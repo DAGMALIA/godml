@@ -1,0 +1,101 @@
+# === PYTHON ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# === ENTORNOS VIRTUALES ===
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# === MLFLOW ===
+mlruns/
+mlartifacts/
+.mlflow/
+
+# === DATOS Y MODELOS ===
+data/
+*.csv
+*.parquet
+*.pkl
+*.joblib
+*.h5
+*.hdf5
+models/
+checkpoints/
+*.model
+*.bin
+
+# === OUTPUTS Y RESULTADOS ===
+outputs/
+results/
+logs/
+*.log
+
+# === JUPYTER NOTEBOOKS ===
+.ipynb_checkpoints/
+*.ipynb
+
+# === IDE Y EDITORES ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === SISTEMA OPERATIVO ===
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# === CONFIGURACIÓN SENSIBLE ===
+.env
+.env.local
+.env.*.local
+config/secrets/
+*.key
+*.pem
+credentials.json
+
+# === CACHE Y TEMPORALES ===
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# === TERRAFORM (si usas IaC) ===
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# === DOCKER ===
+.dockerignore
