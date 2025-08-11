@@ -1,7 +1,7 @@
 # tests/test_compliance_engine.py
 
 import pandas as pd
-from core_service.preprocessor import ComplianceEngine
+from godml.core_service.preprocessor import ComplianceEngine
 
 def test_compliance_engine_with_pci_dss():
     data = {

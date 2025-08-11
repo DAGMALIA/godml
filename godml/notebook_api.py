@@ -2,6 +2,10 @@ from godml.core_service.parser import load_pipeline
 from godml.core_service.executors import get_executor
 from godml.config_service.schema import PipelineDefinition
 from .utils.model_storage import save_model_to_structure, load_model_from_structure
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class GodmlNotebook:
     def __init__(self):

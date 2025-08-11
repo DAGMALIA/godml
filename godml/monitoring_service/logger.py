@@ -6,6 +6,38 @@ import sys
 import os
 import warnings
 
+# ============================================================================
+# EXCEPCIONES PERSONALIZADAS GODML
+# ============================================================================
+
+class GodMLError(Exception):
+    """Base exception para GodML"""
+    pass
+
+class SecurityError(GodMLError):
+    """Error de seguridad - path traversal, inyección de código, etc."""
+    pass
+
+class ModelLoadError(GodMLError):
+    """Error cargando modelo"""
+    pass
+
+class ConfigurationError(GodMLError):
+    """Error en configuración"""
+    pass
+
+class PipelineError(GodMLError):
+    """Error en pipeline"""
+    pass
+
+class PredictionError(GodMLError):
+    """Error en predicción"""
+    pass
+
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
+
 def setup_clean_logging():
     """Configurar logging limpio sin warnings molestos"""
     # Suprimir warnings de TensorFlow y otros

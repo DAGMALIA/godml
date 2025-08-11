@@ -4,7 +4,7 @@ provider: mlflow
 description: "Modelo de clasificación para predecir baja de clientes en Telco"
 
 dataset:
-  uri: ./data/churn.csv
+  uri: ./data/data.csv
   hash: auto
 
 model:
@@ -32,3 +32,9 @@ governance:
 deploy:
   realtime: false
   batch_output: ./outputs/predictions_custom_model.csv
+
+deploy_config:
+  dev:
+    docker_tag: godml:dev
+    port: 8000
+    host: 0.0.0.0

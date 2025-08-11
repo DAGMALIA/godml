@@ -104,7 +104,7 @@ godml = GodmlNotebook()
 godml.create_pipeline(
     name="churn_rf",
     model_type="random_forest",
-    hyperparameters={"max_depth": 3},
+    hyperparameters={{"max_depth": 3}},
     dataset_path="./data/churn.csv"
 )
 godml.train()
@@ -118,7 +118,7 @@ from godml.notebook_api import quick_train
 
 quick_train(
     model_type="xgboost",
-    hyperparameters={"eta": 0.1, "max_depth": 4},
+    hyperparameters={{"eta": 0.1, "max_depth": 4}},
     dataset_path="./data/churn.csv"
 )
 ```

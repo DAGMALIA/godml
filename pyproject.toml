@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "godml"
-version = "0.3.1"
+version = "0.4.16"
 description = "Governed, Observable & Declarative Machine Learning Framework"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -51,6 +51,9 @@ api = [
     "uvicorn[standard]",
     "joblib"
 ]
+
+[tool.setuptools.package-data]
+"godml.utils" = ["README_TEMPLATE.txt","DOCKERFILE_TEMPLATE.txt"]
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -9,6 +9,7 @@ from godml.config_service.schema import (
 )
 
 import yaml
+from importlib.resources import files
 from pathlib import Path
 
 def update_dataset_hash_in_yaml(yaml_path: str, new_hash: str):
@@ -24,8 +25,8 @@ def update_dataset_hash_in_yaml(yaml_path: str, new_hash: str):
         yaml.dump(config, f, sort_keys=False, allow_unicode=True)
 
 def generate_default_yaml(project_name: str) -> str:
-    """Genera YAML válido a partir de PipelineDefinition usando instancias Pydantic"""
-    
+    """Genera YAML válido a partir de PipelineDefinition con deploy_config incluido."""
+
     pipeline = PipelineDefinition(
         name=project_name,
         version="1.0.0",
@@ -61,10 +62,37 @@ def generate_default_yaml(project_name: str) -> str:
         )
     )
 
-    return yaml.dump(pipeline.model_dump(), sort_keys=False)
+    # Convertimos a dict
+    yaml_dict = pipeline.model_dump()
+
+    # Agregamos manualmente la sección de deploy_config
+    yaml_dict["deploy_config"] = {
+        "dev": {
+            "docker_tag": "godml:dev",
+            "port": 8000,
+            "host": "0.0.0.0"
+        },
+        "qa": {
+            "docker_tag": "godml:qa",
+            "port": 8080,
+            "host": "0.0.0.0"
+        },
+        "production": {
+            "docker_tag": "godml:prod",
+            "port": 80,
+            "host": "0.0.0.0"
+        }
+    }
+
+    return yaml.dump(yaml_dict, sort_keys=False)
+
 
 def generate_readme_md(project_name: str) -> str:
-    path = Path(__file__).parent / "README_TEMPLATE.txt"
-    template = path.read_text(encoding="utf-8")
+    template_path = files("godml.utils").joinpath("README_TEMPLATE.txt")
+    template = template_path.read_text(encoding="utf-8")
     return template.format(project_name=project_name)
 
+def generate_dockerfile_txt(wheel_file: str ) -> str:
+    template_path = files("godml.utils").joinpath("DOCKERFILE_TEMPLATE.txt")
+    template = template_path.read_text(encoding="utf-8")
+    return template.format(wheel_file=wheel_file)

@@ -165,10 +165,9 @@ class MLflowExecutor(BaseExecutor):
                     logger.info("   - Ajusta los thresholds en godml.yml")
                     logger.info("   - Mejora la calidad del dataset")
                     logger.info("   - Prueba otros hiperparámetros")
-                    return False
 
     def validate(self, pipeline: PipelineDefinition):
-        from core_service.validators import validate_pipeline
+        from godml.core_service.validators import validate_pipeline
         warnings = validate_pipeline(pipeline)
         for w in warnings:
             print("⚠️", w)

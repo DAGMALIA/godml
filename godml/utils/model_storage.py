@@ -36,10 +36,6 @@ def save_model_to_structure(model, model_name: str = None, environment: str = "e
     model_filename = f"{model_name}_{timestamp}.pkl"
     model_path = env_path / model_filename
     
-    # Guardar modelo con pickle
-    #with open(model_path, 'wb') as f:
-    #    pickle.dump(model, f)
-
     # ✅ Guardar modelo con joblib
     joblib.dump(model, model_path)
     

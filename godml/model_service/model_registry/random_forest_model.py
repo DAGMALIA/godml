@@ -7,8 +7,8 @@ from typing import Dict, Tuple
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.base import ClassifierMixin
 
-from model_service.base_model_interface import BaseClassificationModel
-from monitoring_service.metrics import evaluate_binary_classification
+from godml.model_service.base_model_interface import BaseClassificationModel
+from godml.monitoring_service.metrics import evaluate_binary_classification
 
 
 class RandomForestModel(BaseClassificationModel):

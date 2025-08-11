@@ -1,4 +1,3 @@
-# godml/deploy_service/env_config.py
 
 ENVIRONMENTS = {
     "dev": {
