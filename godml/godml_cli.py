@@ -23,6 +23,7 @@ from godml.utils.path_utils import normalize_path, sanitize_for_log, validate_sa
 from godml.utils.yaml_utils import update_dataset_hash_in_yaml
 from godml.utils.yaml_utils import generate_default_yaml, generate_dockerfile_txt, generate_readme_md
 from godml.deploy_service.env_config import ENVIRONMENTS
+from godml.dataprep_service.cli import app as dataprep_app
 
 logger = get_logger()
 app = typer.Typer()
@@ -376,6 +377,9 @@ def deploy(project_name: str, environment: str = typer.Argument(..., help="Ambie
     except Exception as e:
         logger.error(f"❌ Error general: {sanitize_for_log(str(e))}")
         raise typer.Exit(1)
+    
+app = typer.Typer(help="GODML CLI")
+app.add_typer(dataprep_app, name="dataprep")
 
 def main():
     """Función principal para el CLI"""

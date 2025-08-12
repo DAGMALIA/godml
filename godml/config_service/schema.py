@@ -1,5 +1,7 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, Field, ConfigDict
+
+from godml.dataprep_service.schema import Recipe as DataprepRecipe
 
 
 class DatasetConfig(BaseModel):
@@ -53,7 +55,8 @@ class PipelineDefinition(BaseModel):
     metrics: List[Metric]
     governance: Governance = Field(default_factory=lambda: Governance(owner="", tags=[]))
     deploy: DeployConfig
-
+    # Nuevo: DataPrep puede ser 1 receta o varias (opcional)
+    dataprep: Optional[Union[DataprepRecipe, List[DataprepRecipe]]] = None
 
 # Resultado del pipeline (puede moverse si prefieres)
 class ModelResult(BaseModel):
