@@ -2,6 +2,7 @@ import os
 import re
 import platform
 from pathlib import Path
+from typing import Optional 
 
 class SecurityError(Exception):
     """Excepción para errores de seguridad"""
@@ -48,35 +49,41 @@ def sanitize_for_log(text: str) -> str:
     return sanitized[:500] + "..." if len(sanitized) > 500 else sanitized
 
 
-def validate_safe_path(path: str, base_dir: str = None) -> str:
-    """Valida que la ruta sea segura y no contenga path traversal"""
-    if not path or not isinstance(path, str):
+def validate_safe_path(path: str, base_dir: Optional[str | Path] = None) -> Path:
+    """
+    Valida que la ruta sea segura y (si base_dir se provee) que esté contenida dentro de base_dir.
+    Retorna un pathlib.Path absoluto.
+    """
+    if not isinstance(path, str) or not path.strip():
         raise SecurityError("Ruta inválida o vacía")
-    
+
+    # Normaliza a Path absoluto (sin resolver errores si no existe el archivo)
     try:
-        # Verificar patrones peligrosos en la entrada original
-        dangerous_patterns = ["..", "~", "$", "|", "&", ";", "`"]
-        for pattern in dangerous_patterns:
-            if pattern in path:
-                raise SecurityError(f"Patrón peligroso detectado: {pattern}")
-        
-        # Normalizar la ruta de forma segura
-        normalized = Path(path).resolve()
-        
-        # Si se especifica un directorio base, verificar que esté dentro
-        if base_dir:
-            base_resolved = Path(base_dir).resolve()
-            try:
-                normalized.relative_to(base_resolved)
-            except ValueError:
-                raise SecurityError(f"Ruta fuera del directorio permitido")
-                
-        return str(normalized)
-        
-    except SecurityError:
-        raise  # Re-lanzar errores de seguridad
+        p = Path(path).expanduser().resolve(strict=False)  # no falla si no existe
     except Exception as e:
-        raise SecurityError(f"Error validando ruta: {str(e)}")
+        raise SecurityError(f"No se pudo normalizar la ruta: {e}")
+
+    # Políticas de entrada (opcional endurecimiento)
+    # Evita caracteres de control y null bytes
+    if any(ord(c) < 32 for c in path) or "\x00" in path:
+        raise SecurityError("Caracteres de control o null byte detectados")
+
+    # Si se define base_dir, exige contención
+    if base_dir:
+        base = Path(base_dir).expanduser().resolve(strict=True)
+        try:
+            p.relative_to(base)
+        except ValueError:
+            raise SecurityError("Ruta fuera del directorio permitido")
+
+    # Evita traversal basado en la entrada original (defensa en profundidad)
+    # Nota: resolve() ya neutraliza .. y ~, esto es extra-cautela
+    dangerous_tokens = [".."]
+    if any(tok in Path(path).parts for tok in dangerous_tokens):
+        # Usar parts evita falsos positivos en nombres tipo "data..csv"
+        raise SecurityError("Path traversal detectado en la ruta de entrada")
+
+    return p
 
 
 def safe_join(*paths) -> str:
