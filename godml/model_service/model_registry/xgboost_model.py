@@ -1,23 +1,45 @@
 # Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
 # Licensed under the MIT License
 
-from typing import Dict, Tuple
 import numpy as np
 import pandas as pd
-import xgboost as xgb
-from sklearn.base import ClassifierMixin 
+from typing import Dict, Tuple
 
+try:
+    from xgboost import XGBClassifier
+except Exception as e:
+    raise ImportError("Instala xgboost: pip install xgboost") from e
+
+from sklearn.base import ClassifierMixin
 from godml.model_service.base_model_interface import BaseClassificationModel
 from godml.monitoring_service.metrics import evaluate_binary_classification
 
 
-class XgboostModel(BaseClassificationModel):
+class XGBoostModel(BaseClassificationModel):
     """
-    Implementación del modelo XGBoost para clasificación binaria.
+    Wrapper XGBoost alineado a la interfaz GODML (train/predict).
     """
 
+    ALLOWED_PARAMS = {
+        "n_estimators", "max_depth", "learning_rate", "subsample",
+        "colsample_bytree", "gamma", "reg_alpha", "reg_lambda",
+        "min_child_weight", "n_jobs", "random_state", "tree_method",
+        "max_bin", "scale_pos_weight", "eval_metric", "verbosity",
+    }
+
+    DEFAULTS = {
+        "random_state": 42,
+        "n_estimators": 200,
+        "learning_rate": 0.1,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "eval_metric": "logloss",   # evita warnings
+        "n_jobs": -1,
+        # "tree_method": "hist",    # opcional, útil en CPU
+    }
+
     def __init__(self):
-        self.model = None
+        self.model: XGBClassifier | None = None
 
     def train(
         self,
@@ -26,27 +48,17 @@ class XgboostModel(BaseClassificationModel):
         X_test: pd.DataFrame,
         y_test: np.ndarray,
         params: Dict
-    ) -> Tuple[xgb.Booster, np.ndarray, Dict[str, float]]:
-        """
-        Entrena el modelo XGBoost con los datos proporcionados.
-        """
-        dtrain = xgb.DMatrix(X_train, label=y_train)
-        dtest = xgb.DMatrix(X_test, label=y_test)
+    ) -> Tuple[ClassifierMixin, np.ndarray, Dict[str, float]]:
+        # Mezcla defaults + params permitidos
+        full = {**self.DEFAULTS, **{k: v for k, v in params.items() if k in self.ALLOWED_PARAMS}}
+        self.model = XGBClassifier(**full)
+        self.model.fit(X_train, y_train)
 
-        self.model = xgb.train(params, dtrain, num_boost_round=params.get("num_boost_round", 100))
-        preds = self.model.predict(dtest)
-
+        preds = self.model.predict_proba(X_test)[:, 1]
         metrics = evaluate_binary_classification(y_test, preds)
-
         return self.model, preds, metrics
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
-        """
-        Realiza predicciones con el modelo entrenado.
-        """
         if self.model is None:
-            raise ValueError("❌ El modelo XGBoost no ha sido entrenado.")
-        
-        dmatrix = xgb.DMatrix(X)
-        return self.model.predict(dmatrix)
-
+            raise ValueError("❌ El modelo no ha sido entrenado.")
+        return self.model.predict_proba(X)[:, 1]

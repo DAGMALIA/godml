@@ -688,6 +688,26 @@ def quick_train(model_type: str, hyperparameters: dict, dataset_path: str, name:
     godml.train()
     return "✅ Modelo entrenado exitosamente"
 
+def quick_train_with_metrics(model_type: str, hyperparameters: dict, dataset_path: str, name: str | None = None):
+    """Como quick_train, pero retorna un dict con métricas si el executor las expone."""
+    godml = GodmlNotebook()
+    name = name or f"{model_type}-quick-train"
+    pipe = godml.create_pipeline(
+        name=name,
+        model_type=model_type,
+        hyperparameters=hyperparameters,
+        dataset_path=dataset_path,
+    )
+    executor = get_executor(pipe.provider)
+    result = executor.run(pipe)  # suele tener .metrics y .model
+    return {
+        "message": f"✅ Modelo {model_type} entrenado",
+        "metrics": getattr(result, "metrics", {}),
+        "model": getattr(result, "model", None),
+        "pipeline": pipe,
+    }
+
+
 
 # ---- Helpers para entrenar desde YAML ----
 
