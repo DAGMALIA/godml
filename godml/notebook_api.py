@@ -425,6 +425,184 @@ def plot_roc_pr_curves(y_true, y_prob) -> None:
     plt.legend(loc="lower left")
     plt.show()
 
+# =========================
+# AutoTuning (MVP sklearn)
+# =========================
+
+def suggest_search_space(model_type: str) -> dict:
+    """
+    Espacios de búsqueda recomendados por modelo.
+    Pensados para RandomizedSearchCV (listas discretas).
+    """
+    m = (model_type or "").lower()
+    if m in {"random_forest", "rf"}:
+        return {
+            "n_estimators": [100, 200, 400, 800],
+            "max_depth": [3, 4, 6, 8, None],
+            "min_samples_split": [2, 5, 10],
+            "min_samples_leaf": [1, 2, 4],
+            "max_features": ["sqrt", "log2", None],
+            "bootstrap": [True, False],
+        }
+    if m in {"xgboost", "xgb"}:
+        # API sklearn de XGBoost (XGBClassifier)
+        return {
+            "n_estimators": [100, 200, 400, 800],
+            "max_depth": [3, 4, 6, 8],
+            "learning_rate": [0.03, 0.05, 0.1, 0.2],
+            "subsample": [0.7, 0.8, 1.0],
+            "colsample_bytree": [0.7, 0.8, 1.0],
+            "reg_lambda": [0.0, 1.0, 3.0, 5.0],
+        }
+    if m in {"logistic_regression", "logreg", "logistic"}:
+        return {
+            "C": [0.01, 0.1, 1.0, 3.0, 10.0],
+            "penalty": ["l2"],
+            "solver": ["lbfgs"],
+            "max_iter": [200, 400, 800],
+        }
+    return {}
+
+
+def _sklearn_scoring(metric: str, y) -> str:
+    """
+    Mapa de métricas a 'scoring' de sklearn.
+    Soporta multiclase básico para roc_auc.
+    """
+    m = (metric or "").lower().strip()
+    if m == "roc_auc":
+        return "roc_auc_ovr" if getattr(y, "nunique", lambda: 2)() > 2 else "roc_auc"
+    return m  # accuracy, f1, precision, recall, r2, etc.
+
+
+def tune_model(
+    model_type: str,
+    X,
+    y,
+    search_space: dict | None = None,
+    metric: str = "roc_auc",
+    cv: int = 5,
+    max_trials: int = 30,
+    time_budget_s: int | None = None,  # reservado para Optuna en fase 2
+    seed: int = 42,
+    use_optuna: bool = False,
+    n_jobs: int | None = None,
+):
+    """
+    AutoTuning con RandomizedSearchCV (por defecto).
+    Retorna:
+        {
+          "best_params": dict,
+          "best_score": float,
+          "cv_results": pd.DataFrame,
+          "best_estimator": fitted_estimator
+        }
+    """
+    # Intento Optuna (fase 2)
+    if use_optuna:
+        try:
+            import optuna  # noqa: F401
+        except Exception:
+            print("⚠️ Optuna no está instalado; continuo con RandomizedSearchCV.")
+            use_optuna = False
+
+    if use_optuna:
+        raise NotImplementedError("Optuna backend no implementado aún.")
+
+    # --- sklearn backend ---
+    try:
+        from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold, KFold
+        import pandas as _pd
+    except Exception as e:  # pragma: no cover
+        raise ImportError("Se requiere scikit-learn para tune_model().") from e
+
+    # Resolver estimator sklearn-friendly según el tipo
+    EstCls = _sk_estimator_for(model_type)
+    try:
+        tmp = EstCls()
+        est_params = tmp.get_params()
+    except Exception:
+        est_params = {}
+    est_kwargs = {}
+    if "random_state" in est_params:
+        est_kwargs["random_state"] = seed
+    estimator = EstCls(**est_kwargs)
+
+    # Espacio por defecto si no te pasaron uno
+    search_space = search_space or suggest_search_space(model_type)
+
+    # CV estratificado si parece clasificación (<=20 clases)
+    is_classif = getattr(y, "nunique", lambda: 2)() <= 20
+    cv_split = StratifiedKFold(n_splits=cv, shuffle=True, random_state=seed) if is_classif else KFold(n_splits=cv, shuffle=True, random_state=seed)
+    scoring = _sklearn_scoring(metric, y)
+
+    rs = RandomizedSearchCV(
+        estimator=estimator,
+        param_distributions=search_space,
+        n_iter=max_trials,
+        scoring=scoring,
+        cv=cv_split,
+        random_state=seed,
+        n_jobs=n_jobs if n_jobs is not None else (-1 if is_classif else None),
+        verbose=0,
+        refit=True,  # entrena con best_params en todo el set
+    )
+    rs.fit(X, y)
+
+    cv_df = _pd.DataFrame(rs.cv_results_)
+    return {
+        "best_params": rs.best_params_,
+        "best_score": float(rs.best_score_),
+        "cv_results": cv_df,
+        "best_estimator": rs.best_estimator_,
+    }
+
+
+def _sk_estimator_for(model_type: str):
+    """Devuelve la clase de estimator sklearn para el model_type."""
+    key = (model_type or "").lower()
+    if key in {"random_forest", "rf"}:
+        from sklearn.ensemble import RandomForestClassifier
+        return RandomForestClassifier
+    if key in {"logistic_regression", "logreg", "logistic"}:
+        from sklearn.linear_model import LogisticRegression
+        return LogisticRegression
+    if key in {"xgboost", "xgb"}:
+        try:
+            from xgboost import XGBClassifier  # requiere xgboost instalado
+            return XGBClassifier
+        except Exception as e:
+            raise ImportError("xgboost no está instalado para usar XGBClassifier") from e
+    raise ValueError(f"No hay mapeo sklearn para model_type='{model_type}'")
+
+def optimize_threshold(y_true, y_prob, metric: str = "f1"):
+    """
+    Busca el mejor umbral en [0,1] para maximizar la métrica dada (f1, precision, recall).
+    Retorna (best_threshold, best_score).
+    """
+    try:
+        from sklearn import metrics as sk
+        import numpy as np
+    except Exception as e:  # pragma: no cover
+        raise ImportError("Se requiere scikit-learn y numpy para optimize_threshold.") from e
+
+    y_prob = np.asarray(y_prob).ravel()
+    candidates = np.linspace(0.05, 0.95, 19)
+    best_thr, best_score = 0.5, -1.0
+    for thr in candidates:
+        y_hat = (y_prob >= thr).astype(int)
+        if metric == "f1":
+            s = sk.f1_score(y_true, y_hat)
+        elif metric == "precision":
+            s = sk.precision_score(y_true, y_hat)
+        elif metric == "recall":
+            s = sk.recall_score(y_true, y_hat)
+        else:
+            # fallback: usa f1
+            s = sk.f1_score(y_true, y_hat)
+        if s > best_score:
+            best_thr, best_score = thr, s
+    return best_thr, float(best_score)
 
 # ---------------------------------------------
 # Integración con pipelines YAML y ejecutores
