@@ -15,7 +15,7 @@ from godml.model_service.base_model_interface import BaseClassificationModel
 from godml.monitoring_service.metrics import evaluate_binary_classification
 
 
-class XGBoostModel(BaseClassificationModel):
+class XgboostModel(BaseClassificationModel):
     """
     Wrapper XGBoost alineado a la interfaz GODML (train/predict).
     """

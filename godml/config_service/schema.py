@@ -7,6 +7,8 @@ from godml.dataprep_service.schema import Recipe as DataprepRecipe
 class DatasetConfig(BaseModel):
     uri: str
     hash: Optional[str] = "auto"
+    target: Optional[str] = None
+    dataprep: Optional[Union[DataprepRecipe, List[DataprepRecipe], Dict[str, Any]]] = None
 
 
 class Hyperparameters(BaseModel):
@@ -56,7 +58,7 @@ class PipelineDefinition(BaseModel):
     governance: Governance = Field(default_factory=lambda: Governance(owner="", tags=[]))
     deploy: DeployConfig
     # Nuevo: DataPrep puede ser 1 receta o varias (opcional)
-    dataprep: Optional[Union[DataprepRecipe, List[DataprepRecipe]]] = None
+    #dataprep: Optional[Union[DataprepRecipe, List[DataprepRecipe]]] = None
 
 # Resultado del pipeline (puede moverse si prefieres)
 class ModelResult(BaseModel):

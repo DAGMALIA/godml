@@ -74,15 +74,18 @@ def dataprep_run(
 
 
 def dataprep_run_inline(
-    recipe: Dict[str, Any],
+    recipe: Dict[str, Any] | Any,
     governance: Optional[Dict[str, Any]] = None,
 ) -> pd.DataFrame:
-    """Permite pasar la receta como `dict` en lugar de archivo YAML.
+    """Permite pasar la receta como dict o como objeto Pydantic Recipe."""
+    # ✅ Normaliza a dict si viene como Pydantic (v2 o v1)
+    if hasattr(recipe, "model_dump"):
+        recipe = recipe.model_dump()
+    elif hasattr(recipe, "dict"):
+        recipe = recipe.dict()
 
-    Serializa a un archivo temporal y delega a `run_recipe`.
-    """
+    payload = {"dataprep": recipe} if isinstance(recipe, dict) and "inputs" in recipe else recipe
 
-    payload = {"dataprep": recipe} if "inputs" in recipe else recipe
     with tempfile.NamedTemporaryFile("w", suffix=".yml", delete=False, encoding="utf-8") as f:
         yaml.safe_dump(payload, f, allow_unicode=True, sort_keys=False)
         tmp = Path(f.name)
@@ -97,8 +100,8 @@ def dataprep_run_inline(
 _DEF_REGISTRY: Dict[str, str] = {
     "random_forest": "godml.model_service.model_registry.random_forest_model:RandomForestModel",
     "rf": "godml.model_service.model_registry.random_forest_model:RandomForestModel",
-    "xgboost": "godml.model_service.model_registry.xgboost_model:XGBoostModel",
-    "xgb": "godml.model_service.model_registry.xgboost_model:XGBoostModel",
+    "xgboost": "godml.model_service.model_registry.xgboost_model:XgboostModel",
+    "xgb": "godml.model_service.model_registry.xgboost_model:XgboostModel",
 }
 
 
