@@ -18,10 +18,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # ⚡ 5. Usa caché si el wheel no cambia
-COPY godml-0.4.16-py3-none-any.whl .
+COPY godml-0.4.0-py3-none-any.whl .
 
 # ⚡ 6. Instala solo desde wheel (esto debería ser MUY rápido)
-RUN pip install godml-0.4.16-py3-none-any.whl[api]
+RUN pip install godml-0.4.0-py3-none-any.whl[api]
 
 # ⚡ 7. Copia únicamente el código necesario (no el root del proyecto si ya está en wheel)
 COPY deploy_service/ ./deploy_service/
