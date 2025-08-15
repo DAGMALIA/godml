@@ -23,7 +23,7 @@ from .utils.model_storage import (
     promote_model
 )
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 __all__ = [
     "GodmlNotebook", 
     "quick_train", 

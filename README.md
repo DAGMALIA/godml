@@ -25,7 +25,7 @@ Declarativo : Configuración simple en YAML
 - ⚡ Nuevas funciones `quick_train`, `train_from_yaml`, `quick_train_yaml` para acelerar iteraciones
 - 📄 Mejor integración con YAML, sin perder reproducibilidad
 
-
+```text
 📁 Estructura del Proyecto
                 
 {project_name}/
@@ -41,11 +41,11 @@ Declarativo : Configuración simple en YAML
 ├── mlruns/                # 📋 Experimentos MLflow (auto-generado)
 ├── requirements.txt       # 📦 Dependencias del proyecto
 └── README.md             # 📖 Esta documentación
-
+```
 
 ⚙️ Configuración del Pipeline
 El archivo godml.yml contiene toda la configuración:
-
+```yaml title="godml.yml (mínimo viable)"
 Dataset
 
 dataset:
@@ -76,7 +76,7 @@ governance:
   tags:
   - project: {project_name}
   - environment: development    # development/staging/production
-
+```
 🔧 Modelos Disponibles
 Algoritmo	Tipo	Comando
 xgboost	Gradient Boosting	Por defecto
@@ -97,32 +97,34 @@ f1 - F1 Score
 
 🎯 Flujo de Trabajo
 
-1. Preparar Datos
-Coloca tu dataset en data/
+```bash
+#1. Preparar Datos
+#Coloca tu dataset en data/
 
 cp mi_dataset.csv data/your_dataset.csv
 
-2. Configurar Pipeline
-Edita godml.yml según tus necesidades
+#2. Configurar Pipeline
+#Edita godml.yml según tus necesidades
 
 vim godml.yml
 
-3. Entrenar Modelo
-Ejecuta el pipeline completo
+#3. Entrenar Modelo
+#Ejecuta el pipeline completo
 
 godml run -f godml.yml
 
-4. Revisar Resultados
-Ver experimentos en MLflow
+#4. Revisar Resultados
+#Ver experimentos en MLflow
 
 mlflow ui
 
-Ver predicciones
+#Ver predicciones
 cat outputs/predictions.csv
-
+```
 
 🧪 Entrenamiento desde Notebooks
 
+```python
 from godml.notebook_api import GodmlNotebook
 
 godml = GodmlNotebook()
@@ -157,7 +159,7 @@ quick_train_yaml(
     hyperparameters={"max_depth": 4},
     yaml_path="./godml/godml.yml"
 )
-
+```
 
 🏛️ Gobernanza y Trazabilidad
 GODML automáticamente registra:
@@ -220,3 +222,4 @@ vim godml.yml
 
 # 4. run
 godml run -f godml.yml
+```
