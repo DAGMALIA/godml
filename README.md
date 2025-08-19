@@ -208,6 +208,8 @@ Governed, Observable & Declarative Machine Learning
 
 ## 🚀 Cómo Empezar
 
+# Se recomienda crear un entorno virtual
+
 ```bash
 # 1. Instala el CLI
 pip install godml
