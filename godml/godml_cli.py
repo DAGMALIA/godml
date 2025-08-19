@@ -26,7 +26,7 @@ from godml.deploy_service.env_config import ENVIRONMENTS
 from godml.dataprep_service.cli import app as dataprep_app
 
 logger = get_logger()
-app = typer.Typer()
+app = typer.Typer(help="GODML CLI")
 
 def _validate_docker_available() -> None:
     """Valida que Docker esté disponible y corriendo."""
@@ -377,8 +377,7 @@ def deploy(project_name: str, environment: str = typer.Argument(..., help="Ambie
     except Exception as e:
         logger.error(f"❌ Error general: {sanitize_for_log(str(e))}")
         raise typer.Exit(1)
-    
-app = typer.Typer(help="GODML CLI")
+
 app.add_typer(dataprep_app, name="dataprep")
 
 def main():

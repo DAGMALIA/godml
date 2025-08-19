@@ -28,19 +28,17 @@ Declarativo : Configuración simple en YAML
 ```text
 📁 Estructura del Proyecto
                 
-{project_name}/
-├── godml.yml              # 🎯 Configuración principal del pipeline
+mi-proyecto-ml/
+├── godml.yml              # 🎯 Configuración principal
 ├── data/                  # 📊 Datasets
-│   └── your_dataset.csv   # ← Coloca aquí tus datos
-├── outputs/               # 📈 Predicciones y resultados
-│   └── predictions.csv    # Salida del modelo
-├── models/                # 🤖 Modelos entrenados
-│   ├── production/        # Modelos en producción
-│   ├── staging/           # Modelos en testing
-│   └── experiments/       # Modelos experimentales
-├── mlruns/                # 📋 Experimentos MLflow (auto-generado)
-├── requirements.txt       # 📦 Dependencias del proyecto
-└── README.md             # 📖 Esta documentación
+├── outputs/               # 📈 Predicciones
+├── models/                # 🤖 Modelos por entorno
+│   ├── production/
+│   ├── staging/
+│   └── experiments/
+├── deploy_service/        # 🚀 Servicios de despliegue
+├── Dockerfile             # 🐳 Contenedor Docker
+└── README.md              # 📖 Documentación
 ```
 
 ⚙️ Configuración del Pipeline
