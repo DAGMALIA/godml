@@ -267,9 +267,6 @@ def find_model_for_deploy(environment: str) -> Path:
         # Buscar en diferentes ubicaciones según el ambiente
         search_paths = [
             current_dir / "models" / environment,
-            current_dir / "models" / "prod",
-            current_dir / "models" / "qa", 
-            current_dir / "models" / "dev",
             current_dir / "models"
         ]
         

@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "godml"
-version = "0.4.2"
+version = "0.4.4"
 description = "Governed, Observable & Declarative Machine Learning Framework"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "Apache-2.0"}
-authors = [{name="Dagmalia", email="contact@dagmalia.com"}]
-keywords = ["mlops", "machine learning", "framework", "governance", "observability", "mlflow", "sagemaker", "rag"]
+authors = [{name="Arturo Gutierrez Rubio Rojas", email="agtzrubio@dagmalia.com"}]
+keywords = ["mlops", "machine learning", "framework", "governance", "observability", "mlflow"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
@@ -19,18 +19,8 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
-  "Topic :: Software Development :: Libraries :: Application Frameworks",
-  "Framework :: Jupyter",
-  "Framework :: FastAPI",
-  "Framework :: Pydantic",
+  "Topic :: Software Development :: Libraries :: Application Frameworks"
 ]
-
-[project.urls]
-Homepage = "https://godmlcore.com/"
-Documentation = "https://godmlcore.com/docs/intro"
-Source = "https://github.com/DAGMALIA/godml"
-Issues = "https://github.com/DAGMALIA/godml/issues"
-Changelog = "https://github.com/DAGMALIA/godml/releases"
 
 dependencies = [
     # CLI & UX
@@ -69,11 +59,14 @@ dependencies = [
 godml = "godml.godml_cli:main"
 
 [project.optional-dependencies]
-api = [
-    "fastapi",
-    "uvicorn[standard]",
-    "joblib"
-]
+api = ["fastapi", "uvicorn[standard]", "joblib"]
+
+[project.urls]
+Homepage = "https://godmlcore.com/"
+Documentation = "https://godmlcore.com/docs/intro"
+Source = "https://github.com/DAGMALIA/godml"
+Issues = "https://github.com/DAGMALIA/godml/issues"
+Changelog = "https://github.com/DAGMALIA/godml/releases"
 
 [tool.setuptools.package-data]
 "godml.utils" = ["README_TEMPLATE.txt","DOCKERFILE_TEMPLATE.txt"]
