@@ -92,7 +92,7 @@ def generate_readme_md(project_name: str) -> str:
     template = template_path.read_text(encoding="utf-8")
     return template.format(project_name=project_name)
 
-def generate_dockerfile_txt(wheel_file: str ) -> str:
+def generate_dockerfile_txt() -> str:
     template_path = files("godml.utils").joinpath("DOCKERFILE_TEMPLATE.txt")
     template = template_path.read_text(encoding="utf-8")
-    return template.format(wheel_file=wheel_file)
+    return template
