@@ -7,8 +7,8 @@ import pandas as pd
 from pathlib import Path
 import inspect
 import os
-import xgboost as xgb
 from xgboost import DMatrix
+import xgboost as xgb
 from godml.monitoring_service.logger import godml_logger, SecurityError
 
 app = FastAPI()
@@ -24,15 +24,16 @@ def find_model_file() -> Path:
         # Buscar desde el directorio de trabajo actual
         current_dir = Path.cwd()
         
-        # Buscar en diferentes ubicaciones posibles
+        # Obtener ambiente desde variable de entorno
+        environment = os.getenv("GODML_ENV", "dev")
+        
+        # Buscar solo en el ambiente especificado
         search_paths = [
-            current_dir / "models",
-            current_dir / "models" / "qa",
-            current_dir / "models" / "dev",
-            current_dir / "models" / "prod"
+            current_dir / "models" / environment,  # Ambiente específico
+            current_dir / "models"                 # Fallback general
         ]
         
-        godml_logger.info(f"🔍 Buscando modelo desde: {current_dir}")
+        godml_logger.info(f"🔍 Buscando modelo para ambiente '{environment}' desde: {current_dir}")
         
         for search_path in search_paths:
             if search_path.exists():

@@ -184,17 +184,6 @@ def init(project_name: str):
         with open(readme_path, "w", encoding="utf-8") as f:
             f.write(readme_content)
 
-        # Copiar deploy_service/ desde plantilla
-        deploy_path = validate_safe_path(str(project_path / "deploy_service"))
-        if not Path(deploy_path).exists():
-            try:
-                with pkg_resources.path("godml.templates.deploy_template", "") as template_path:
-                    safe_template_path = validate_safe_path(str(template_path))
-                    copytree(str(safe_template_path), str(deploy_path))
-                    logger.info("📦 deploy_service/ copiado desde plantilla.")
-            except Exception as e:
-                logger.error(f"❌ Error copiando deploy_service/: {sanitize_for_log(str(e))}")
-
         # Crear Dockerfile por defecto
         dockerfile_path = validate_safe_path(str(project_path / "Dockerfile"))
         if not Path(dockerfile_path).exists():

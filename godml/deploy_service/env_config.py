@@ -11,7 +11,7 @@ ENVIRONMENTS = {
         "port": 8001,
         "host": "0.0.0.0",
         "reload": False,
-        "docker_tag": "godml-staging"
+        "docker_tag": "godml-qa"
     },
     "prod": {
         "port": 80,

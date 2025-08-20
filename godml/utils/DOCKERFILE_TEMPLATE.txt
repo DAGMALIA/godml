@@ -21,9 +21,8 @@ WORKDIR /app
 RUN pip install godml
 
 # ⚡ 7. Copia únicamente el código necesario (no el root del proyecto si ya está en wheel)
-COPY deploy_service/ ./deploy_service/
 COPY models ./models
 COPY godml.yml .
 
 # ⚡ 8. Usa puerto explícito y comando robusto
-CMD ["uvicorn", "deploy_service.server:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn godml.deploy_service.server:app --host ${HOST} --port ${PORT}"]
