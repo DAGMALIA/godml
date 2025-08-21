@@ -331,7 +331,7 @@ def deploy(project_name: str, environment: str = typer.Argument(..., help="Ambie
         # Verificar o generar Dockerfile
         dockerfile_path = validate_safe_path("Dockerfile")
         if not Path(dockerfile_path).exists():
-            dockerfile_content = generate_dockerfile_txt(project_name)
+            dockerfile_content = generate_dockerfile_txt()
             with open(dockerfile_path, "w", encoding="utf-8") as f:
                 f.write(dockerfile_content)
 
