@@ -88,27 +88,62 @@ def _validate_environment_vars(environment: str, host: str, port: str) -> tuple:
 def run(file: str = typer.Option(..., "--file", "-f", help="Ruta al archivo YAML")):
     """Ejecuta un pipeline GODML desde un archivo YAML."""
     try:
-
         if '..' in file or os.path.isabs(file):
             raise SecurityError("Ruta no permitida")
 
         yaml_path = validate_safe_path(file)
         print(f"📄 Usando archivo YAML: {yaml_path}")
 
-        # Calcular hash si está en modo automático
-        with open(yaml_path, "r", encoding="utf-8") as f:
-            yaml_dict = safe_load(f)
-        
-        dataset_path = validate_safe_path(yaml_dict['dataset']['uri'])
-        if yaml_dict['dataset'].get('hash', 'auto') == 'auto':
-            new_hash = calculate_file_hash(str(dataset_path))
-            update_dataset_hash_in_yaml(str(yaml_path), new_hash)
-            print(f"🔑 Hash calculado e insertado en YAML: {new_hash}")
-
+        # Cargar pipeline
         pipeline = load_pipeline(str(yaml_path))
         print(f"📂 Dataset: {pipeline.dataset.uri}")
         print(f"📤 Output: {pipeline.deploy.batch_output}")
 
+        # ✅ Normalización: Si dataset.dataprep está en modo inline, lo convertimos a full
+        def normalize_inline_to_full(dataprep: dict, dataset_uri: str) -> dict:
+            steps = dataprep.get("steps", []) or []
+        
+            # Detectar tipo de input
+            if dataset_uri.startswith("s3://"):
+                connector = "s3"
+            elif dataset_uri.endswith(".parquet"):
+                connector = "parquet"
+            else:
+                connector = "csv"
+        
+            # Detectar entradas/salidas explícitas
+            read_step = next((s for s in steps if s.get("op") in ("read_csv", "read_parquet")), None)
+            write_step = next((s for s in reversed(steps) if s.get("op") in ("write_csv", "write_parquet")), None)
+        
+            in_uri = (read_step or {}).get("params", {}).get("path") or dataset_uri
+            if write_step and write_step.get("params", {}).get("path"):
+                out_uri = write_step["params"]["path"]
+            else:
+                if connector == "csv":
+                    out_uri = dataset_uri[:-4] + "_clean.csv"
+                elif connector == "parquet":
+                    out_uri = dataset_uri[:-8] + "_clean.parquet"
+                else:
+                    out_uri = dataset_uri + "_clean"
+        
+            # Filtramos IO para evitar duplicidad
+            core_steps = [s for s in steps if s.get("op") not in ("read_csv", "read_parquet", "write_csv", "write_parquet")]
+        
+            return {
+                "inputs": [{"name": "raw", "connector": connector, "uri": in_uri}],
+                "steps": core_steps,
+                "outputs": [{"name": "clean", "connector": connector, "uri": out_uri}],
+            }
+
+
+        # Aplicar la conversión si hace falta
+        if isinstance(pipeline.dataset.dataprep, dict) and "steps" in pipeline.dataset.dataprep and (
+            "inputs" not in pipeline.dataset.dataprep or "outputs" not in pipeline.dataset.dataprep
+        ):
+            pipeline.dataset.dataprep = normalize_inline_to_full(pipeline.dataset.dataprep, pipeline.dataset.uri)
+            print("✅ dataprep inline normalizado a formato completo.")
+
+        # Ejecutar pipeline
         executor = get_executor(pipeline.provider)
         executor.validate(pipeline)
         result = executor.run(pipeline)
@@ -126,6 +161,7 @@ def run(file: str = typer.Option(..., "--file", "-f", help="Ruta al archivo YAML
     except Exception as e:
         logger.error(f"❌ Error inesperado: {sanitize_for_log(str(e))}")
         raise typer.Exit(1)
+
 
 @app.command("calc-hash")
 def calc_hash(
