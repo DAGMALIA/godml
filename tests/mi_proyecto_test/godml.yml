@@ -1,0 +1,46 @@
+name: mi_proyecto_test
+version: 1.0.0
+provider: mlflow
+description: null
+dataset:
+  uri: ./data/your_dataset.csv
+  hash: auto
+  target: null
+  dataprep: null
+model:
+  type: xgboost
+  source: core
+  hyperparameters:
+    max_depth: 5
+    eta: 0.3
+    objective: binary:logistic
+    n_estimators: null
+    max_features: null
+    random_state: null
+metrics:
+- name: auc
+  threshold: 0.85
+- name: accuracy
+  threshold: 0.8
+governance:
+  owner: your-team@company.com
+  compliance: pci-dss
+  tags:
+  - project: mi_proyecto_test
+  - environment: development
+deploy:
+  realtime: false
+  batch_output: ./outputs/predictions.csv
+deploy_config:
+  dev:
+    docker_tag: godml:dev
+    port: 8000
+    host: 0.0.0.0
+  qa:
+    docker_tag: godml:qa
+    port: 8080
+    host: 0.0.0.0
+  prod:
+    docker_tag: godml:prod
+    port: 80
+    host: 0.0.0.0

@@ -20,6 +20,12 @@ def test_compliance_engine_with_pci_dss():
     # Aplicar cumplimiento
     masked_df = ComplianceEngine.apply(df, "pci-dss")
 
+    # 👀 Debug: imprimir para visualizar
+    print("\n=== DataFrame Original ===")
+    print(df)
+    print("\n=== DataFrame Masked ===")
+    print(masked_df)
+
     # Verificaciones básicas
     assert masked_df is not None
     assert "cvv" not in masked_df.columns  # debe haber sido eliminado
@@ -30,4 +36,6 @@ def test_compliance_engine_with_pci_dss():
     assert masked_df["zip_code"].iloc[0].startswith("12")
     assert masked_df["ssn"].iloc[0] != "123-45-6789"
     assert masked_df["dob"].iloc[0] != "1985-10-24"
+
+    return print(masked_df)
 
