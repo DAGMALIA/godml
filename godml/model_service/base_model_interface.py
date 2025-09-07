@@ -34,3 +34,9 @@ class BaseClassificationModel(BaseModel):
     Por ahora no agrega nada extra, pero sirve para claridad y especialización futura.
     """
     task_type: str = "classification"
+
+class BaseRegressionModel(BaseModel):
+    """
+    Clase base para modelos de regresión.
+    """
+    task_type: str = "regression"

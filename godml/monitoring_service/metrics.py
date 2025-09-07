@@ -3,7 +3,10 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
     f1_score,
-    roc_auc_score
+    roc_auc_score,
+    mean_squared_error, 
+    mean_absolute_error, 
+    r2_score
 )
 
 def evaluate_binary_classification(y_true, y_proba, threshold=0.5):
@@ -27,3 +30,33 @@ def evaluate_binary_classification(y_true, y_proba, threshold=0.5):
         "recall": recall_score(y_true, y_pred_binary, zero_division=0),
         "f1": f1_score(y_true, y_pred_binary, zero_division=0),
     }
+
+def evaluate_regression(y_true, y_pred, metric_names=None):
+    """
+    Evalúa métricas de regresión dinámicamente.
+
+    Args:
+        y_true: Valores reales.
+        y_pred: Predicciones del modelo.
+        metric_names: Lista de nombres de métricas. Ejemplo: ["mse", "mae", "r2"]
+
+    Returns:
+        dict con las métricas solicitadas.
+    """
+    available_metrics = {
+        "mse": mean_squared_error,
+        "mae": mean_absolute_error,
+        "r2": r2_score
+    }
+
+    # Si no se especifican métricas, usar todas
+    if not metric_names:
+        metric_names = list(available_metrics.keys())
+
+    results = {}
+    for name in metric_names:
+        metric_func = available_metrics.get(name)
+        if metric_func:
+            results[name] = metric_func(y_true, y_pred)
+
+    return results

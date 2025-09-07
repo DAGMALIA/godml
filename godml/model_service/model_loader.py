@@ -36,7 +36,7 @@ def register_adhoc_model(model_type: str, model_class: Type[BaseModel]) -> None:
     godml_logger.info(f"✅ Modelo ad-hoc '{model_type}' registrado")
 
 def load_custom_model_class(project_path: str, model_type: str, source: str = "core", 
-                          adhoc_model_class: Optional[Type[BaseModel]] = None) -> BaseModel:
+                        adhoc_model_class: Optional[Type[BaseModel]] = None) -> BaseModel:
     """
     Carga un modelo de forma segura.
     
