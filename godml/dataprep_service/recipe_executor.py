@@ -13,7 +13,7 @@ from .connectors.s3 import S3Connector
 
 # Transforms
 from .transforms.columns import DropColumns, Rename, SelectColumns
-from .transforms.types import SafeCast, CastTypes
+from .transforms.cast_types import SafeCast, CastTypes
 from .transforms.missing import FillNA, DropNA
 from .transforms.encode import OneHot, LabelEncode
 from .transforms.scale import StandardScale, MinMaxScale

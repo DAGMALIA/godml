@@ -1,0 +1,331 @@
+[
+  {
+    "summary": "Titanic dataset, target binario, columnas categóricas y numéricas con nulos",
+    "recipe": {
+      "inputs": [
+        {
+          "name": "raw",
+          "connector": "csv",
+          "uri": "inp"
+        }
+      ],
+      "steps": [
+        {
+          "op": "select",
+          "params": {
+            "columns": [
+              "Survived",
+              "Pclass",
+              "Sex",
+              "Age",
+              "SibSp",
+              "Parch",
+              "Fare",
+              "Embarked"
+            ]
+          }
+        },
+        {
+          "op": "safe_cast",
+          "params": {
+            "mapping": {
+              "Age": "float",
+              "Fare": "float"
+            }
+          }
+        },
+        {
+          "op": "fillna",
+          "params": {
+            "columns": {
+              "Age": 28.0,
+              "Embarked": "S"
+            }
+          }
+        },
+        {
+          "op": "one_hot",
+          "params": {
+            "columns": [
+              "Sex",
+              "Embarked"
+            ],
+            "drop_first": true
+          }
+        },
+        {
+          "op": "rename",
+          "params": {
+            "mapping": {
+              "Survived": "survived"
+            }
+          }
+        },
+        {
+          "op": "safe_cast",
+          "params": {
+            "mapping": {
+              "survived": "int"
+            }
+          }
+        },
+        {
+          "op": "drop_duplicates",
+          "params": {}
+        }
+      ],
+      "outputs": [
+        {
+          "name": "clean",
+          "connector": "csv",
+          "uri": "out"
+        }
+      ]
+    }
+  },
+  {
+    "summary": "Dataset de ventas en bruto sin target",
+    "recipe": {
+      "inputs": [
+        {
+          "name": "raw",
+          "connector": "csv",
+          "uri": "inp"
+        }
+      ],
+      "steps": [
+        {
+          "op": "safe_cast",
+          "params": {
+            "mapping": {
+              "precio": "float",
+              "cantidad": "int"
+            }
+          }
+        },
+        {
+          "op": "fillna",
+          "params": {
+            "columns": {
+              "precio": 0.0,
+              "cantidad": 0,
+              "region": "desconocida"
+            }
+          }
+        },
+        {
+          "op": "one_hot",
+          "params": {
+            "columns": [
+              "producto",
+              "region",
+              "vendedor"
+            ],
+            "drop_first": false
+          }
+        },
+        {
+          "op": "drop_duplicates",
+          "params": {}
+        }
+      ],
+      "outputs": [
+        {
+          "name": "clean",
+          "connector": "csv",
+          "uri": "out"
+        }
+      ]
+    }
+  },
+  {
+    "summary": "Dataset de ventas con target derivado (precio*cantidad>1000)",
+    "recipe": {
+      "inputs": [
+        {
+          "name": "raw",
+          "connector": "csv",
+          "uri": "inp"
+        }
+      ],
+      "steps": [
+        {
+          "op": "safe_cast",
+          "params": {
+            "mapping": {
+              "precio": "float",
+              "cantidad": "int"
+            }
+          }
+        },
+        {
+          "op": "fillna",
+          "params": {
+            "columns": {
+              "precio": 0.0,
+              "cantidad": 0,
+              "region": "desconocida"
+            }
+          }
+        },
+        {
+          "op": "derive",
+          "params": {
+            "column": "target",
+            "formula": "1 if (precio*cantidad) > 1000 else 0"
+          }
+        },
+        {
+          "op": "one_hot",
+          "params": {
+            "columns": [
+              "producto",
+              "region",
+              "vendedor"
+            ],
+            "drop_first": false
+          }
+        },
+        {
+          "op": "drop_duplicates",
+          "params": {}
+        }
+      ],
+      "outputs": [
+        {
+          "name": "clean",
+          "connector": "csv",
+          "uri": "out"
+        }
+      ]
+    }
+  },
+  {
+    "summary": "Dataset sencillo con color, edad, target binario",
+    "recipe": {
+      "inputs": [
+        {
+          "name": "raw",
+          "connector": "csv",
+          "uri": "inp"
+        }
+      ],
+      "steps": [
+        {
+          "op": "safe_cast",
+          "params": {
+            "mapping": {
+              "edad": "float"
+            }
+          }
+        },
+        {
+          "op": "fillna",
+          "params": {
+            "columns": {
+              "edad": 29.0,
+              "color": "desconocido"
+            }
+          }
+        },
+        {
+          "op": "one_hot",
+          "params": {
+            "columns": [
+              "color"
+            ],
+            "drop_first": false
+          }
+        },
+        {
+          "op": "drop_duplicates",
+          "params": {}
+        }
+      ],
+      "outputs": [
+        {
+          "name": "clean",
+          "connector": "csv",
+          "uri": "out"
+        }
+      ]
+    }
+  },
+  {
+    "summary": "Dataset de regresión con target ingresos, columnas region y genero",
+    "recipe": {
+      "inputs": [
+        {
+          "name": "raw",
+          "connector": "csv",
+          "uri": "inp"
+        }
+      ],
+      "steps": [
+        {
+          "op": "safe_cast",
+          "params": {
+            "mapping": {
+              "ingresos": "float"
+            }
+          }
+        },
+        {
+          "op": "fillna",
+          "params": {
+            "columns": {
+              "ingresos": 5000.0,
+              "region": "desconocida"
+            }
+          }
+        },
+        {
+          "op": "one_hot",
+          "params": {
+            "columns": [
+              "region",
+              "genero"
+            ],
+            "drop_first": true
+          }
+        },
+        {
+          "op": "drop_duplicates",
+          "params": {}
+        }
+      ],
+      "outputs": [
+        {
+          "name": "clean",
+          "connector": "csv",
+          "uri": "out"
+        }
+      ]
+    }
+  },
+  {
+    "summary": "Dataset simple con duplicados",
+    "recipe": {
+      "inputs": [
+        {
+          "name": "raw",
+          "connector": "csv",
+          "uri": "inp"
+        }
+      ],
+      "steps": [
+        {
+          "op": "drop_duplicates",
+          "params": {}
+        }
+      ],
+      "outputs": [
+        {
+          "name": "clean",
+          "connector": "csv",
+          "uri": "out"
+        }
+      ]
+    }
+  }
+]

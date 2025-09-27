@@ -18,10 +18,15 @@ from __future__ import annotations
 from joblib import dump, load
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence
+from godml.advisor_service.advisor_orchestrator import AdvisorOrchestrator
+from godml.advisor_service.doc_rag_advisor import DocRAGAdvisor
+from godml.advisor_service.metric_judge import MetricJudge
+from godml.advisor_service.llm_advisor import LLMAdvisor
 
 import pandas as pd
 import numpy as np
 import tempfile
+import json
 import yaml
 import importlib
 
@@ -752,3 +757,86 @@ def quick_train_yaml(model_type: str, hyperparameters: dict, yaml_path: str = ".
         return f"✅ Modelo {model_type} entrenado con configuración de {yaml_path}"
     except Exception as e:  # pragma: no cover
         return f"❌ Error: {e}"
+
+def advisor(df, target: str = None):
+    """Versión simple (sin RAG)"""
+    orchestrator = AdvisorOrchestrator(use_rag=False)
+    return orchestrator.analyze(df, target)
+
+def advisor_rag(df, target: str = None, derive_target: bool = False):
+    """Versión robusta con RAG de recetas"""
+    orchestrator = AdvisorOrchestrator(use_rag=True)
+    return orchestrator.analyze(df, target, derive_target)
+
+def doc_advisor(question: str):
+    """Asistente de documentación GODML con RAG"""
+    bot = DocRAGAdvisor()
+    return bot.ask(question)
+
+def metric_judge(X, y, task_type="classification"):
+    """
+    Evalúa qué métricas son más adecuadas para un dataset específico.
+    Usa MetricJudge internamente.
+    """
+    judge = MetricJudge()
+    return judge.suggest(X, y, task_type=task_type)
+
+
+def advisor_full_report(df, target: str = None, derive_target: bool = False):
+    """
+    Orquesta:
+        - MetricJudge → métricas recomendadas
+        - ModelSelector → modelos sugeridos
+        - HyperparamAdvisor → espacio de hiperparámetros
+        - DataQualityJudge → calidad de datos
+        - LLMAdvisor / RAG → receta DataPrep
+    Muestra el reporte completo en el notebook con formato bonito.
+    """
+    orch = AdvisorOrchestrator()
+    report = orch.analyze(df, target=target, derive_target=derive_target)
+
+    print("\n======================")
+    print("📊 GODML FULL REPORT")
+    print("======================")
+
+    # 1) Métricas
+    metrics = report.get("metrics", {})
+    print("\n=== Métricas ===")
+    print(f"🔎 Tipo de tarea: {metrics.get('task_type', 'N/A')}")
+    if "metrics" in metrics:
+        print("📌 Métricas recomendadas:", ", ".join(metrics["metrics"]))
+    if "recipe" in metrics:
+        print("📜 Receta mínima de DataPrep:")
+        print(json.dumps(metrics["recipe"], indent=2, ensure_ascii=False))
+
+    # 2) Modelos
+    print("\n=== Modelos sugeridos ===")
+    for i, model in enumerate(report.get("models", []), 1):
+        print(f"⚡ {i}. {model}")
+
+    # 3) Hyperparams
+    print("\n=== Espacio de hiperparámetros ===")
+    hyperparams = report.get("hyperparams", {})
+    if hyperparams:
+        for k, v in hyperparams.items():
+            print(f"  - {k}: {v}")
+    else:
+        print("  (ninguno sugerido)")
+
+    # 4) Calidad de datos
+    print("\n=== Calidad de datos ===")
+    quality = report.get("quality", {})
+    for k, v in quality.items():
+        print(f"  - {k}: {v}")
+
+    # 5) Receta LLM
+    print("\n=== Receta LLM (JSON para notebook) ===")
+    recipe_llm = report.get("recipe_llm", None)
+    if recipe_llm:
+        print(json.dumps(recipe_llm, indent=2, ensure_ascii=False))
+    else:
+        print("  (no generada)")
+
+    print("\n✅ Reporte completo generado.\n")
+
+    return report

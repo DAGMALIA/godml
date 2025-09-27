@@ -233,7 +233,7 @@ def init(project_name: str):
         logger.info("📋 Próximos pasos:")
         logger.info(f"   cd {sanitize_for_log(project_name)}")
         logger.info("   godml run -f godml.yml")
-        logger.info("   godml deploy dev")
+        logger.info(f"   godml deploy dev {sanitize_for_log(project_name)}")
 
     except PermissionError as e:
         logger.error(f"❌ Error de permisos: {sanitize_for_log(str(e))}")
