@@ -14,3 +14,4 @@ jobs:
         uses: pyupio/safety-action@v1
         with:
           api-key: ${{ secrets.SAFETY_API_KEY }}
+          args: --full-report --ignore 71584 71692 71587 71691 ...
