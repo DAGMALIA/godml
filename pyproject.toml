@@ -32,13 +32,15 @@ dependencies = [
   "scikit-learn>=1.5.0",
   "xgboost==3.0.2",
   "lightgbm==4.6.0",
-  "mlflow>=3.2.0", # Data Validation
+  "mlflow==3.4.0", # Data Validation
   "pydantic==2.11.7", # Utilities
   "pyyaml==6.0.2",
   "rich==14.0.0", # AWS SDK
   "boto3>=1.40.0",
   "sagemaker>=2.237.3",
-  "keras>=3.9.0",
+  "keras==3.9.0",
+  "joblib==1.5.2",
+  "fastapi==0.118.2",
 ]
 
 [project.scripts]
