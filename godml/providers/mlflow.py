@@ -5,7 +5,6 @@ import os
 import mlflow
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from godml import notebook_api as nb
 from godml.core_service.engine import BaseExecutor
 from godml.config_service.schema import PipelineDefinition
 from godml.model_service.model_loader import load_custom_model_class
@@ -48,6 +47,7 @@ class MLflowExecutor(BaseExecutor):
         return X, y
 
     def run(self, pipeline: PipelineDefinition):
+        from godml import notebook_api as nb 
         logger.info(f"🚀 Entrenando modelo con MLflow: {pipeline.name}")
     
         # -----------------------------

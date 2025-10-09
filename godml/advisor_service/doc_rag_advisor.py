@@ -9,7 +9,7 @@ class DocRAGAdvisor:
     def __init__(self,
                  model_name="mistral-7b-instruct-v0.2-code-ft.Q4_0.gguf",
                  model_path="C:/Users/arturo/.gpt4all/models",
-                 doc_index_path="godml_doc_index_curado_full.json"):
+                 doc_index_path="godml_doc_index.json"):
         # Inicializa modelo y carga índice
         self.model = GPT4All(model_name, model_path=model_path)
         with open(doc_index_path, "r", encoding="utf-8") as f:

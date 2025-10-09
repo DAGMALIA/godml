@@ -49,8 +49,12 @@ def _validate_docker_available() -> None:
 
 def _load_yaml_config(yaml_path: str) -> dict:
     """Carga y valida configuración YAML."""
-    if '..' in yaml_path or os.path.isabs(yaml_path):
+    if '..' in yaml_path:
         raise SecurityError("Ruta no permitida")
+
+    if os.path.isabs(yaml_path):
+        if not (yaml_path.startswith("/tmp/uploads") or yaml_path.startswith("/data")):
+            raise SecurityError(f"Ruta no permitida: {yaml_path}")
     
     safe_yaml_path = validate_safe_path(yaml_path)
     if not safe_yaml_path.exists():
@@ -88,8 +92,12 @@ def _validate_environment_vars(environment: str, host: str, port: str) -> tuple:
 def run(file: str = typer.Option(..., "--file", "-f", help="Ruta al archivo YAML")):
     """Ejecuta un pipeline GODML desde un archivo YAML."""
     try:
-        if '..' in file or os.path.isabs(file):
+        if '..' in file:
             raise SecurityError("Ruta no permitida")
+        
+        if os.path.isabs(file):
+            if not (file.startswith("/tmp/uploads") or file.startswith("/data")):
+                raise SecurityError(f"Ruta no permitida: {file}")
 
         yaml_path = validate_safe_path(file)
         print(f"📄 Usando archivo YAML: {yaml_path}")
