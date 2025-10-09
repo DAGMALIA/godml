@@ -38,7 +38,7 @@ dependencies = [
   "rich==14.0.0", # AWS SDK
   "boto3>=1.40.0",
   "sagemaker>=2.237.3",
-  "keras==3.9.0",
+  "keras==3.11.3",
   "joblib==1.5.2",
   "fastapi==0.118.2",
 ]
