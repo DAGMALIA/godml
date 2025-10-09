@@ -5,7 +5,6 @@ from godml.advisor_service.metric_judge import MetricJudge
 from godml.advisor_service.model_selector import ModelSelector
 from godml.advisor_service.hyperparam_advisor import HyperparamAdvisor
 from godml.advisor_service.data_quality_judge import DataQualityJudge
-from godml.advisor_service.rag_advisor import RAGAdvisor
 
 
 def _json_safe(obj):
@@ -21,7 +20,6 @@ class AdvisorOrchestrator:
         self.model_selector = ModelSelector()
         self.hyperparam_advisor = HyperparamAdvisor()
         self.data_quality = DataQualityJudge()
-        self.llm_advisor = RAGAdvisor() if use_rag else None
 
     def analyze(self, df, target: str = None, derive_target: bool = False):
         # 1) Calidad de datos

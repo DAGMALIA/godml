@@ -19,15 +19,15 @@ from joblib import dump, load
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 from godml.advisor_service.advisor_orchestrator import AdvisorOrchestrator
-from godml.advisor_service.doc_rag_advisor import DocRAGAdvisor
 from godml.advisor_service.metric_judge import MetricJudge
-from godml.advisor_service.llm_advisor import LLMAdvisor
+from godml.monitoring_service.logger import SecurityError
 
 import pandas as pd
 import numpy as np
 import tempfile
 import json
 import yaml
+import re
 import importlib
 
 # -----------------------------
@@ -107,14 +107,54 @@ _DEF_REGISTRY: Dict[str, str] = {
     "rf": "godml.model_service.model_registry.random_forest_model:RandomForestModel",
     "xgboost": "godml.model_service.model_registry.xgboost_model:XgboostModel",
     "xgb": "godml.model_service.model_registry.xgboost_model:XgboostModel",
+    "logistic_regression": "godml.model_service.model_registry.logistic_regression_model:LogisticRegressionModel",
+    "linear_regression": "godml.model_service.model_registry.linear_regression_model:LinearRegressionModel",
+    "lstm_forecast": "godml.model_service.model_registry.lstm_forecast_model:LSTMForecastModel"
 }
 
+# Whitelist de rutas permitidas
+SAFE_MODEL_REGISTRY = {
+    "godml.model_service.model_registry.random_forest_model:RandomForestModel": "random_forest",
+    "godml.model_service.model_registry.xgboost_model:XgboostModel": "xgboost", 
+    "godml.model_service.model_registry.logistic_regression_model:LogisticRegressionModel": "logistic_regression",
+    "godml.model_service.model_registry.linear_regression_model:LinearRegressionModel": "linear_regression",
+    "godml.model_service.model_registry.lstm_forecast_model:LSTMForecastModel": "lstm_forecast"
+}
 
-def _import_symbol(path: str) -> Any:
-
-    module_path, _, attr = path.partition(":")
-    mod = importlib.import_module(module_path)
-    return getattr(mod, attr)
+def _import_symbol_secure(path: str) -> Any:
+    """Importación segura usando mapeo estático - elimina CWE-94"""
+    if not path or not isinstance(path, str):
+        raise SecurityError("Ruta de importación debe ser una cadena no vacía")
+    
+    # Validar formato
+    if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_.]*:[a-zA-Z_][a-zA-Z0-9_]*$', path):
+        raise SecurityError(f"Formato de ruta inválido: {path}")
+    
+    # Solo permitir rutas en whitelist
+    if path not in SAFE_MODEL_REGISTRY:
+        available = ", ".join(SAFE_MODEL_REGISTRY.keys())
+        raise SecurityError(f"Ruta no permitida: {path}. Permitidas: {available}")
+    
+    # Mapeo estático seguro
+    model_type = SAFE_MODEL_REGISTRY[path]
+    
+    if model_type == "random_forest":
+        from godml.model_service.model_registry.random_forest_model import RandomForestModel
+        return RandomForestModel
+    elif model_type == "xgboost":
+        from godml.model_service.model_registry.xgboost_model import XgboostModel
+        return XgboostModel
+    elif model_type == "logistic_regression":
+        from godml.model_service.model_registry.logistic_regression_model import LogisticRegressionModel
+        return LogisticRegressionModel
+    elif model_type == "linear_regression":
+        from godml.model_service.model_registry.linear_regression_model import LinearRegressionModel
+        return LinearRegressionModel
+    elif model_type == "lstm_forecast":
+        from godml.model_service.model_registry.lstm_forecast_model import LSTMForecastModel
+        return LSTMForecastModel
+    else:
+        raise SecurityError(f"Modelo no implementado: {model_type}")
 
 
 def _fit_any(m, X, y, hyperparams: Dict[str, Any] | None = None):
@@ -231,7 +271,7 @@ def _get_model(model_type: str, **hyperparams):
         raise ValueError(
             f"Modelo no soportado: {model_type}. Disponibles: {sorted(set(_DEF_REGISTRY))}"
         )
-    cls = _import_symbol(_DEF_REGISTRY[key])
+    cls = _import_symbol_secure(_DEF_REGISTRY[key])
     # 1) intenta kwargs; 2) si falla, instancia vacío y aplica params
     try:
         return cls(**(hyperparams or {}))
@@ -500,10 +540,10 @@ def tune_model(
     AutoTuning con RandomizedSearchCV (por defecto).
     Retorna:
         {
-          "best_params": dict,
-          "best_score": float,
-          "cv_results": pd.DataFrame,
-          "best_estimator": fitted_estimator
+            "best_params": dict,
+            "best_score": float,
+            "cv_results": pd.DataFrame,
+            "best_estimator": fitted_estimator
         }
     """
     # Intento Optuna (fase 2)
@@ -768,11 +808,6 @@ def advisor_rag(df, target: str = None, derive_target: bool = False):
     orchestrator = AdvisorOrchestrator(use_rag=True)
     return orchestrator.analyze(df, target, derive_target)
 
-def doc_advisor(question: str):
-    """Asistente de documentación GODML con RAG"""
-    bot = DocRAGAdvisor()
-    return bot.ask(question)
-
 def metric_judge(X, y, task_type="classification"):
     """
     Evalúa qué métricas son más adecuadas para un dataset específico.
@@ -828,14 +863,6 @@ def advisor_full_report(df, target: str = None, derive_target: bool = False):
     quality = report.get("quality", {})
     for k, v in quality.items():
         print(f"  - {k}: {v}")
-
-    # 5) Receta LLM
-    print("\n=== Receta LLM (JSON para notebook) ===")
-    recipe_llm = report.get("recipe_llm", None)
-    if recipe_llm:
-        print(json.dumps(recipe_llm, indent=2, ensure_ascii=False))
-    else:
-        print("  (no generada)")
 
     print("\n✅ Reporte completo generado.\n")
 
