@@ -313,8 +313,10 @@ protobuf==4.25.8
     #   tensorflow-intel
 psutil==7.0.0
     # via sagemaker
-pyarrow==20.0.0
-    # via mlflow
+pyarrow==21.0.0
+    # via
+    #   godml (pyproject.toml)
+    #   mlflow
 pyasn1==0.6.1
     # via
     #   pyasn1-modules
@@ -340,6 +342,8 @@ pydantic-settings==2.11.0
     # via mcp
 pygments==2.19.2
     # via rich
+pymysql==1.1.2
+    # via godml (pyproject.toml)
 pyparsing==3.2.3
     # via matplotlib
 pyperclip==1.11.0
