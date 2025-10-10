@@ -14,8 +14,7 @@ classifiers = [
 ]
 description = "Governed, Observable & Declarative Machine Learning Framework"
 keywords = ["mlops", "machine learning", "framework", "governance", "observability", "mlflow"]
-license = {text = "Apache-2.0"}
-name = "godml"
+name = "godml-aeromex"
 readme = "README.md"
 requires-python = ">=3.8"
 version = "0.4.7"
