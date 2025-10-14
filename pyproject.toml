@@ -17,7 +17,7 @@ keywords = ["mlops", "machine learning", "framework", "governance", "observabili
 name = "godml-aeromex"
 readme = "README.md"
 requires-python = ">=3.8"
-version = "0.4.7"
+version = "1.0.0"
 
 dependencies = [
   # CLI & UX
