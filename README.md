@@ -3,11 +3,56 @@ Proyecto GODML - Machine Learning con Gobernanza**
 [![GODML](https://img.shields.io/badge/Powered%20by-GODML-blue.svg)](https://pypi.org/project/godml/)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Supply Chain Verified](https://img.shields.io/badge/Supply%20Chain-Verified%20by%20Sigstore-2ea44f?style=for-the-badge&logo=trustpilot&logoColor=white)](https://search.sigstore.dev/?logIndex=605629063)
+
+GODML adopta un enfoque de **cadena de suministro verificada**, con artefactos firmados de manera *keyless* mediante **Sigstore Cosign** y verificación automatizada en CI/CD.
+
+**Cumplimientos:**
+- 📜 SBOM firmado (SPDX)
+- 🧾 Provenance conforme a [SLSA v1](https://slsa.dev/)
+- 🔑 Certificados efímeros OIDC (GitHub Actions)
+- 🪶 Auditoría pública en [Rekor Transparency Log](https://search.sigstore.dev/?logIndex=605629063)
+
+**Archivos generados:**
+
+sbom.spdx.json
+sbom.spdx.sig
+sbom.spdx.crt
+sbom.spdx.bundle
+provenance.json
+provenance.sig
+provenance.crt
+provenance.bundle
+
+
+> 🔍 *Verificación reproducible:*
+> ```bash
+> cosign verify-blob \
+>   --bundle sbom.spdx.bundle \
+>   --certificate-identity-regexp "github.com/DAGMALIA" \
+>   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+>   sbom.spdx.json
+> ```
+
+---
+
+### 🧠 GODML Supply Chain Summary
+- ✅ SBOM y Provenance firmados y verificados
+- ✅ Transparencia auditada vía Rekor
+- ✅ Sin llaves locales (OIDC Keyless)
+- ✅ Compatible con GitHub Advanced Security
+
+---
+
+**Ver registro público:**  
+[🔗 Rekor entry #605629063 (SBOM)](https://search.sigstore.dev/?logIndex=605629063)  
+[🔗 Rekor entry #605629073 (Provenance)](https://search.sigstore.dev/?logIndex=605629073)
+
 
 > Proyecto de Machine Learning generado automáticamente con **GODML Framework** - Governed, Observable & Declarative ML
 
 ---
-            
+
 🎯 ¿Qué es este proyecto?
 Este proyecto fue generado con GODML , un framework que unifica:
 
