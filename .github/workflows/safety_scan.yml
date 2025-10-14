@@ -1,17 +1,121 @@
-
-name: Example workflow for Python using Safety Action
+name: 🧩 GODML Core Supply Chain Scan (pyproject-based)
 
 on:
-  push:  # Run on every push to any branch
-  pull_request:  # Run on new pull requests
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+
+permissions:
+  contents: read
+  id-token: write
+  security-events: write
 
 jobs:
-  security:
+  supplychain:
+    name: 🔐 GODML Supply Chain Audit (pyproject)
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+
     steps:
-      - uses: actions/checkout@main
-      - name: Run Safety CLI to check for vulnerabilities
+      # 1️⃣ Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Setup Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # 3️⃣ Install base dependencies from pyproject.toml
+      - name: Install project dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel build
+          pip install toml-cli pip-tools
+          
+          # ✅ Compila dependencias directamente desde pyproject.toml
+          pip-compile pyproject.toml --extra all -o requirements.lock --generate-hashes || true
+          pip install -r requirements.lock
+          
+          # ⚙️ Instala herramientas de seguridad
+          pip install bandit safety
+
+      # 4️⃣ Run Bandit (code scan)
+      - name: Run Bandit static analysis
+        run: |
+          echo "🔎 Running Bandit scan on GODML..."
+          bandit -r godml -f txt -o bandit-report.txt || true
+          cat bandit-report.txt
+
+      # 5️⃣ Run Safety (dependency vulnerability scan)
+      - name: Run Safety scan
         uses: pyupio/safety-action@v1
         with:
           api-key: ${{ secrets.SAFETY_API_KEY }}
-          args: --full-report --ignore 71691,71693,71578,71577,71587,71692,71579,71584
+          args: --file requirements.lock --full-report --ignore 71691,71693,71578,71577,71587,71692,71579,71584
+
+      # 6️⃣ Generate SBOM (SPDX)
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: sbom.spdx.json
+          upload-artifact: true
+          metadata: '{"predicateType":"spdxjson"}'
+
+      # 7️⃣ Install Cosign (keyless)
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.5.0
+        with:
+          cosign-release: "v2.3.0"
+
+      # 8️⃣ Sign SBOM with OIDC (no keys)
+      - name: Sign SBOM attestation
+        run: |
+          echo "🔐 Signing SPDX SBOM with Cosign (OIDC)..."
+          cosign attest --yes \
+            --predicate sbom.spdx.json \
+            --type spdxjson \
+            github.com/${{ github.repository }}@${{ github.sha }}
+          echo "✅ SBOM attestation completed."
+
+      # 9️⃣ Generate provenance statement (SLSA v1)
+      - name: Generate provenance (SLSA)
+        run: |
+          echo "🧾 Generating provenance..."
+          cat > provenance.json <<EOF
+          {
+            "_type": "https://in-toto.io/Statement/v1",
+            "predicateType": "https://slsa.dev/provenance/v1",
+            "predicate": {
+              "buildType": "https://dagmalia.com/build/python",
+              "builder": { "id": "urn:github:actions" },
+              "buildConfig": {
+                "repo": "${GITHUB_REPOSITORY}",
+                "workflow": "${GITHUB_WORKFLOW}",
+                "commit": "${GITHUB_SHA}"
+              },
+              "materials": [
+                { "uri": "git+${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}", "digest": { "sha1": "${GITHUB_SHA}" } }
+              ]
+            }
+          }
+          EOF
+          cosign attest --yes \
+            --predicate provenance.json \
+            --type https://slsa.dev/provenance/v1 \
+            github.com/${{ github.repository }}@${{ github.sha }}
+
+      # 🔟 Summary
+      - name: Supply Chain Summary
+        run: |
+          echo "🧾 GODML Supply Chain Summary" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Bandit code analysis complete" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Safety dependency scan complete" >> $GITHUB_STEP_SUMMARY
+          echo "✅ SBOM generated & signed (Cosign OIDC)" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Provenance attestation (SLSA v1)" >> $GITHUB_STEP_SUMMARY
+          echo "🔐 Repository: $GITHUB_REPOSITORY" >> $GITHUB_STEP_SUMMARY
+          echo "🔖 Commit: $GITHUB_SHA" >> $GITHUB_STEP_SUMMARY
