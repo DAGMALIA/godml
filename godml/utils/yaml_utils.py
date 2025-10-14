@@ -70,17 +70,17 @@ def generate_default_yaml(project_name: str) -> str:
         "dev": {
             "docker_tag": "godml:dev",
             "port": 8000,
-            "host": "0.0.0.0"
+            "host": "127.0.0.1"
         },
         "qa": {
             "docker_tag": "godml:qa",
             "port": 8080,
-            "host": "0.0.0.0"
+            "host": "127.0.0.1"
         },
         "prod": {
             "docker_tag": "godml:prod",
             "port": 80,
-            "host": "0.0.0.0"
+            "host": "127.0.0.1"
         }
     }
 
