@@ -134,7 +134,7 @@ godml.create_pipeline(
 )
 
 godml.train()
-godml.save_model(model_name="churn_rf", environment="experiments")
+godml.save_model(model, model_name="churn_rf", environment="experiments")
 
 ⚡ Entrenamiento rápido con una línea
 
