@@ -76,10 +76,10 @@ jobs:
       - name: Sign SBOM attestation
         run: |
           echo "🔐 Signing SPDX SBOM with Cosign (OIDC)..."
-          cosign attest --yes \
+          cosign sign-blob --yes \
             --predicate sbom.spdx.json \
-            --type spdxjson \
-            github.com/${{ github.repository }}@${{ github.sha }}
+            --output-signature sbom.spdx.sig \
+            sbom.spdx.json
           echo "✅ SBOM attestation completed."
 
       # 9️⃣ Generate provenance statement (SLSA v1)
