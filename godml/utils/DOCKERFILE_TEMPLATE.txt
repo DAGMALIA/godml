@@ -1,0 +1,28 @@
+# ⚡ 1. Usa imagen base optimizada
+FROM python:3.11-slim AS base
+
+# ⚡ 2. Crea entorno virtual (opcional pero mantiene limpio)
+ENV VIRTUAL_ENV=/opt/venv
+RUN python -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# ⚡ 3. Instala pip y compilers en el mismo RUN para evitar capas innecesarias
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential gcc libffi-dev libssl-dev curl && \
+    pip install --upgrade pip && \
+    apt-get remove -y gcc && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# ⚡ 4. Establece el directorio de trabajo
+WORKDIR /app
+
+# ⚡ 6. Instala godml
+RUN pip install godml
+
+# ⚡ 7. Copia únicamente el código necesario (no el root del proyecto si ya está en wheel)
+COPY models ./models
+COPY godml.yml .
+
+# ⚡ 8. Usa puerto explícito y comando robusto
+CMD ["sh", "-c", "uvicorn godml.deploy_service.server:app --host ${HOST} --port ${PORT}"]
