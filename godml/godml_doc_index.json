@@ -1,0 +1,597 @@
+[
+  {
+    "name": "train_model",
+    "path": "godml/notebook_api.py",
+    "signature": "train_model(model_type, X, y, hyperparams=None)",
+    "doc": "Entrena un modelo de GODML (random_forest, logistic_regression, etc.) con un dataset.",
+    "tags": [
+      "entrenar modelo",
+      "ajustar modelo",
+      "fit"
+    ],
+    "examples": [
+      ">>> from godml import notebook_api as nb\n>>> res = nb.train_model('random_forest', X, y, hyperparams={'n_estimators':100, 'max_depth':5})\n>>> print(res)"
+    ]
+  },
+  {
+    "name": "predict",
+    "path": "godml/notebook_api.py",
+    "signature": "predict(model, X)",
+    "doc": "Genera predicciones a partir de un modelo entrenado y un conjunto de datos.",
+    "tags": [
+      "predecir",
+      "inferir",
+      "predicciones"
+    ],
+    "examples": [
+      ">>> y_pred = nb.predict(res['model'], X_test)\n>>> print(y_pred[:5])"
+    ]
+  },
+  {
+    "name": "evaluate",
+    "path": "godml/notebook_api.py",
+    "signature": "evaluate(model, X, y, metrics)",
+    "doc": "Evalúa un modelo entrenado en un dataset con métricas definidas.",
+    "tags": [
+      "evaluar",
+      "accuracy",
+      "f1",
+      "auc"
+    ],
+    "examples": [
+      ">>> nb.evaluate(res['model'], X_test, y_test, metrics=['accuracy','f1'])"
+    ]
+  },
+  {
+    "name": "compare_models",
+    "path": "godml/notebook_api.py",
+    "signature": "compare_models(models, X, y, metrics)",
+    "doc": "Compara varios modelos en un mismo dataset con métricas seleccionadas.",
+    "tags": [
+      "comparar modelos",
+      "benchmark",
+      "ranking"
+    ],
+    "examples": [
+      ">>> results = nb.compare_models(['random_forest','logistic_regression'], X, y, metrics=['accuracy'])\n>>> print(results)"
+    ]
+  },
+  {
+    "name": "dataprep_run_inline",
+    "path": "godml/notebook_api.py",
+    "signature": "dataprep_run_inline(recipe)",
+    "doc": "Ejecuta una receta de DataPrep en memoria y devuelve un DataFrame limpio.",
+    "tags": [
+      "receta dataprep",
+      "pipeline de limpieza",
+      "preprocesamiento"
+    ],
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'drop_duplicates','params':{}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ]
+  },
+  {
+    "name": "evaluate_with_cv",
+    "path": "godml/utils/cross_validation.py",
+    "signature": "evaluate_with_cv(model_class, X, y, task_type, params, folds=5, random_state=42)",
+    "doc": "Evalúa un modelo con validación cruzada estratificada o normal.",
+    "tags": [
+      "validación cruzada",
+      "cross validation",
+      "evaluar con cv"
+    ],
+    "examples": [
+      ">>> from godml.utils.cross_validation import evaluate_with_cv\n>>> avg, folds = evaluate_with_cv(RandomForestModel, X, y, task_type='classification', params={'n_estimators':100})\n>>> print(avg)"
+    ]
+  },
+  {
+    "name": "OneHot",
+    "path": "godml/dataprep_service/transforms/encode.py",
+    "signature": "OneHot().apply(df, columns, drop_first=False)",
+    "doc": "Aplica codificación one-hot a columnas categóricas.",
+    "examples": [
+      ">>> OneHot().apply(df, columns=['color'], drop_first=True)"
+    ],
+    "tags": [
+      "dataprep",
+      "onehot",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "FillNA",
+    "path": "godml/dataprep_service/transforms/missing.py",
+    "signature": "FillNA().apply(df, columns, value)",
+    "doc": "Rellena valores nulos en columnas numéricas o categóricas.",
+    "examples": [
+      ">>> FillNA().apply(df, columns=['edad'], value=30)"
+    ],
+    "tags": [
+      "dataprep",
+      "fillna",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "DropDuplicates",
+    "path": "godml/dataprep_service/transforms/dedup.py",
+    "signature": "DropDuplicates().apply(df, subset=None)",
+    "doc": "Elimina filas duplicadas del DataFrame.",
+    "examples": [
+      ">>> DropDuplicates().apply(df)"
+    ],
+    "tags": [
+      "dataprep",
+      "dropduplicates",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "CSVConnector.read",
+    "path": "godml/dataprep_service/connectors/csv.py",
+    "signature": "CSVConnector().read(path)",
+    "doc": "Lee un archivo CSV como DataFrame.",
+    "examples": [
+      ">>> CSVConnector().read('data.csv')"
+    ],
+    "tags": [
+      "dataprep",
+      "csvconnector.read",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "CSVConnector.write",
+    "path": "godml/dataprep_service/connectors/csv.py",
+    "signature": "CSVConnector().write(df, path)",
+    "doc": "Escribe un DataFrame a CSV.",
+    "examples": [
+      ">>> CSVConnector().write(df, 'out.csv')"
+    ],
+    "tags": [
+      "dataprep",
+      "csvconnector.write",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "expect_non_null",
+    "path": "godml/dataprep_service/validators/expectations.py",
+    "signature": "expect_non_null(df, column)",
+    "doc": "Valida que una columna no tenga valores nulos.",
+    "examples": [
+      ">>> expect_non_null(df, 'edad')"
+    ],
+    "tags": [
+      "dataprep",
+      "expect_non_null",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "DropColumns",
+    "path": "godml/dataprep_service/transforms/columns.py",
+    "signature": "drop_columns(columns)",
+    "doc": "Elimina columnas específicas de un DataFrame.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'drop_columns','params':{'columns':['id']}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "dropcolumns",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "Rename",
+    "path": "godml/dataprep_service/transforms/columns.py",
+    "signature": "rename(mapping)",
+    "doc": "Renombra columnas de un DataFrame.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'rename','params':{'mapping':{'old':'new'}}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "rename",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "SelectColumns",
+    "path": "godml/dataprep_service/transforms/columns.py",
+    "signature": "select(columns)",
+    "doc": "Selecciona un subconjunto de columnas.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'select','params':{'columns':['id','value']}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "selectcolumns",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "DropDuplicates",
+    "path": "godml/dataprep_service/transforms/dedup.py",
+    "signature": "drop_duplicates(subset=None)",
+    "doc": "Elimina filas duplicadas.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'drop_duplicates','params':{}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "dropduplicates",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "LabelEncode",
+    "path": "godml/dataprep_service/transforms/encode.py",
+    "signature": "label_encode(columns)",
+    "doc": "Codifica variables categóricas como etiquetas numéricas.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'label_encode','params':{'columns':['color']}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "labelencode",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "OneHot",
+    "path": "godml/dataprep_service/transforms/encode.py",
+    "signature": "one_hot(columns, drop_first=False)",
+    "doc": "Codifica variables categóricas en variables dummy.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'one_hot','params':{'columns':['color'],'drop_first':True}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "onehot",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "DropNA",
+    "path": "godml/dataprep_service/transforms/missing.py",
+    "signature": "dropna(columns)",
+    "doc": "Elimina filas con valores nulos en columnas seleccionadas.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'dropna','params':{'columns':['edad']}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "dropna",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "FillNA",
+    "path": "godml/dataprep_service/transforms/missing.py",
+    "signature": "fillna(columns, value)",
+    "doc": "Rellena valores nulos en columnas numéricas o categóricas.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'fillna','params':{'columns':{'edad':30,'color':'rojo'}}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "fillna",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "OutlierFlag",
+    "path": "godml/dataprep_service/transforms/quality.py",
+    "signature": "outlier_flag(column)",
+    "doc": "Agrega una bandera para outliers en una columna.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'outlier_flag','params':{'column':'valor'}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "outlierflag",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "StandardScale",
+    "path": "godml/dataprep_service/transforms/scale.py",
+    "signature": "standard_scale(columns)",
+    "doc": "Estandariza columnas numéricas.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'standard_scale','params':{'columns':['valor']}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "standardscale",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "MinMaxScale",
+    "path": "godml/dataprep_service/transforms/scale.py",
+    "signature": "minmax_scale(columns)",
+    "doc": "Normaliza columnas numéricas a un rango [0,1].",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'minmax_scale','params':{'columns':['valor']}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "minmaxscale",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "Lower",
+    "path": "godml/dataprep_service/transforms/text.py",
+    "signature": "lower(column)",
+    "doc": "Convierte texto a minúsculas.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'lower','params':{'column':'nombre'}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "lower",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "Strip",
+    "path": "godml/dataprep_service/transforms/text.py",
+    "signature": "strip(column)",
+    "doc": "Elimina espacios en blanco al inicio y fin del texto.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'strip','params':{'column':'nombre'}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "strip",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "RegexReplace",
+    "path": "godml/dataprep_service/transforms/text.py",
+    "signature": "regex_replace(column, pattern, repl)",
+    "doc": "Reemplaza patrones en texto con regex.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'regex_replace','params':{'column':'texto','pattern':'hola','repl':'hi'}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "regexreplace",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "CastTypes",
+    "path": "godml/dataprep_service/transforms/cast_types.py",
+    "signature": "cast_types(columns)",
+    "doc": "Convierte tipos de columnas según un mapping.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'cast_types','params':{'columns':{'valor':'float'}}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "casttypes",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "Lag",
+    "path": "godml/dataprep_service/transforms/window.py",
+    "signature": "lag(column, window, func)",
+    "doc": "Crea variables rezagadas para series temporales.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'lag','params':{'column':'ventas','window':5,'func':'mean'}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_clean = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "lag",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "expect_non_null",
+    "path": "godml/dataprep_service/validators/expectations.py",
+    "signature": "expect_non_null(column)",
+    "doc": "Valida que una columna no tenga valores nulos.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'expect_non_null','params':{'columns':['edad']}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_checked = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "expect_non_null",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "expect_unique",
+    "path": "godml/dataprep_service/validators/expectations.py",
+    "signature": "expect_unique(column)",
+    "doc": "Valida que los valores de una columna sean únicos.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'expect_unique','params':{'columns':['id']}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_checked = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "expect_unique",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "expect_range",
+    "path": "godml/dataprep_service/validators/expectations.py",
+    "signature": "expect_range(column, min, max)",
+    "doc": "Valida que los valores de una columna estén en un rango.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'expect_range','params':{'column':'valor','min':0,'max':100}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_checked = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "expect_range",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "expect_regex",
+    "path": "godml/dataprep_service/validators/expectations.py",
+    "signature": "expect_regex(column, pattern)",
+    "doc": "Valida que los valores de una columna cumplan con una regex.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'expect_regex','params':{'column':'category','pattern':'[A-D]'}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_checked = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "expect_regex",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "check_types",
+    "path": "godml/dataprep_service/validators/schema_checks.py",
+    "signature": "check_types(columns)",
+    "doc": "Valida que las columnas tengan tipos esperados.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'check_types','params':{'columns':{'id':'int64','valor':'float'}}}],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df_checked = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "check_types",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "CSVConnector.read",
+    "path": "godml/dataprep_service/connectors/csv.py",
+    "signature": "CSVConnector.read(uri)",
+    "doc": "Lee un archivo CSV.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'csv','uri':'data.csv'}],\n    'steps':[],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "csvconnector.read",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "CSVConnector.write",
+    "path": "godml/dataprep_service/connectors/csv.py",
+    "signature": "CSVConnector.write(df, uri)",
+    "doc": "Escribe un DataFrame a CSV.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'drop_duplicates','params':{}}],\n    'outputs':[{'name':'clean','connector':'csv','uri':'out.csv'}]\n}\n>>> nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "csvconnector.write",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "ParquetConnector.read",
+    "path": "godml/dataprep_service/connectors/parquet.py",
+    "signature": "ParquetConnector.read(uri)",
+    "doc": "Lee un archivo Parquet.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'parquet','uri':'data.parquet'}],\n    'steps':[],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "parquetconnector.read",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "ParquetConnector.write",
+    "path": "godml/dataprep_service/connectors/parquet.py",
+    "signature": "ParquetConnector.write(df, uri)",
+    "doc": "Escribe un DataFrame a Parquet.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'drop_duplicates','params':{}}],\n    'outputs':[{'name':'clean','connector':'parquet','uri':'out.parquet'}]\n}\n>>> nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "parquetconnector.write",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "S3Connector.read",
+    "path": "godml/dataprep_service/connectors/s3.py",
+    "signature": "S3Connector.read(uri)",
+    "doc": "Lee un archivo desde S3.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'s3','uri':'s3://bucket/data.csv'}],\n    'steps':[],\n    'outputs':[{'name':'clean','connector':'dataframe'}]\n}\n>>> df = nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "s3connector.read",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "S3Connector.write",
+    "path": "godml/dataprep_service/connectors/s3.py",
+    "signature": "S3Connector.write(df, uri)",
+    "doc": "Escribe un DataFrame en S3.",
+    "examples": [
+      ">>> recipe = {\n    'inputs':[{'name':'raw','connector':'dataframe'}],\n    'steps':[{'op':'drop_duplicates','params':{}}],\n    'outputs':[{'name':'clean','connector':'s3','uri':'s3://bucket/out.csv'}]\n}\n>>> nb.dataprep_run_inline(recipe)"
+    ],
+    "tags": [
+      "dataprep",
+      "s3connector.write",
+      "transformación",
+      "limpieza"
+    ]
+  },
+  {
+    "name": "OpenLineageEmitter.emit",
+    "path": "godml/dataprep_service/lineage/openlineage_emitter.py",
+    "signature": "emit(event, payload)",
+    "doc": "Emite un evento de linaje con OpenLineage.",
+    "examples": [
+      ">>> nb.emit_lineage('READ', {'dataset':'data.csv'})"
+    ],
+    "tags": [
+      "dataprep",
+      "openlineageemitter.emit",
+      "transformación",
+      "limpieza"
+    ]
+  }
+]

@@ -57,43 +57,31 @@ def validate_safe_path(path: str, base_dir: Optional[str | Path] = None) -> Path
     if not isinstance(path, str) or not path.strip():
         raise SecurityError("Ruta inválida o vacía")
 
-    # VALIDACIÓN TEMPRANA de patrones peligrosos
-    if ".." in path or "\x00" in path:
-        raise SecurityError("Patrón peligroso detectado en ruta")
-    
-    # Evita caracteres de control y null bytes
-    if any(ord(c) < 32 for c in path):
-        raise SecurityError("Caracteres de control detectados")
-
-    # Normaliza a Path absoluto de forma segura
+    # Normaliza a Path absoluto (sin resolver errores si no existe el archivo)
     try:
-        p = Path(path).expanduser()
-        
-        # Validar componentes después de expanduser pero antes de resolve
-        if any(".." in part for part in p.parts):
-            raise SecurityError("Path traversal detectado en componentes")
-            
-        p = p.resolve()  # Sin strict=False para mayor seguridad
-        
+        p = Path(path).expanduser().resolve(strict=False)  # no falla si no existe
     except Exception as e:
         raise SecurityError(f"No se pudo normalizar la ruta: {e}")
 
-    # Si se define base_dir, validación robusta de contención
+    # Políticas de entrada (opcional endurecimiento)
+    # Evita caracteres de control y null bytes
+    if any(ord(c) < 32 for c in path) or "\x00" in path:
+        raise SecurityError("Caracteres de control o null byte detectados")
+
+    # Si se define base_dir, exige contención
     if base_dir:
+        base = Path(base_dir).expanduser().resolve(strict=True)
         try:
-            base = Path(base_dir).expanduser().resolve()
-            
-            # Método más robusto que relative_to()
-            try:
-                # Verificar que p esté dentro de base usando commonpath
-                common = Path(os.path.commonpath([str(base), str(p)]))
-                if common != base:
-                    raise SecurityError("Ruta fuera del directorio permitido")
-            except (ValueError, OSError):
-                raise SecurityError("Ruta fuera del directorio permitido")
-                
-        except Exception as e:
-            raise SecurityError(f"Error validando directorio base: {e}")
+            p.relative_to(base)
+        except ValueError:
+            raise SecurityError("Ruta fuera del directorio permitido")
+
+    # Evita traversal basado en la entrada original (defensa en profundidad)
+    # Nota: resolve() ya neutraliza .. y ~, esto es extra-cautela
+    dangerous_tokens = [".."]
+    if any(tok in Path(path).parts for tok in dangerous_tokens):
+        # Usar parts evita falsos positivos en nombres tipo "data..csv"
+        raise SecurityError("Path traversal detectado en la ruta de entrada")
 
     return p
 
