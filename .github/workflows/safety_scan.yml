@@ -74,6 +74,8 @@ jobs:
           echo "🔐 Signing SBOM with Cosign..."
           cosign sign-blob --yes \
             --output-signature sbom.spdx.sig \
+            --bundle sbom.spdx.bundle \
+            --output-certificate sbom.spdx.crt \
             sbom.spdx.json
           echo "✅ SBOM signed successfully."
 
@@ -102,8 +104,11 @@ jobs:
 
           cosign sign-blob --yes \
             --output-signature provenance.sig \
+            --bundle provenance.bundle \
+            --output-certificate provenance.crt \
             provenance.json
           echo "✅ Provenance signed successfully."
+
 
       # 🔟 Upload artifacts (reports + signatures)
       - name: Upload supply chain artifacts
@@ -114,8 +119,12 @@ jobs:
             bandit-report.txt
             sbom.spdx.json
             sbom.spdx.sig
+            sbom.spdx.crt
+            sbom.spdx.bundle
             provenance.json
             provenance.sig
+            provenance.crt
+            provenance.bundle
 
       # 1️⃣1️⃣ Summary
       - name: Supply Chain Summary
@@ -126,3 +135,21 @@ jobs:
           echo "✅ SBOM generated & signed (OIDC keyless)" >> $GITHUB_STEP_SUMMARY
           echo "✅ Provenance (SLSA v1) generated & signed" >> $GITHUB_STEP_SUMMARY
           echo "🔖 Commit: $GITHUB_SHA" >> $GITHUB_STEP_SUMMARY
+
+      # 1️⃣2️⃣ Verify integrity (optional, recommended)
+      - name: Verify SBOM & Provenance integrity
+        run: |
+          echo "🧠 Verifying SBOM and provenance signatures..."
+          cosign verify-blob \
+            --bundle sbom.spdx.bundle \
+            --certificate-identity-regexp "github.com/DAGMALIA" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            sbom.spdx.json
+
+          cosign verify-blob \
+            --bundle provenance.bundle \
+            --certificate-identity-regexp "github.com/DAGMALIA" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            provenance.json
+
+          echo "✅ Verified: both SBOM and provenance signatures are valid and auditable via Rekor log."
