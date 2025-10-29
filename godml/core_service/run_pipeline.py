@@ -16,7 +16,7 @@ def display_pipeline_summary(info, metrics):
     """Salida final del pipeline GODML sin Rich, usando el logger limpio."""
     godml_logger.info("\n╭─────────────────────────── GODML ────────────────────────────╮")
     godml_logger.info("│ 🤖 GODML PIPELINE EXECUTION                                  │")
-    godml_logger.info("│ Governed, Observable & Declarative Machine Learning (v1.0.1) │")
+    godml_logger.info("│ Governed, Observable & Declarative Machine Learning (v1.0.2) │")
     godml_logger.info("╰─────────────────────── Dagmalia Labs ────────────────────────╯")
 
     godml_logger.info("\n📄 YAML Configuration")
@@ -63,7 +63,7 @@ def run_pipeline(config_path="godml.yml"):
     try:
         godml_logger.info("\n╭─────────────────────────── GODML ────────────────────────────╮")
         godml_logger.info("│ 🚀 STARTING PIPELINE EXECUTION                              │")
-        godml_logger.info("│ Governed, Observable & Declarative Machine Learning (v1.0.1) │")
+        godml_logger.info("│ Governed, Observable & Declarative Machine Learning (v1.0.2) │")
         godml_logger.info("╰─────────────────────── Dagmalia Labs ────────────────────────╯")
 
         godml_logger.info(f"\n📄 Usando archivo de configuración: {config_path}")

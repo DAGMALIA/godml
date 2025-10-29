@@ -66,9 +66,9 @@ Dynamic: license-file
 
 ---
 
-## 🚀 GODML v1.0.1 — *Stable Governance Release*
+## 🚀 GODML v1.0.2 — *Stable Governance Release*
 
-La versión 1.0.1 marca un **hito en la madurez del framework**, incorporando trazabilidad completa, publicación verificada en PyPI y una cadena de suministro auditada mediante **Sigstore + SLSA**.
+La versión 1.0.2 marca un **hito en la madurez del framework**, incorporando trazabilidad completa, publicación verificada en PyPI y una cadena de suministro auditada mediante **Sigstore + SLSA**.
 
 ### 🧩 Características clave
 - ✅ Framework **estable y modular**

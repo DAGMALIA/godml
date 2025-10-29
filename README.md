@@ -9,9 +9,9 @@
 
 ---
 
-## 🚀 GODML v1.0.1 — *Stable Governance Release*
+## 🚀 GODML v1.0.2 — *Stable Governance Release*
 
-La versión 1.0.1 marca un **hito en la madurez del framework**, incorporando trazabilidad completa, publicación verificada en PyPI y una cadena de suministro auditada mediante **Sigstore + SLSA**.
+La versión 1.0.2 marca un **hito en la madurez del framework**, incorporando trazabilidad completa, publicación verificada en PyPI y una cadena de suministro auditada mediante **Sigstore + SLSA**.
 
 ### 🧩 Características clave
 - ✅ Framework **estable y modular**
@@ -301,23 +301,13 @@ Project Management
 ```bash
 godml init <project-name>              # Initialize new project
 godml run -f <config.yml>              # Execute pipeline
-godml validate -f <config.yml>         # Validate configuration
 ```
 
-Model Management
-
-```bash
-godml model list --env=production      # List models by environment
-godml model promote <name> --to=prod   # Promote model between environments
-godml model rollback <name> --version=1.2  # Rollback to previous version
-```
 
 Deployment
 
 ```bash
 godml deploy <project> <env>           # Deploy to environment
-godml scale <deployment> --replicas=5  # Scale deployment
-godml logs <service> --follow          # View service logs
 ```
 
 🌐 Cloud Deployment
