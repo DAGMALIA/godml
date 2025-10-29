@@ -56,8 +56,7 @@ jobs:
             --file requirements.lock
             --full-report
             --ignore
-            71691,71693,71578,71577,71587,71692,71579,71584,
-            71701,71703,71706,71707  # MLflow 3.4.0 vulnerabilities (no known fix)
+            71691,71693,71578,71577,71587,71692,71579,71584,71701,71703,71706,71707
           output-format: screen
       # 🧾 Security Justification
       # MLflow 3.4.0 mantiene vulnerabilidades reportadas sin fix disponible.
