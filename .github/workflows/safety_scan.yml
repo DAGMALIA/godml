@@ -3,8 +3,6 @@ name: 🚀 GODML Stable Release & Supply Chain (v1.0.0)
 on:
   push:
     branches: ['main']
-  pull_request:
-    branches: ['main']
   workflow_dispatch:
 
 permissions:
