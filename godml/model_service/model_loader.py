@@ -11,11 +11,9 @@ from godml.monitoring_service.logger import SecurityError, ModelLoadError, godml
 CORE_MODEL_REGISTRY = {
     'random_forest': 'godml.model_service.model_registry.random_forest_model',
     'xgboost': 'godml.model_service.model_registry.xgboost_model',
-    'lightgbm': 'godml.model_service.model_registry.lightgbm_model',
+    'lstm_forecast': 'godml.model_service.model_registry.lstm_forecast_model',
     'linear_regression': 'godml.model_service.model_registry.linear_regression_model',
-    'logistic_regression': 'godml.model_service.model_registry.logistic_regression_model',
-    'svm': 'godml.model_service.model_registry.svm_model',
-    'neural_network': 'godml.model_service.model_registry.neural_network_model'
+    'logistic_regression': 'godml.model_service.model_registry.logistic_regression_model'
 }
 
 # Registry dinámico para modelos ad-hoc

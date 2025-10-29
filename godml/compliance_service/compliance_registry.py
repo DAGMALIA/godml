@@ -10,7 +10,7 @@ class ComplianceRegistry:
     """
 
     _registry: Dict[str, Type[BaseCompliance]] = {
-        "pci-dss": PciDssCompliance,
+        "pci-dss": PciDssCompliance
     }
 
     @classmethod

@@ -1,3 +1,60 @@
+Metadata-Version: 2.4
+Name: godml
+Version: 1.0.1
+Summary: Governed, Observable & Declarative Machine Learning Framework
+Author-email: Arturo Gutierrez Rubio Rojas <agtzrubio@dagmalia.com>
+Maintainer-email: Arturo Gutierrez Rubio Rojas <agtzrubio@dagmalia.com>
+License: MIT
+Project-URL: Documentation, https://godmlcore.com
+Project-URL: Homepage, https://godmlcore.com
+Project-URL: PyPI, https://pypi.org/project/godml/
+Project-URL: SLSA Framework, https://slsa.dev/
+Project-URL: Supply Chain Verified, https://search.sigstore.dev/?q=DAGMALIA
+Keywords: mlops,machine learning,framework,governance,observability,mlflow,sagemaker,dagmalia,supply-chain-security,slsa,cosign,sigstore
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Software Development :: Libraries :: Application Frameworks
+Classifier: Operating System :: OS Independent
+Classifier: Typing :: Typed
+Classifier: Natural Language :: English
+Classifier: Natural Language :: Spanish
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+License-File: LICENSE_REPORT.md
+Requires-Dist: typer==0.12.3
+Requires-Dist: click==8.1.3
+Requires-Dist: protobuf>=4.25.8
+Requires-Dist: tensorflow==2.17.1
+Requires-Dist: urllib3<3,>=2.5.0
+Requires-Dist: pandas==2.3.0
+Requires-Dist: numpy<2.0,>=1.24.0
+Requires-Dist: scikit-learn>=1.5.0
+Requires-Dist: xgboost==3.0.2
+Requires-Dist: lightgbm==4.6.0
+Requires-Dist: mlflow==3.4.0
+Requires-Dist: pydantic==2.11.7
+Requires-Dist: pyyaml==6.0.2
+Requires-Dist: rich==14.0.0
+Requires-Dist: boto3>=1.40.0
+Requires-Dist: sagemaker==2.237.3
+Requires-Dist: keras==3.11.3
+Requires-Dist: joblib==1.5.2
+Requires-Dist: fastapi==0.118.2
+Requires-Dist: pyarrow==21.0.0
+Requires-Dist: pymysql==1.1.2
+Requires-Dist: gpt4all==2.8.2
+Provides-Extra: api
+Requires-Dist: fastapi; extra == "api"
+Requires-Dist: uvicorn[standard]; extra == "api"
+Requires-Dist: joblib; extra == "api"
+Dynamic: license-file
+
 # 🤖 GODML — Governed, Observable & Declarative Machine Learning  
 **Framework de MLOps con Gobernanza, Trazabilidad y Supply Chain Verificada**
 
@@ -301,13 +358,23 @@ Project Management
 ```bash
 godml init <project-name>              # Initialize new project
 godml run -f <config.yml>              # Execute pipeline
+godml validate -f <config.yml>         # Validate configuration
 ```
 
+Model Management
+
+```bash
+godml model list --env=production      # List models by environment
+godml model promote <name> --to=prod   # Promote model between environments
+godml model rollback <name> --version=1.2  # Rollback to previous version
+```
 
 Deployment
 
 ```bash
 godml deploy <project> <env>           # Deploy to environment
+godml scale <deployment> --replicas=5  # Scale deployment
+godml logs <service> --follow          # View service logs
 ```
 
 🌐 Cloud Deployment

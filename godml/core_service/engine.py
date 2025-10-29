@@ -5,6 +5,7 @@ from typing import Union
 from abc import ABC, abstractmethod
 from godml.config_service.schema import PipelineDefinition, ModelResult
 
+
 class BaseExecutor(ABC):
     @abstractmethod
     def run(self, pipeline: PipelineDefinition) -> Union[ModelResult, bool, None]:

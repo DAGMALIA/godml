@@ -3,28 +3,55 @@ build-backend = "setuptools.build_meta"
 requires = ["setuptools>=78.1.1", "wheel"]
 
 [project]
-authors = [{name = "Arturo Gutierrez Rubio Rojas", email = "arubior@aeromexico.com"}]
-classifiers = [
-  "Development Status :: 4 - Beta",
-  "Intended Audience :: Developers",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Topic :: Scientific/Engineering :: Artificial Intelligence",
-  "Topic :: Software Development :: Libraries :: Application Frameworks",
-]
 description = "Governed, Observable & Declarative Machine Learning Framework"
-keywords = ["mlops", "machine learning", "framework", "governance", "observability", "mlflow"]
+license = {text = "MIT"}
 name = "godml"
 readme = "README.md"
-requires-python = ">=3.8"
-version = "1.0.0"
+requires-python = ">=3.11"
+version = "1.0.2"
+
+authors = [{name = "Arturo Gutierrez Rubio Rojas", email = "agtzrubio@dagmalia.com"}]
+
+maintainers = [
+  {name = "Arturo Gutierrez Rubio Rojas", email = "agtzrubio@dagmalia.com"},
+]
+
+keywords = [
+  "mlops",
+  "machine learning",
+  "framework",
+  "governance",
+  "observability",
+  "mlflow",
+  "sagemaker",
+  "dagmalia",
+  "supply-chain-security",
+  "slsa",
+  "cosign",
+  "sigstore",
+]
+
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Software Development :: Libraries :: Application Frameworks",
+  "Operating System :: OS Independent",
+  "Typing :: Typed",
+  "Natural Language :: English",
+  "Natural Language :: Spanish",
+]
 
 dependencies = [
   # CLI & UX
   "typer==0.12.3",
   "click==8.1.3", # Explicit, aunque typer ya lo incluye
   "protobuf>=4.25.8",
-  "tensorflow==2.17.1",
+  "tensorflow==2.18.0",
   "urllib3>=2.5.0,<3", # Core ML
   "pandas==2.3.0",
   "numpy>=1.24.0,<2.0",
@@ -42,10 +69,18 @@ dependencies = [
   "fastapi==0.118.2",
   "pyarrow==21.0.0",
   "pymysql==1.1.2 ",
+  "gpt4all==2.8.2",
 ]
 
 [project.scripts]
 godml = "godml.godml_cli:main"
+
+[project.urls]
+"Documentation" = "https://godmlcore.com"
+"Homepage" = "https://godmlcore.com"
+"PyPI" = "https://pypi.org/project/godml/"
+"SLSA Framework" = "https://slsa.dev/"
+"Supply Chain Verified" = "https://search.sigstore.dev/?q=DAGMALIA"
 
 [project.optional-dependencies]
 api = ["fastapi", "uvicorn[standard]", "joblib"]

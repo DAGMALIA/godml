@@ -11,7 +11,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-__version__ = "1.0.0"
+__version__ = "1.0.2"
 
 __all__ = [
     "GodmlNotebook", 

@@ -156,12 +156,133 @@ train_from_yaml("godml.yml")
 
 ---
 
-## 📚 Recursos
+# 🧠 GODML Deployment API — Endpoints Documentation
 
-- [GODML en PyPI](https://pypi.org/project/godml/)
-- Documentación oficial (próximamente)
-- Guía de gobernanza (en construcción)
+**Servicio:** `deploy_service/server.py`  
+**Entorno:** `GODML_ENV = dev | qa | prod`  
+**Base URL (local):** `http://127.0.0.1:8000`
 
 ---
 
-Generado con ❤️ por **GODML Framework v0.3.0**
+## 📋 Overview
+
+Esta API expone un microservicio de inferencia para modelos entrenados con **GODML**.  
+Está construida con **FastAPI**, lo que permite compatibilidad nativa con OpenAPI (Swagger UI).
+
+El servicio se adapta según el entorno:
+| Entorno | Características |
+|:--|:--|
+| **dev** | Logs detallados, CORS activo, endpoint `/debug/config` habilitado |
+| **qa** | Similar a dev, sin autoreload |
+| **prod** | Logs JSON minimalistas, CORS desactivado, `/debug/config` deshabilitado |
+
+---
+
+## ⚡ Endpoints principales
+
+### 1️⃣ `/predict`
+**Método:** `POST`  
+**Descripción:** Ejecuta una predicción con el modelo cargado.  
+**Headers:**  
+`Content-Type: application/json`  
+---
+
+### 2️⃣ `/health`
+**Método:** `GET`  
+**Descripción:** Verifica la salud general del servicio.  
+Usado para *health checks* de Docker, ECS o SageMaker.
+
+---
+
+### 3️⃣ `/metadata`
+**Método:** `GET`  
+**Descripción:** Devuelve metadatos del modelo actual.
+
+---
+
+### 4️⃣ `/version`
+**Método:** `GET`  
+**Descripción:** Devuelve las versiones del servicio y del framework GODML.
+
+
+---
+
+## 🧩 Endpoints adicionales
+
+### `/docs`
+**Método:** `GET`  
+**Descripción:** Interfaz Swagger UI autogenerada para pruebas manuales.  
+**Ruta:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+---
+
+### `/openapi.json`
+**Método:** `GET`  
+**Descripción:** Esquema OpenAPI para integraciones y generación de SDKs.  
+**Ruta:** [http://127.0.0.1:8000/openapi.json](http://127.0.0.1:8000/openapi.json)
+
+---
+
+### `/debug/config` *(solo en dev o qa)*
+**Método:** `GET`  
+**Descripción:** Endpoint de diagnóstico.  
+**Solo disponible cuando** `GODML_ENV=dev` o `qa`.
+
+
+---
+
+## 🩺 Healthcheck Docker/ECS
+
+Puedes agregar esta validación en tu `Dockerfile` o ECS Task Definition:
+```dockerfile
+HEALTHCHECK CMD curl -f http://localhost:8000/health || exit 1
+```
+
+---
+
+## 🧠 Notas técnicas
+
+| Campo | Descripción |
+|:--|:--|
+| `GODML_ENV` | Controla el modo de ejecución (`dev`, `qa`, `prod`) |
+| `MODE` | Se usa internamente por el entrypoint de la imagen base |
+| `PORT` | Puerto expuesto por FastAPI (por defecto 8000) |
+| `models/dev/model.pkl` | Ruta del modelo cargado por el servicio |
+| `godml.yml` | Archivo de configuración del pipeline GODML |
+
+---
+
+## 🧱 Ejemplo de ejecución local
+
+```bash
+docker run -p 8000:8000   -e GODML_ENV=dev   -v $(pwd):/app   godml:dev
+```
+
+Y luego prueba los endpoints:
+```
+http://127.0.0.1:8000/health
+http://127.0.0.1:8000/predict
+http://127.0.0.1:8000/docs
+```
+
+---
+
+## 🧩 Recursos relacionados
+- [Repositorio GODML en GitHub](https://github.com/dagmalia/godml)
+- [Documentación oficial FastAPI](https://fastapi.tiangolo.com/)
+- [Dagmalia AI Platform](https://dagmalia.com)
+
+---
+
+## 📚 Recursos
+
+- [GODML en PyPI](https://pypi.org/project/godml/)
+- Documentación oficial (https://godmlcore.com/)
+- Guía de gobernanza (en construcción)
+
+--
+
+© 2025 **godmlcore** — Arquitectura GODML
+Creado por [Arturo Gutiérrez Rubio R.](mailto:agtzrubio@dagmalia.com)
+
+                      Generado con ❤️ por **GODML Framework v1.0.0**

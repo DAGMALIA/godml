@@ -89,37 +89,36 @@ def _run_validations(df: pd.DataFrame, validations):
 # ---------------------------
 # Compliance Hook (PCI-DSS)
 # ---------------------------
-
 def _apply_compliance(df: pd.DataFrame, governance: Optional[Dict[str, Any]]) -> pd.DataFrame:
     """
     Aplica compliance si governance.compliance está configurado.
-    Actualmente soporta 'pci-dss' usando tu clase PciDssCompliance.
+    Soporta 'pci-dss' y lee la política del YAML (mask_sensitive, drop_sensitive, hash_sensitive).
     """
     if not governance:
         return df
-    standard = governance.get("compliance")
+
+    standard = str(governance.get("compliance", "")).strip().lower()
     if not standard:
         return df
 
-    standard = str(standard).lower().strip()
     if standard != "pci-dss":
-        # Futuras normas podrían mapearse aquí
         emit("COMPLIANCE_SKIPPED", {"reason": f"standard '{standard}' no soportado aún"})
         return df
 
     try:
-        # Import perezoso para no acoplar si no se usa compliance
-        from godml.compliance_service.pci_dss import PciDssCompliance  # <- tu clase
+        from godml.compliance_service.pci_dss import PciDssCompliance
     except Exception as e:
         raise RuntimeError(
             "Compliance 'pci-dss' solicitado, pero no se pudo importar "
             "godml.compliance_service.pci_dss.PciDssCompliance."
         ) from e
 
-    engine = PciDssCompliance()
-    emit("COMPLIANCE_APPLY", {"standard": "pci-dss"})
+    policy = str(governance.get("policy", "mask_sensitive")).strip().lower()
+    engine = PciDssCompliance(policy=policy)
+    emit("COMPLIANCE_APPLY", {"standard": "pci-dss", "policy": policy})
     out = engine.apply(df.copy())
     return out
+
 
 # ---------------------------
 # Preview & Run
