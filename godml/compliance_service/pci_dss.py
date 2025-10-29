@@ -1,73 +1,94 @@
-# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# Copyright (c) 2024
 # Licensed under the MIT License
 
 import pandas as pd
 from .base_compliance import BaseCompliance
+from .pii_detector import PiiDetector
 from .compliance_utils import (
     hash_sha256,
+    hash_truncated,
     mask_string,
     mask_email,
     mask_zip_code,
-    mask_date
+    mask_date,
+    is_pii_column,
 )
 
-
-PII_DETECTORS = {
-    "card_number": lambda val: isinstance(val, str) and val.isdigit() and 12 <= len(val) <= 19,
-    "email": lambda val: isinstance(val, str) and "@" in val and "." in val,
-    "cvv": lambda val: isinstance(val, str) and len(val) in (3, 4) and val.isdigit(),
-    "expiration_date": lambda val: isinstance(val, str) and any(sep in val for sep in ["/", "-"]),
-    "zip_code": lambda val: isinstance(val, str) and val.isdigit() and len(val) in (5, 9),
-    "dob": lambda val: isinstance(val, str) and any(sep in val for sep in ["-", "/"]),
-    "ssn": lambda val: isinstance(val, str) and len(val) == 11 and val[3] == "-" and val[6] == "-",
-    "name": lambda val: isinstance(val, str) and val.istitle() and " " in val,
-    "address": lambda val: isinstance(val, str) and any(x in val.lower() for x in ["street", "ave", "blvd", "road", "calle"])
-}
-
-
-PII_MASKERS = {
-    "card_number": lambda val: mask_string(val, num_visible=4),
-    "email": mask_email,
-    "cvv": lambda _: None,
-    "expiration_date": lambda _: "MM/YY",
-    "name": hash_sha256,
-    "address": hash_sha256,
-    "zip_code": mask_zip_code,
-    "ssn": hash_sha256,
-    "dob": mask_date,
-}
-
-
 class PciDssCompliance(BaseCompliance):
+    """
+    PCI-DSS Compliance:
+      - Detecta PII por contenido (PiiDetector) y por nombre de columna (heurística).
+      - Aplica política configurable:
+          * 'drop_sensitive'  -> elimina columnas PII
+          * 'mask_sensitive'  -> enmascara (emails, zip, fechas) o mascara genérica
+          * 'hash_sensitive'  -> hashing irreversible (sha256 truncado por defecto)
+    """
+
+    def __init__(self, policy: str = "mask_sensitive", hash_len: int = 12):
+        self.policy = (policy or "mask_sensitive").strip().lower()
+        self.hash_len = hash_len
+        self.detector = PiiDetector()
+
+    def _mask_col(self, series: pd.Series, pii_type: str) -> pd.Series:
+        # Regla específica según tipo
+        if pii_type == "email":
+            return series.apply(mask_email)
+        if pii_type in {"zip_code", "zip"}:
+            return series.apply(mask_zip_code)
+        if pii_type in {"dob", "expiration_date", "date"}:
+            return series.apply(mask_date)
+        # Fallback masking genérico
+        return series.apply(lambda v: mask_string(str(v), num_prefix=2))
+
+    def _hash_col(self, series: pd.Series) -> pd.Series:
+        return series.apply(lambda v: hash_truncated(v, self.hash_len))
+
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+        if df is None or df.empty:
+            return df
+
         df = df.copy()
 
+        # 1) Detección por contenido (muestra)
+        detected_content = self.detector.detect_all(df)  # dict: col -> pii_type
+
+        # 2) Detección por nombre (heurística)
+        detected_name = {col: "name_heuristic" for col in df.columns if is_pii_column(col)}
+
+        # Unimos resultados: preferimos el tipo del detector de contenido
+        detected = dict(detected_name, **detected_content)
+
+        if not detected:
+            print("🔒 [PCI-DSS] No se detectaron columnas PII.")
+            return df
+
+        print(f"🔒 [PCI-DSS] Columnas PII detectadas: {list(detected.keys())}")
         columns_to_drop = []
 
-        for col in df.columns:
-            col_lower = col.lower()
+        for col, content_type in detected.items():
+            # Normalizamos tipo: si vino de heurística de nombre, intentamos clasificar
+            pii_type = detected_content.get(col, None) or content_type
 
-            if "card" in col_lower:
-                df[col] = df[col].apply(lambda x: mask_string(x, num_visible=4))
-            elif "cvv" in col_lower:
+            if self.policy == "drop_sensitive":
                 columns_to_drop.append(col)
-            elif "expiration" in col_lower or "exp" in col_lower:
-                df[col] = df[col].apply(lambda x: "MM/YY")
-            elif "name" in col_lower:
-                df[col] = df[col].apply(hash_sha256)
-            elif "email" in col_lower:
-                df[col] = df[col].apply(mask_email)
-            elif "address" in col_lower:
-                df[col] = df[col].apply(hash_sha256)
-            elif "zip" in col_lower or "postal" in col_lower:
-                df[col] = df[col].apply(mask_zip_code)
-            elif "ssn" in col_lower:
-                df[col] = df[col].apply(hash_sha256)
-            elif "dob" in col_lower or "birth" in col_lower:
-                df[col] = df[col].apply(mask_date)
+            elif self.policy == "mask_sensitive":
+                # Si no se pudo clasificar por contenido, aplica máscara genérica
+                if pii_type in {None, "unknown", "name_heuristic"}:
+                    df[col] = df[col].apply(lambda v: mask_string(str(v), num_prefix=2))
+                else:
+                    df[col] = self._mask_col(df[col], pii_type)
+            elif self.policy == "hash_sensitive":
+                df[col] = self._hash_col(df[col])
+            else:
+                # Política desconocida => por seguridad, hasheamos
+                df[col] = self._hash_col(df[col])
 
-        # 🔥 Ejecutar drop fuera del bucle
+        # Ejecuta drops al final para evitar conflictos
         if columns_to_drop:
-            df.drop(columns=columns_to_drop, inplace=True)
+            df.drop(columns=columns_to_drop, inplace=True, errors="ignore")
+            print(f"🧹 [PCI-DSS] Columnas eliminadas por política: {columns_to_drop}")
 
         return df
+
+    def describe(self) -> str:
+        return "PCI-DSS Compliance: PII masking/hash/drop with mixed detection (content + name heuristic)."

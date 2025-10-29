@@ -7,20 +7,43 @@ description = "Governed, Observable & Declarative Machine Learning Framework"
 license = {text = "MIT"}
 name = "godml"
 readme = "README.md"
-requires-python = ">=3.8"
-version = "1.0.0"
+requires-python = ">=3.11"
+version = "1.0.1"
 
-authors = [{name = "Arturo Gutierrez Rubio Rojas", email = "arubior@aeromexico.com"}]
+authors = [{name = "Arturo Gutierrez Rubio Rojas", email = "agtzrubio@dagmalia.com"}]
 
-keywords = ["mlops", "machine learning", "framework", "governance", "observability", "mlflow"]
+maintainers = [
+  {name = "Arturo Gutierrez Rubio Rojas", email = "agtzrubio@dagmalia.com"},
+]
+
+keywords = [
+  "mlops",
+  "machine learning",
+  "framework",
+  "governance",
+  "observability",
+  "mlflow",
+  "sagemaker",
+  "dagmalia",
+  "supply-chain-security",
+  "slsa",
+  "cosign",
+  "sigstore",
+]
 
 classifiers = [
-  "Development Status :: 4 - Beta",
+  "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
-  "Programming Language :: Python :: 3.10",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
   "Topic :: Software Development :: Libraries :: Application Frameworks",
+  "Operating System :: OS Independent",
+  "Typing :: Typed",
+  "Natural Language :: English",
+  "Natural Language :: Spanish",
 ]
 
 dependencies = [
@@ -46,10 +69,18 @@ dependencies = [
   "fastapi==0.118.2",
   "pyarrow==21.0.0",
   "pymysql==1.1.2 ",
+  "gpt4all==2.8.2",
 ]
 
 [project.scripts]
 godml = "godml.godml_cli:main"
+
+[project.urls]
+"Documentation" = "https://godmlcore.com"
+"Homepage" = "https://godmlcore.com"
+"PyPI" = "https://pypi.org/project/godml/"
+"SLSA Framework" = "https://slsa.dev/"
+"Supply Chain Verified" = "https://search.sigstore.dev/?q=DAGMALIA"
 
 [project.optional-dependencies]
 api = ["fastapi", "uvicorn[standard]", "joblib"]

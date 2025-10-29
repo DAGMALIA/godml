@@ -1,61 +1,57 @@
-# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
-# Licensed under the MIT License
-# compliance_service/compliance_utils.py
-
 import hashlib
+import pandas as pd
 
-def hash_sha256(value: str) -> str:
-    """
-    Aplica hashing SHA-256 a una cadena de texto.
-    """
-    if not value:
-        return ""
-    return hashlib.sha256(str(value).encode()).hexdigest()
 
-def mask_string(value: str, num_visible: int = 4, mask_char: str = "*") -> str:
-    """
-    Enmascara una cadena dejando visibles los últimos `num_visible` caracteres.
-    """
-    if not value:
+def hash_sha256(value) -> str:
+    if value is None:
         return ""
-    value = str(value)
-    visible = value[-num_visible:] if num_visible < len(value) else value
-    masked = mask_char * max(len(value) - num_visible, 0)
-    return masked + visible
+    return hashlib.sha256(str(value).encode("utf-8")).hexdigest()
+
+
+def hash_truncated(value, length: int = 12) -> str:
+    return hash_sha256(value)[:max(1, int(length))]
+
+
+def mask_string(value: str, num_prefix: int = 2, num_suffix: int = 0, mask_char: str = "*") -> str:
+    if value is None:
+        return ""
+    s = str(value)
+    if len(s) <= (num_prefix + num_suffix):
+        return mask_char * len(s)
+    middle_len = len(s) - num_prefix - num_suffix
+    return s[:num_prefix] + (mask_char * middle_len) + (s[-num_suffix:] if num_suffix > 0 else "")
+
 
 def mask_email(email: str) -> str:
-    """
-    Enmascara un correo dejando la primera letra del nombre y el dominio.
-    """
-    if not email or "@" not in str(email):
+    if not email:
         return ""
-    name, domain = str(email).split("@", 1)
-    visible = name[:1] if name else ""
-    masked = "*" * (len(name) - 1) if len(name) > 1 else ""
-    return f"{visible}{masked}@{domain}"
+    email = str(email)
+    if "@" not in email:
+        return mask_string(email, num_prefix=2)
+    user, domain = email.split("@", 1)
+    user_mask = mask_string(user, num_prefix=2)
+    return f"{user_mask}@{domain}"
 
-def mask_zip_code(zip_code: str) -> str:
-    """
-    Enmascara código postal dejando solo los primeros 2 dígitos visibles.
-    """
-    if not zip_code:
-        return ""
-    zip_code = str(zip_code)
-    return zip_code[:2] + "*" * max(len(zip_code) - 2, 0)
 
-def mask_date(date_str: str) -> str:
-    """
-    Enmascara completamente una fecha.
-    """
-    if not date_str:
+def mask_zip_code(zip_code) -> str:
+    if zip_code is None:
         return ""
+    s = str(zip_code)
+    return s[:2] + "*" * max(0, len(s) - 2)
+
+
+def mask_date(date_str) -> str:
+    if date_str is None:
+        return ""
+    s = str(date_str)
+    if len(s) >= 4 and s[:4].isdigit():
+        return s[:4] + "-**-**"
     return "****-**-**"
 
+
 def is_pii_column(col_name: str) -> bool:
-    """
-    Detección básica de columnas con datos sensibles (PII) por nombre.
-    """
     if not col_name:
         return False
-    pii_keywords = ["name", "email", "address", "ssn", "card", "cvv", "zip", "dob"]
-    return any(k in col_name.lower() for k in pii_keywords)
+    pii_keywords = ["name", "email", "address", "ssn", "card", "cvv", "zip", "postal", "dob", "birth"]
+    lower = col_name.lower()
+    return any(k in lower for k in pii_keywords)

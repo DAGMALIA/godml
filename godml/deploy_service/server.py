@@ -1,171 +1,167 @@
 # deploy_service/server.py
 
 from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import joblib
-import pandas as pd
+import joblib, pandas as pd, inspect, os, time, json, xgboost as xgb
 from pathlib import Path
-import inspect
-import os
-from xgboost import DMatrix
-import xgboost as xgb
 from godml.monitoring_service.logger import godml_logger, SecurityError
 
-app = FastAPI()
+# ==========================================================
+# 🌎 ENTORNO ACTUAL
+# ==========================================================
+ENVIRONMENT = os.getenv("GODML_ENV", "dev").lower()
+IS_DEV = ENVIRONMENT in ("dev", "qa")
 
+# ==========================================================
+# ⚙️ CONFIGURACIÓN FASTAPI
+# ==========================================================
+app = FastAPI(
+    title=f"GODML Model API ({ENVIRONMENT})",
+    version="1.1.0",
+    description="Microservicio de inferencia robusto para GODML",
+)
+
+# CORS solo en entornos de desarrollo
+if IS_DEV:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+# ==========================================================
+# 📦 MODEL UTILITIES
+# ==========================================================
 class InputData(BaseModel):
     data: dict
 
 def find_model_file() -> Path:
-    """
-    Busca el archivo de modelo en el directorio correcto del proyecto.
-    """
-    try:
-        # Buscar desde el directorio de trabajo actual
-        current_dir = Path.cwd()
-        
-        # Obtener ambiente desde variable de entorno
-        environment = os.getenv("GODML_ENV", "dev")
-        
-        # Buscar solo en el ambiente especificado
-        search_paths = [
-            current_dir / "models" / environment,  # Ambiente específico
-            current_dir / "models"                 # Fallback general
-        ]
-        
-        godml_logger.info(f"🔍 Buscando modelo para ambiente '{environment}' desde: {current_dir}")
-        
-        for search_path in search_paths:
-            if search_path.exists():
-                godml_logger.info(f"📂 Revisando directorio: {search_path}")
-                
-                # Buscar archivos de modelo
-                model_patterns = ["*.pkl", "*model*", "*.joblib", "*.pickle"]
-                
-                for pattern in model_patterns:
-                    for model_file in search_path.glob(pattern):
-                        if model_file.is_file():
-                            godml_logger.info(f"📦 Modelo encontrado: {model_file}")
-                            return model_file
-        
-        # Si no encuentra nada, mostrar información de debug
-        godml_logger.error("❌ No se encontró modelo en ninguna ubicación")
-        godml_logger.error("📍 Directorio actual: {current_dir}")
-        godml_logger.error("📂 Directorios buscados:")
-        for path in search_paths:
-            exists = "✅" if path.exists() else "❌"
-            godml_logger.error(f"   {exists} {path}")
-            
-        raise FileNotFoundError("No se encontró ningún archivo de modelo")
-        
-    except Exception as e:
-        godml_logger.error(f"❌ Error buscando modelo: {e}")
-        raise
+    """Busca el archivo del modelo para el entorno actual"""
+    current_dir = Path.cwd()
+    search_paths = [current_dir / "models" / ENVIRONMENT, current_dir / "models"]
+    for path in search_paths:
+        if not path.exists():
+            continue
+        for pattern in ["*.pkl", "*.joblib", "*.model", "*.pickle"]:
+            for model_file in path.glob(pattern):
+                return model_file
+    raise FileNotFoundError(f"No se encontró modelo para {ENVIRONMENT}")
 
 def validate_model_path(model_path: Path) -> None:
-    """Valida que el path del modelo sea seguro"""
-    try:
-        resolved_path = model_path.resolve()
-        current_dir = Path.cwd().resolve()
-        
-        # Verificar que el modelo esté en el directorio del proyecto
-        if not str(resolved_path).startswith(str(current_dir)):
-            raise SecurityError("El modelo debe estar en el directorio del proyecto")
-            
-        if not resolved_path.exists():
-            raise FileNotFoundError(f"Archivo de modelo no existe: {resolved_path}")
-            
-        if not resolved_path.is_file():
-            raise ValueError(f"Path no es un archivo: {resolved_path}")
-            
-    except Exception as e:
-        raise SecurityError(f"Error validando path del modelo: {e}")
+    resolved = model_path.resolve()
+    base = Path.cwd().resolve()
+    if not str(resolved).startswith(str(base)):
+        raise SecurityError("Ruta del modelo fuera del proyecto")
+    if not resolved.exists() or not resolved.is_file():
+        raise FileNotFoundError(f"Archivo de modelo inválido: {resolved}")
 
+# ==========================================================
+# ⚡ CARGA DE MODELO
+# ==========================================================
 @app.on_event("startup")
 def load_model():
     try:
-        godml_logger.info("🚀 Iniciando carga del modelo...")
-        
-        # Buscar modelo
+        godml_logger.info(f"🚀 Iniciando carga de modelo en {ENVIRONMENT.upper()}")
         model_path = find_model_file()
-        
-        # Validar seguridad del path
         validate_model_path(model_path)
-        
-        # Cargar modelo
-        try:
-            app.state.model = joblib.load(model_path)
-            godml_logger.info(f"✅ Modelo cargado correctamente desde: {model_path}")
-        except Exception as e:
-            godml_logger.error(f"❌ Error cargando archivo del modelo: {e}")
-            raise RuntimeError(f"Error cargando modelo: {e}")
-            
+        app.state.model = joblib.load(model_path)
+        godml_logger.info(f"✅ Modelo cargado: {model_path}")
     except Exception as e:
-        godml_logger.error(f"❌ Error en startup del servidor: {e}")
-        raise RuntimeError(str(e))
+        godml_logger.error(f"⚠️ Error al cargar modelo: {e}")
+        app.state.model = None  # Permite dry-run (CI/CD)
 
+# ==========================================================
+# 🧠 ENDPOINT DE INFERENCIA
+# ==========================================================
 @app.post("/predict")
 def predict(input_data: InputData, request: Request):
+    start = time.time()
     try:
-        # Validar que el modelo esté cargado
-        if not hasattr(request.app.state, 'model') or request.app.state.model is None:
+        model = getattr(request.app.state, "model", None)
+        if model is None:
             raise HTTPException(status_code=500, detail="Modelo no cargado")
-            
-        model = request.app.state.model
-        
-        # Validar entrada
-        if not input_data.data:
-            raise HTTPException(status_code=400, detail="Datos de entrada vacíos")
-            
+
         df = pd.DataFrame([input_data.data])
-        godml_logger.info("📥 Input recibido:")
-        godml_logger.info(str(df))
 
-        try:
-            # Detectar tipo de modelo y predecir
-            sig = inspect.signature(model.predict)
-            params = sig.parameters
+        expected_features = getattr(model, "feature_names", None)
+        if expected_features:
+            missing = [f for f in expected_features if f not in df.columns]
+            if missing:
+                raise HTTPException(status_code=400, detail=f"Faltan columnas: {missing}")
 
-            if "data" in params or isinstance(model, xgb.Booster):
-                godml_logger.info("🔎 Detectado modelo XGBoost nativo (usa DMatrix)")
-                
-                if hasattr(model, 'feature_names') and model.feature_names:
-                    expected_features = model.feature_names
-                    df = df[expected_features]
-                    
-                dmatrix = xgb.DMatrix(df)
-                prediction = model.predict(dmatrix)
-            else:
-                godml_logger.info("🔎 Modelo sklearn o pipeline")
-                prediction = model.predict(df)
+        sig = inspect.signature(model.predict)
+        if "data" in sig.parameters or isinstance(model, xgb.Booster):
+            dmatrix = xgb.DMatrix(df)
+            prediction = model.predict(dmatrix)
+        else:
+            prediction = model.predict(df)
 
-            # Convertir predicción a formato serializable
-            if hasattr(prediction, 'tolist'):
-                prediction_result = prediction.tolist()
-            else:
-                prediction_result = list(prediction) if hasattr(prediction, '__iter__') else [prediction]
+        result = prediction.tolist() if hasattr(prediction, "tolist") else [float(prediction)]
+        latency = round(time.time() - start, 4)
+        godml_logger.info(f"✅ Predicción en {latency}s -> {result}")
+        return {"prediction": result, "latency": latency}
 
-            return {"prediction": prediction_result}
-
-        except Exception as e:
-            godml_logger.error(f"❌ Error durante predicción: {str(e)}")
-            raise HTTPException(status_code=400, detail=f"Error en predicción: {str(e)}")
-            
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        raise e
     except Exception as e:
-        godml_logger.error(f"❌ Error inesperado en predict: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error interno del servidor")
+        godml_logger.error(f"❌ Error en predict: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
+# ==========================================================
+# ❤️ HEALTH, METADATA & VERSION
+# ==========================================================
 @app.get("/health")
 def health_check():
-    """Endpoint de salud del servicio"""
+    model_loaded = getattr(app.state, "model", None) is not None
+    return {
+        "status": "healthy" if model_loaded else "degraded",
+        "environment": ENVIRONMENT,
+        "model_loaded": model_loaded,
+    }
+
+@app.get("/metadata")
+def metadata():
+    model = getattr(app.state, "model", None)
+    features = getattr(model, "feature_names", [])
+    return {"status": "ok", "environment": ENVIRONMENT, "features": features}
+
+@app.get("/version")
+def version():
+    return {
+        "godml_version": os.getenv("GODML_VERSION", "dev"),
+        "service_version": "1.1.0",
+        "environment": ENVIRONMENT,
+    }
+
+# ==========================================================
+# 🧩 MANEJO GLOBAL DE ERRORES Y MÉTRICAS
+# ==========================================================
+@app.middleware("http")
+async def timing_and_logging(request: Request, call_next):
+    start = time.time()
     try:
-        model_loaded = hasattr(app.state, 'model') and app.state.model is not None
+        response = await call_next(request)
+        duration = round(time.time() - start, 4)
+        response.headers["X-Response-Time"] = str(duration)
+        if IS_DEV:
+            godml_logger.info(f"📡 {request.method} {request.url.path} - {duration}s")
+        return response
+    except Exception as exc:
+        godml_logger.error(f"🔥 Error inesperado: {exc}")
+        return JSONResponse(status_code=500, content={"detail": str(exc)})
+
+# ==========================================================
+# 🧰 ENDPOINT SOLO DEV: /debug/config
+# ==========================================================
+if IS_DEV:
+    @app.get("/debug/config")
+    def debug_config():
+        """Dev-only endpoint para validar entorno"""
         return {
-            "status": "healthy" if model_loaded else "unhealthy",
-            "model_loaded": model_loaded,
-            "working_directory": str(Path.cwd())
+            "environment": ENVIRONMENT,
+            "cwd": str(Path.cwd()),
+            "model_loaded": getattr(app.state, "model", None) is not None,
         }
-    except Exception as e:
-        return {"status": "error", "error": str(e)}

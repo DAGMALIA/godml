@@ -130,6 +130,8 @@ google-pasta==0.2.0
     # via
     #   sagemaker
     #   tensorflow-intel
+gpt4all==2.8.2
+    # via godml (pyproject.toml)
 graphene==3.4.3
     # via mlflow
 graphql-core==3.2.6
@@ -382,6 +384,7 @@ requests==2.32.5
     # via
     #   databricks-sdk
     #   docker
+    #   gpt4all
     #   mlflow-skinny
     #   sagemaker
     #   tensorflow-intel
@@ -464,7 +467,9 @@ termcolor==3.1.0
 threadpoolctl==3.6.0
     # via scikit-learn
 tqdm==4.67.1
-    # via sagemaker
+    # via
+    #   gpt4all
+    #   sagemaker
 typer==0.12.3
     # via godml (pyproject.toml)
 typing-extensions==4.14.1
