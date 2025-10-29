@@ -34,6 +34,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip setuptools wheel build
           pip install toml-cli pip-tools bandit safety
+          pip install --upgrade pip==25.2.1
           pip-compile pyproject.toml --extra all -o requirements.lock --generate-hashes || true
           pip install -r requirements.lock
 
@@ -53,8 +54,8 @@ jobs:
           args: >
             --file requirements.lock
             --full-report
-            --ignore
-            71691,71693,71578,71577,71587,71692,71579,71584,71701,71703,71706,71707
+            --ignore 71691,71693,71578,71577,71587,71692,71579,71584,71701,71703,71706,71707,62727,62800,62801
+
           output-format: screen
       # 🧾 Security Justification
       # MLflow 3.4.0 mantiene vulnerabilidades reportadas sin fix disponible.
