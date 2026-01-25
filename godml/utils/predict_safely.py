@@ -1,7 +1,12 @@
 from sklearn.base import BaseEstimator
 from xgboost import Booster as XGBBooster, DMatrix as XGBDMatrix
 from lightgbm import Booster as LGBMBooster
-from tensorflow.keras.models import Model as KerasModel
+try:
+    # Compatibilidad con TensorFlow < 2.17
+    from tensorflow.keras.models import Model as KerasModel
+except ModuleNotFoundError:
+    # Compatibilidad con TensorFlow >= 2.17 (Keras 3)
+    from keras.models import Model as KerasModel
 from godml.monitoring_service.logger import PredictionError
 
 def predict_safely(model, input_data):

@@ -9,7 +9,12 @@ from sklearn.base import BaseEstimator
 from godml.monitoring_service.logger import get_logger
 from xgboost import Booster as XGBBooster
 from lightgbm import Booster as LGBMBooster
-from tensorflow.keras.models import Model as KerasModel
+try:
+    # Compatibilidad con TensorFlow < 2.17
+    from tensorflow.keras.models import Model as KerasModel
+except ModuleNotFoundError:
+    # Compatibilidad con TensorFlow >= 2.17 (Keras 3)
+    from keras.models import Model as KerasModel
 
 
 logger = get_logger()
