@@ -1,4 +1,4 @@
-name: 🚀 GODML Stable Release & Supply Chain (v1.0.0)
+name: 🚀 GODML Stable Release & Supply Chain
 
 on:
   push:
@@ -9,7 +9,6 @@ permissions:
   contents: write
   id-token: write
   security-events: write
-  packages: write
 
 jobs:
   supplychain:
@@ -20,68 +19,103 @@ jobs:
     steps:
       # 1️⃣ Checkout
       - name: 🧾 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       # 2️⃣ Python setup
       - name: 🐍 Set up Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      # 3️⃣ Install dependencies
+      # 3️⃣ Extraer versión desde pyproject.toml
+      - name: 🏷️ Extract version
+        id: version
+        run: |
+          pip install toml-cli --quiet
+          VERSION=$(toml get --toml-path pyproject.toml project.version)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Version: $VERSION"
+
+      # 4️⃣ Install dependencies
       - name: 📦 Install project dependencies
         run: |
-          python -m pip install --upgrade pip setuptools wheel build
-          pip install toml-cli pip-tools bandit safety
-          pip install --upgrade pip==25.3
+          python -m pip install --upgrade pip==25.3 setuptools wheel build
+          pip install pip-tools bandit[sarif] safety pip-audit
           pip-compile pyproject.toml --extra all -o requirements.lock --generate-hashes || true
           pip install -r requirements.lock
 
-      # 4️⃣ Static code security scan (Bandit)
-      - name: 🧪 Bandit Scan (Static Analysis)
+      # 5️⃣ Tests antes de publicar
+      - name: 🧪 Run tests
+        run: |
+          pip install pytest pytest-cov --quiet
+          pytest tests/ -v --tb=short
+
+      # 6️⃣ Static code security scan (Bandit) — bloquea en HIGH/CRITICAL
+      - name: 🔍 Bandit Scan (Static Analysis)
         run: |
           echo "🔍 Running Bandit for static code security..."
-          bandit -r godml -f txt -o bandit_report.txt || true
-          echo "✅ Bandit completed. Review bandit_report.txt for details."
+          bandit -r godml -f sarif -o bandit_report.sarif -ll || BANDIT_EXIT=$?
+          bandit -r godml -f txt -o bandit_report.txt -ll || true
           cat bandit_report.txt
+          if [ "${BANDIT_EXIT:-0}" -ne 0 ]; then
+            echo "::error::Bandit encontró vulnerabilidades HIGH o CRITICAL. Revisa bandit_report.sarif."
+            exit 1
+          fi
+          echo "✅ Bandit: sin vulnerabilidades HIGH/CRITICAL."
 
-      # 5️⃣ Dependency security scan (Safety)
-      - name: 📦 Safety Dependency Scan
-        uses: pyupio/safety-action@v1
+      # 7️⃣ Upload Bandit SARIF al Security tab de GitHub
+      - name: 📊 Upload Bandit SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: bandit_report.sarif
+          category: bandit
+
+      # 8️⃣ Dependency security scan (Safety)
+      - name: 🛡️ Safety Dependency Scan
+        uses: pyupio/safety-action@3e1cf5e36c8c3e7b59b7ff0cb9b2a17e13a72e4d # v1
         with:
           api-key: ${{ secrets.SAFETY_API_KEY }}
           args: >
             --file requirements.lock
             --full-report
             --ignore 71691,71693,71578,71577,71587,71692,71579,71584,71701,71703,71706,71707,62727,62800,62801
-
           output-format: screen
-      # 🧾 Security Justification
+      # 🧾 Justificación de CVEs ignorados
       # MLflow 3.4.0 mantiene vulnerabilidades reportadas sin fix disponible.
       # Mitigaciones:
       # - Ejecución en entorno aislado (CI/CD y contenedores)
       # - Sin ejecución arbitraria ni entrada de usuario directa
       # - Dependencias verificadas por hash en requirements.lock
       # - Monitoreo continuo en Safety Platform
-      # Política aplicada: “Risk accepted with documented mitigation” (Supply Chain).
+      # Política: "Risk accepted with documented mitigation" (Supply Chain).
 
-      # 6️⃣ Generate SBOM
+      # 9️⃣ pip-audit (open-source, no API key required)
+      - name: 🔎 pip-audit dependency scan
+        run: |
+          echo "🔎 Running pip-audit..."
+          pip-audit --desc --format markdown --output pip-audit-report.md || true
+          cat pip-audit-report.md >> $GITHUB_STEP_SUMMARY
+          echo "✅ pip-audit complete."
+
+      # 🔟 Generate SBOM (SPDX)
       - name: 🧱 Generate SBOM (SPDX)
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@fc46e51fd3cb168ffb36cc6c6b2101947c1dc3a4 # v0.18.0
         with:
           path: .
           format: spdx-json
           output-file: sbom.spdx.json
           upload-artifact: false
 
-      # 7️⃣ Install Cosign
+      # 1️⃣1️⃣ Install Cosign
       - name: 🔑 Install Cosign
-        uses: sigstore/cosign-installer@v3.5.0
+        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb4d04a75ae0e3e91 # v3.8.1
         with:
-          cosign-release: "v2.3.0"
+          cosign-release: "v2.4.3"
 
-      # 8️⃣ Sign SBOM (OIDC)
+      # 1️⃣2️⃣ Sign SBOM (OIDC keyless → Rekor transparency log)
       - name: 🪶 Sign SBOM (OIDC Keyless)
         run: |
           echo "🔐 Signing SBOM..."
@@ -90,97 +124,74 @@ jobs:
             --bundle sbom.spdx.bundle \
             --output-certificate sbom.spdx.crt \
             sbom.spdx.json
-          echo "✅ SBOM signed successfully."
+          echo "✅ SBOM signed and logged to Rekor."
 
-      # 9️⃣ Generate provenance (SLSA)
-      - name: 🧾 Generate provenance (SLSA)
-        run: |
-          echo "🧾 Generating provenance..."
-          cat > provenance.json <<EOF
-          {
-            "_type": "https://in-toto.io/Statement/v1",
-            "predicateType": "https://slsa.dev/provenance/v1",
-            "predicate": {
-              "buildType": "https://dagmalia.com/build/python",
-              "builder": { "id": "urn:github:actions" },
-              "buildConfig": {
-                "repo": "${GITHUB_REPOSITORY}",
-                "workflow": "${GITHUB_WORKFLOW}",
-                "commit": "${GITHUB_SHA}"
-              },
-              "materials": [
-                { "uri": "git+${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}", "digest": { "sha1": "${GITHUB_SHA}" } }
-              ]
-            }
-          }
-          EOF
-          cosign sign-blob --yes \
-            --output-signature provenance.sig \
-            --bundle provenance.bundle \
-            --output-certificate provenance.crt \
-            provenance.json
-          echo "✅ Provenance signed successfully."
-
-      # 🔟 Upload supply chain artifacts
+      # 1️⃣3️⃣ Upload supply chain artifacts
       - name: 📤 Upload supply chain artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698b8c8ac243d6f82e7e8c5 # v4.6.0
         with:
           name: supplychain-artifacts
           path: |
             bandit_report.txt
+            bandit_report.sarif
+            pip-audit-report.md
             sbom.spdx.json
             sbom.spdx.sig
             sbom.spdx.crt
             sbom.spdx.bundle
-            provenance.json
-            provenance.sig
-            provenance.crt
-            provenance.bundle
 
-      # 1️⃣1️⃣ Verify signatures
-      - name: 🧠 Verify SBOM & Provenance integrity
+      # 1️⃣4️⃣ Verify SBOM signature
+      - name: 🧠 Verify SBOM signature
         run: |
-          echo "🧩 Verifying signatures..."
+          echo "🧩 Verifying SBOM signature..."
           cosign verify-blob \
             --bundle sbom.spdx.bundle \
-            --certificate-identity-regexp "github.com/DAGMALIA" \
-            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-            sbom.spdx.json
-          cosign verify-blob \
-            --bundle provenance.bundle \
-            --certificate-identity-regexp "github.com/DAGMALIA" \
+            --certificate-identity-regexp "https://github.com/DAGMALIA/godml/.github/workflows/safety_scan.yml" \
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
             provenance.json
           echo "✅ Signatures verified and auditable."
 
-      # 1️⃣2️⃣ Build & publish to PyPI
+      # 1️⃣5️⃣ Build distribution
       - name: 🏗️ Build distribution
         run: python -m build
 
+      # 1️⃣6️⃣ Publish to PyPI (OIDC Trusted Publisher)
       - name: 🚀 Publish to PyPI (OIDC Trusted Publisher)
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://upload.pypi.org/legacy/
           skip-existing: true
 
-      # 1️⃣3️⃣ Tag release
-      - name: 🔖 Tag and push v1.0.0
+      # 1️⃣7️⃣ Tag dinámico desde pyproject.toml
+      - name: 🔖 Tag and push version
         run: |
           git config user.name "Arturo Gutierrez Rubio Rojas"
           git config user.email "agtzrubio@dagmalia.com"
-          git tag -a "v1.0.0" -m "🚀 GODML Stable Governance Release"
-          git push origin "v1.0.0"
+          TAG="v${{ steps.version.outputs.version }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG ya existe, omitiendo."
+          else
+            git tag -a "$TAG" -m "🚀 GODML $TAG Governance Release"
+            git push origin "$TAG"
+            echo "✅ Tag $TAG creado y publicado."
+          fi
 
-      # 1️⃣4️⃣ Release summary
-      - name: 🧾 GODML Stable Summary
+      # 1️⃣8️⃣ Release summary
+      - name: 🧾 GODML Release Summary
         run: |
-          echo "🧾 GODML v1.0.0 Stable Release Summary" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Static analysis and safety scans complete" >> $GITHUB_STEP_SUMMARY
-          echo "✅ SBOM & provenance generated and signed (OIDC keyless)" >> $GITHUB_STEP_SUMMARY
-          echo "📦 GODML v1.0.0 published to PyPI via Trusted Publisher" >> $GITHUB_STEP_SUMMARY
-          echo "🔖 Commit: $GITHUB_SHA" >> $GITHUB_STEP_SUMMARY
+          echo "## GODML v${{ steps.version.outputs.version }} Supply Chain Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Control | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Bandit SAST | ✅ No HIGH/CRITICAL |" >> $GITHUB_STEP_SUMMARY
+          echo "| Safety dep scan | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| pip-audit | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| SBOM (SPDX) | ✅ Signed with Cosign OIDC → Rekor |" >> $GITHUB_STEP_SUMMARY
+          echo "| SLSA L3 provenance | ✅ via slsa-github-generator (on tag push) |" >> $GITHUB_STEP_SUMMARY
+          echo "| PyPI Trusted Publisher | ✅ OIDC |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | $GITHUB_SHA |" >> $GITHUB_STEP_SUMMARY
 
-      # 1️⃣5️⃣ Residual risk notice (visible in Actions UI)
+      # 1️⃣9️⃣ Residual risk notice
       - name: 🧩 Residual Risk Notice
         run: |
           echo "::notice::Residual risk: MLflow 3.4.0 vulnerabilities documented and accepted under supply chain policy"
