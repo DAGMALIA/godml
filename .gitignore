@@ -1,0 +1,78 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+*.egg-link
+
+# Build & distribution
+dist/
+build/
+*.whl
+*.tar.gz
+MANIFEST
+
+# Cython generated
+*.c
+*.cpp
+*.html
+
+# Virtual environments
+venv/
+venv*/
+.venv/
+env/
+ENV/
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.xml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Generated indexes & caches
+godml_doc_index.json
+*.faiss
+*.pkl
+
+# Profiling
+profile_stats
+*.prof
+
+# Logs
+logs/
+*.log
+
+# Secrets & environment
+.env
+.env.*
+*.pem
+*.key
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Windows build artifacts
+*.exp
+*.lib
+*.obj

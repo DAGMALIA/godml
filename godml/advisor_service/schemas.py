@@ -1,59 +1,49 @@
-# godml/advisor_service/schemas.py
+from __future__ import annotations
 
-from typing import List, Dict, Optional, Literal
-from pydantic import BaseModel, validator
+from typing import Dict, List, Literal, Optional
 
-# ==============================
-# Operaciones soportadas en DataPrep
-# ==============================
+from pydantic import BaseModel, field_validator
 
 VALID_OPS = [
     # I/O
     "csv_read", "csv_write", "parquet_write",
-
     # Transforms
     "drop_columns", "rename", "select_columns", "drop_duplicates",
     "label_encode", "one_hot", "dropna", "fillna",
     "outlier_flag", "standard_scale", "minmax_scale",
     "lower", "strip", "regex_replace", "cast_types", "lag",
-
+    "select", "safe_cast", "extract_date_parts",
     # Validators
     "expect_non_null", "expect_unique", "expect_range",
-    "expect_regex", "check_types"
+    "expect_regex", "check_types",
 ]
 
-
-# ==============================
-# Esquemas de receta
-# ==============================
 
 class InputConfig(BaseModel):
     name: str
     connector: Literal["csv", "dataframe", "parquet"]
-    uri: Optional[str]
+    uri: Optional[str] = None
 
 
 class StepConfig(BaseModel):
     op: str
     params: Dict
 
-    @validator("op")
-    def validate_op(cls, v):
+    @field_validator("op", mode="before")
+    @classmethod
+    def validate_op(cls, v: str) -> str:
         if v not in VALID_OPS:
-            raise ValueError(f"⚠️ Operación no soportada en DataPrep: {v}")
+            raise ValueError(f"Operacion no soportada en DataPrep: {v}")
         return v
 
 
 class OutputConfig(BaseModel):
     name: str
     connector: Literal["csv", "dataframe", "parquet"]
-    uri: Optional[str]
+    uri: Optional[str] = None
 
 
 class RecipeSchema(BaseModel):
-    """
-    Representa una receta de DataPrep.
-    """
     inputs: List[InputConfig]
     steps: List[StepConfig]
     outputs: List[OutputConfig]

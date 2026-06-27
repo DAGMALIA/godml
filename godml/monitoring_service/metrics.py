@@ -112,3 +112,34 @@ def evaluate_regression(y_true, y_pred, metric_names=None):
             except Exception as e:
                 logger.warning(f"⚠️ Error calculando {name}: {e}")
     return results
+
+
+def compute_metrics(y_true, y_pred, metrics) -> dict:
+    """
+    Unified metric computation entry point used by notebook_api.
+
+    Accepts metrics as a list of names or a dict {name: threshold}.
+    Auto-detects task type (classification vs regression) from y_true cardinality.
+    Delegates to evaluate_binary_classification or evaluate_regression.
+    """
+    y_true_arr = np.array(y_true)
+    y_pred_arr = np.array(y_pred)
+
+    wanted = list(metrics.keys()) if isinstance(metrics, dict) else list(metrics)
+
+    n_classes = len(np.unique(y_true_arr))
+    regression_metrics = {"mse", "mae", "r2", "rmse"}
+    wants_regression = any(m.lower() in regression_metrics for m in wanted)
+
+    if wants_regression or n_classes > 20:
+        results = evaluate_regression(y_true_arr, y_pred_arr, metric_names=wanted)
+    else:
+        all_metrics = evaluate_binary_classification(y_true_arr, y_pred_arr)
+        if wanted:
+            results = {k: v for k, v in all_metrics.items() if k in wanted}
+            if not results:
+                results = all_metrics
+        else:
+            results = all_metrics
+
+    return results

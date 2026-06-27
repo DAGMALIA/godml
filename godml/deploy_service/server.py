@@ -1,10 +1,25 @@
 # deploy_service/server.py
+try:
+    from fastapi import FastAPI, Request, HTTPException
+    from fastapi.responses import JSONResponse
+    from fastapi.middleware.cors import CORSMiddleware
+except ImportError as _e:
+    raise ImportError(
+        "El deploy service requiere fastapi. "
+        "Instala con: pip install godml[api]"
+    ) from _e
 
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
+try:
+    import xgboost as xgb
+except ImportError:
+    xgb = None  # type: ignore[assignment]
+
 from pydantic import BaseModel
-import joblib, pandas as pd, inspect, os, time, json, xgboost as xgb
+import joblib
+import pandas as pd
+import inspect
+import os
+import time
 from pathlib import Path
 from godml.monitoring_service.logger import godml_logger, SecurityError
 
