@@ -67,7 +67,7 @@ dependencies = [
   "keras==3.11.3",
   "joblib==1.5.2",
   "fastapi==0.118.2",
-  "pyarrow==21.0.0",
+  "pyarrow==23.0.1",
   "pymysql==1.1.2 ",
   "gpt4all==2.8.2",
 ]
