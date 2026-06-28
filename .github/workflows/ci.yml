@@ -70,13 +70,18 @@ jobs:
 
       - name: Run pip-audit
         run: |
+          touch pip-audit-report.md
           pip-audit \
             --desc \
             --format markdown \
             --output pip-audit-report.md \
             --ignore-vuln PYSEC-2024-230 \
             || true
-          cat pip-audit-report.md >> $GITHUB_STEP_SUMMARY
+          if [ -s pip-audit-report.md ]; then
+            cat pip-audit-report.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No known vulnerabilities found by pip-audit." >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Upload pip-audit report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
