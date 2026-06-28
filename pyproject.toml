@@ -63,7 +63,7 @@ dependencies = [
   "pyyaml==6.0.2",
   "rich==14.0.0", # AWS SDK
   "boto3>=1.40.0",
-  "sagemaker==2.237.3",
+  "sagemaker==3.8.0",
   "keras==3.11.3",
   "joblib==1.5.2",
   "fastapi==0.118.2",
