@@ -4,15 +4,15 @@ from godml.monitoring_service.logger import PredictionError
 
 try:
     from lightgbm import Booster as LGBMBooster
-except ModuleNotFoundError:
+except ImportError:
     LGBMBooster = None
 
 try:
     from tensorflow.keras.models import Model as KerasModel
-except ModuleNotFoundError:
+except ImportError:
     try:
         from keras.models import Model as KerasModel
-    except ModuleNotFoundError:
+    except ImportError:
         KerasModel = None
 
 

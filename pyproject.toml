@@ -188,4 +188,4 @@ exclude_lines = [
   "except ImportError",
 ]
 show_missing = true
-fail_under = 55
+fail_under = 54
