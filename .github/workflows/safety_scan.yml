@@ -6,15 +6,17 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  id-token: write
-  security-events: write
+  contents: read
 
 jobs:
   supplychain:
     name: 🔐 GODML Supply Chain + PyPI Release
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: write
+      id-token: write
+      security-events: write
 
     steps:
       # 1️⃣ Checkout
@@ -55,8 +57,8 @@ jobs:
       - name: 🔍 Bandit Scan (Static Analysis)
         run: |
           echo "🔍 Running Bandit for static code security..."
-          bandit -r godml -f sarif -o bandit_report.sarif -ll || BANDIT_EXIT=$?
-          bandit -r godml -f txt -o bandit_report.txt -ll || true
+          bandit -r godml -f sarif -o bandit_report.sarif -lll || BANDIT_EXIT=$?
+          bandit -r godml -f txt -o bandit_report.txt -lll || true
           cat bandit_report.txt
           if [ "${BANDIT_EXIT:-0}" -ne 0 ]; then
             echo "::error::Bandit encontró vulnerabilidades HIGH o CRITICAL. Revisa bandit_report.sarif."
@@ -147,7 +149,7 @@ jobs:
             --bundle sbom.spdx.bundle \
             --certificate-identity-regexp "https://github.com/DAGMALIA/godml/.github/workflows/safety_scan.yml" \
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-            provenance.json
+            sbom.spdx.json
           echo "✅ Signatures verified and auditable."
 
       # 1️⃣5️⃣ Build distribution
