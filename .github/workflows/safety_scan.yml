@@ -75,7 +75,7 @@ jobs:
 
       # 8️⃣ Dependency security scan (Safety)
       - name: 🛡️ Safety Dependency Scan
-        uses: pyupio/safety-action@3e1cf5e36c8c3e7b59b7ff0cb9b2a17e13a72e4d # v1
+        uses: pyupio/safety-action@7baf6605473beffc874c1313ddf2db085c0cacf2 # v1
         with:
           api-key: ${{ secrets.SAFETY_API_KEY }}
           args: >
@@ -102,7 +102,7 @@ jobs:
 
       # 🔟 Generate SBOM (SPDX)
       - name: 🧱 Generate SBOM (SPDX)
-        uses: anchore/sbom-action@fc46e51fd3cb168ffb36cc6c6b2101947c1dc3a4 # v0.18.0
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
         with:
           path: .
           format: spdx-json
@@ -111,7 +111,7 @@ jobs:
 
       # 1️⃣1️⃣ Install Cosign
       - name: 🔑 Install Cosign
-        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb4d04a75ae0e3e91 # v3.8.1
+        uses: sigstore/cosign-installer@f713795cb21599bc4e5c4b58cbad1da852d7eeb9 # v3
         with:
           cosign-release: "v2.4.3"
 
