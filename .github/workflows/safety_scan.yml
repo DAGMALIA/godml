@@ -68,7 +68,7 @@ jobs:
 
       # 7️⃣ Upload Bandit SARIF al Security tab de GitHub
       - name: 📊 Upload Bandit SARIF
-        uses: github/codeql-action/upload-sarif@1a818fd5f97ed0ee9a823421bd5b171add01227f # v4.36.2
+        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
         if: always()
         with:
           sarif_file: bandit_report.sarif
@@ -153,47 +153,17 @@ jobs:
             sbom.spdx.json
           echo "✅ Signatures verified and auditable."
 
-      # 1️⃣5️⃣ Build distribution
-      - name: 🏗️ Build distribution
-        run: python -m build
-
-      # 1️⃣6️⃣ Publish to PyPI (OIDC Trusted Publisher)
-      - name: 🚀 Publish to PyPI (OIDC Trusted Publisher)
-        uses: pypa/gh-action-pypi-publish@4bb033805d9e19112d8c697528791ff53f6c2f74 # v1.9.0
-        with:
-          repository-url: https://upload.pypi.org/legacy/
-          skip-existing: true
-
-      # 1️⃣7️⃣ Tag dinámico desde pyproject.toml
-      - name: 🔖 Tag and push version
-        run: |
-          git config user.name "Arturo Gutierrez Rubio Rojas"
-          git config user.email "agtzrubio@dagmalia.com"
-          TAG="v${{ steps.version.outputs.version }}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG ya existe, omitiendo."
-          else
-            git tag -a "$TAG" -m "🚀 GODML $TAG Governance Release"
-            git push origin "$TAG"
-            echo "✅ Tag $TAG creado y publicado."
-          fi
-
-      # 1️⃣8️⃣ Release summary
-      - name: 🧾 GODML Release Summary
+      # 1️⃣5️⃣ Supply chain summary
+      - name: 🧾 GODML Supply Chain Summary
         run: |
           echo "## GODML v${{ steps.version.outputs.version }} Supply Chain Summary" >> $GITHUB_STEP_SUMMARY
           echo "| Control | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Tests | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| Bandit SAST | ✅ No HIGH/CRITICAL |" >> $GITHUB_STEP_SUMMARY
-          echo "| Safety dep scan | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Safety dep scan | ✅ (best-effort, continue-on-error) |" >> $GITHUB_STEP_SUMMARY
           echo "| pip-audit | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| SBOM (SPDX) | ✅ Signed with Cosign OIDC → Rekor |" >> $GITHUB_STEP_SUMMARY
-          echo "| SLSA L3 provenance | ✅ via slsa-github-generator (on tag push) |" >> $GITHUB_STEP_SUMMARY
-          echo "| PyPI Trusted Publisher | ✅ OIDC |" >> $GITHUB_STEP_SUMMARY
+          echo "| SLSA L3 + PyPI release | ✅ via release.yml on tag push |" >> $GITHUB_STEP_SUMMARY
           echo "| Commit | $GITHUB_SHA |" >> $GITHUB_STEP_SUMMARY
-
-      # 1️⃣9️⃣ Residual risk notice
-      - name: 🧩 Residual Risk Notice
-        run: |
-          echo "::notice::Residual risk: MLflow 3.4.0 vulnerabilities documented and accepted under supply chain policy"
+          echo "::notice::Residual risk: MLflow vulnerabilities documented and accepted under supply chain policy"
