@@ -69,6 +69,10 @@ jobs:
   # ─── 3. SLSA Level 3 Provenance ──────────────────────────────────────────
   # Uses the official slsa-github-generator reusable workflow.
   # This provides SLSA L3: isolated builder + unforgeable provenance via OIDC.
+  # NOTE: slsa-github-generator REQUIRES this to be pinned by semantic tag
+  # (@vX.Y.Z), not by commit SHA — pinning by SHA breaks the generator's
+  # internal ref-verification and causes "Input required and not supplied"
+  # / exit code 127 failures. See slsa-framework/slsa-github-generator#12.
   provenance:
     name: SLSA L3 provenance
     needs: build
@@ -76,16 +80,19 @@ jobs:
       actions: read
       id-token: write
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@f7dd8c54c2067bafc12ca7a55595d5ee9b75204a # v2.1.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
     with:
       base64-subjects: ${{ needs.build.outputs.hashes }}
       upload-assets: true
 
   # ─── 4. GitHub Release ───────────────────────────────────────────────────
+  # NOTE: provenance intentionally NOT in 'needs' — a failure in the SLSA
+  # generator job (known upstream flakiness, see slsa-github-generator#942)
+  # should not block creating the release with the dist + SBOM assets.
   github-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [build, sbom, provenance]
+    needs: [build, sbom]
     if: always() && needs.build.result == 'success' && needs.sbom.result == 'success'
     permissions:
       contents: write
@@ -116,7 +123,7 @@ jobs:
   pypi-publish:
     name: Publish to PyPI
     runs-on: ubuntu-latest
-    needs: [build, provenance]
+    needs: [build]
     if: always() && needs.build.result == 'success'
     environment:
       name: pypi
@@ -135,4 +142,3 @@ jobs:
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
         with:
           skip-existing: true
-
