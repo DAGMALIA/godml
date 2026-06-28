@@ -153,7 +153,21 @@ jobs:
             sbom.spdx.json
           echo "✅ Signatures verified and auditable."
 
-      # 1️⃣5️⃣ Supply chain summary
+      # 1️⃣5️⃣ Tag version — triggers release.yml (SLSA L3 + PyPI)
+      - name: 🔖 Tag and push version
+        run: |
+          git config user.name "Arturo Gutierrez Rubio Rojas"
+          git config user.email "agtzrubio@dagmalia.com"
+          TAG="v${{ steps.version.outputs.version }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists — skipping. PyPI publish already done."
+          else
+            git tag -a "$TAG" -m "GODML $TAG — supply chain verified"
+            git push origin "$TAG"
+            echo "✅ Tag $TAG pushed → triggers release.yml for SLSA L3 + PyPI publish."
+          fi
+
+      # 1️⃣6️⃣ Supply chain summary
       - name: 🧾 GODML Supply Chain Summary
         run: |
           echo "## GODML v${{ steps.version.outputs.version }} Supply Chain Summary" >> $GITHUB_STEP_SUMMARY
