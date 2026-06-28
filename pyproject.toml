@@ -120,7 +120,7 @@ advisor = [
 # pip install godml[data]
 # Extended data connectors
 data = [
-  "pyarrow>=15.0.0,<22",
+  "pyarrow>=15.0.0,<25",
   "pymysql>=1.1.0,<2",
 ]
 
