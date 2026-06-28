@@ -1,5 +1,4 @@
 import hashlib
-import pandas as pd
 
 
 def hash_sha256(value) -> str:

@@ -5,7 +5,6 @@ import pandas as pd
 from .base_compliance import BaseCompliance
 from .pii_detector import PiiDetector
 from .compliance_utils import (
-    hash_sha256,
     hash_truncated,
     mask_string,
     mask_email,

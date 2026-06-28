@@ -52,19 +52,18 @@ class AdvisorOrchestrator:
             f"nulos: {quality['nulls']}"
         )
 
-        recipe_llm = None
         if self.llm_advisor:
             raw_recipe = self.llm_advisor.suggest_recipe(dataset_summary)
             try:
                 # Si viene como string → parseamos directo
                 if isinstance(raw_recipe, str):
-                    recipe_llm = json.loads(raw_recipe)
+                    json.loads(raw_recipe)
                 else:
                     # Si ya es dict de Python → lo normalizamos a JSON válido
-                    recipe_llm = json.loads(json.dumps(raw_recipe))
+                    json.loads(json.dumps(raw_recipe))
             except Exception as e:
                 print(f"⚠️ Error validando receta: {e}")
-                recipe_llm = {"error": "Receta inválida", "raw": str(raw_recipe)}
+                {"error": "Receta inválida", "raw": str(raw_recipe)}
 
         # 4) Imprimir resultados con formato seguro
 

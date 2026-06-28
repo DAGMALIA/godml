@@ -14,14 +14,14 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 __version__ = "1.0.2"
 
 __all__ = [
-    "GodmlNotebook", 
-    "quick_train", 
-    "train_from_yaml", 
+    "GodmlNotebook",
+    "quick_train",
+    "train_from_yaml",
     "quick_train_yaml",
-    "load_pipeline", 
+    "load_pipeline",
     "get_executor",
     "save_model_to_structure",
-    "load_model_from_structure", 
+    "load_model_from_structure",
     "list_models",
     "promote_model",
 ]

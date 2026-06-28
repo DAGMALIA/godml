@@ -8,8 +8,8 @@ from sklearn.metrics import (
     recall_score,
     f1_score,
     roc_auc_score,
-    mean_squared_error, 
-    mean_absolute_error, 
+    mean_squared_error,
+    mean_absolute_error,
     r2_score,
     log_loss
 )
@@ -64,7 +64,7 @@ def evaluate_binary_classification(y_true, y_proba, threshold=0.5):
                 metrics["roc_auc_ovr"] = roc_auc_score(
                     y_true, y_proba, multi_class="ovr", average="macro", labels=unique_labels
                 )
-            except Exception as prob_err:
+            except Exception:
                 reason, code = analyze_metric_issue(y_true, y_proba)
                 logger.warning(f"⚠️ AUC no calculada ({code}): {reason}")
                 logger.info(explain_issue_and_action(reason, code))

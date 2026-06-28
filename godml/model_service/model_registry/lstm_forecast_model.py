@@ -43,7 +43,7 @@ class LstmForecastModel(BaseRegressionModel):
             numeric_cols = data.select_dtypes(include=[np.number]).columns.tolist()
             if len(numeric_cols) == 0:
                 raise ValueError("[LSTMForecastModel] ❌ No se encontraron columnas numéricas.")
-            
+
             # 1️⃣ Si YAML define target_hint y existe, úsalo
             if self._yaml_configured and self.target_hint in numeric_cols:
                 col = self.target_hint
@@ -52,7 +52,7 @@ class LstmForecastModel(BaseRegressionModel):
                 variances = data[numeric_cols].var()
                 col = variances.idxmax()
                 print(f"[LSTMForecastModel] ⚠️ Fallback: usando columna '{col}' por mayor varianza.")
-            
+
             data = data[col].values
         elif isinstance(data, pd.Series):
             data = data.values
@@ -73,7 +73,7 @@ class LstmForecastModel(BaseRegressionModel):
             X.append(series[i:(i + self.look_back)])
             y.append(series[i + self.look_back])
         return np.array(X), np.array(y)
-    
+
     def _safe_scale(self, series: np.ndarray, fit: bool = False) -> np.ndarray:
         """
         Escalado seguro con fallback automático.
@@ -153,7 +153,7 @@ class LstmForecastModel(BaseRegressionModel):
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         try:
             X = self._validate_input(X)
-    
+
             # 🔍 Validación fuerte de longitud
             if X is None or len(X) == 0:
                 raise ValueError("[LSTMForecastModel] Entrada vacía: no hay datos para predecir.")
@@ -161,33 +161,33 @@ class LstmForecastModel(BaseRegressionModel):
                 raise ValueError(
                     f"[LSTMForecastModel] El tamaño de entrada ({len(X)}) es menor o igual al look_back ({self.look_back})."
                 )
-    
+
             # 🔧 Escalado seguro
             scaled_input = self._safe_scale(X, fit=False)
             if scaled_input is None or len(scaled_input) == 0:
                 raise ValueError("[LSTMForecastModel] Escalado fallido o datos vacíos tras escalar.")
-    
+
             # 🔁 Creación de secuencias
             X_seq, _ = self.create_dataset(scaled_input)
             if X_seq is None or X_seq.size == 0:
                 raise ValueError("[LSTMForecastModel] No se generaron secuencias válidas para predicción.")
-    
+
             # 🔢 Validación del shape antes del reshape
             if len(X_seq.shape) != 2:
                 raise ValueError(f"[LSTMForecastModel] Forma inesperada: {X_seq.shape}, se esperaba (samples, look_back)")
-    
+
             X_seq = X_seq.reshape((X_seq.shape[0], X_seq.shape[1], 1))
-    
+
             # 🧠 Predicción
             preds = self.model.predict(X_seq, verbose=0)
-    
+
             # 🔄 Normalización de salida
             if not isinstance(preds, np.ndarray):
                 preds = np.array(preds)
             preds = preds.flatten()
-    
+
             print(f"[LSTMForecastModel] ✅ Predicciones generadas con forma: {preds.shape}")
             return preds
-    
+
         except Exception as e:
             raise RuntimeError(f"Error durante predicción: {e}")

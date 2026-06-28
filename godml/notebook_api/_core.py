@@ -4,8 +4,6 @@ from __future__ import annotations
 import importlib
 from typing import Any, Dict
 
-import numpy as np
-import pandas as pd
 
 _DEF_REGISTRY: Dict[str, str] = {
     "random_forest": "godml.model_service.model_registry.random_forest_model:RandomForestModel",

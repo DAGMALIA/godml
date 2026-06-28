@@ -3,8 +3,7 @@
 from typing import List
 from godml.config_service.schema import PipelineDefinition
 from godml.compliance_service.validation_helpers import (
-    validate_pipeline,
-    ValidationError
+    validate_pipeline
 )
 
 

@@ -29,7 +29,7 @@ model = joblib.load(MODEL_PATH) if MODEL_PATH and MODEL_PATH.exists() else None
 def healthcheck():
     return {
         "status": "ok",
-        "message": f"GODML Model microservice is running",
+        "message": "GODML Model microservice is running",
         "model_path": str(MODEL_PATH) if model else "Not loaded"
     }
 

@@ -46,7 +46,7 @@ CONNECTORS = {
     "s3": S3Connector(),  # delega por extensión (MVP)
 }
 
-from .validators.expectations import (
+from .validators.expectations import (  # noqa: E402
     expect_non_null, expect_unique, expect_range, expect_regex
 )
 

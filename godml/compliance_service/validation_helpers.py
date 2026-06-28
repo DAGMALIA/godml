@@ -1,7 +1,7 @@
 # compliance_service/validation_helpers.py
 
 from godml.config_service.schema import PipelineDefinition, Metric
-from typing import List, Dict, Any
+from typing import List, Dict
 
 
 class ValidationError(Exception):

@@ -198,7 +198,7 @@ class MLflowExecutor(BaseExecutor):
 
         params = pipeline.model.hyperparameters.model_dump(exclude_none=True)
         model_type = pipeline.model.type.lower()
-        
+
         # 🧠 Ajuste automático basado en tipo de modelo y dataset
         params = auto_tune_hyperparameters(model_type, params, X_train, y_train)
 

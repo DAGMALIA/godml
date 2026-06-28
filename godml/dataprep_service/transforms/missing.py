@@ -7,7 +7,7 @@ class FillNA(BaseTransform):
     def apply(self, df: pd.DataFrame, columns=None, value=None, **_):
         if isinstance(columns, str):
             columns = [columns]
-    
+
         # Si no hay valor explícito, escoger uno por tipo de dato
         if value is None:
             if columns:
@@ -18,7 +18,7 @@ class FillNA(BaseTransform):
                     value = "MISSING"
             else:
                 value = 0
-    
+
         if columns:
             return df.fillna({c: value for c in columns})
         return df.fillna(value=value)

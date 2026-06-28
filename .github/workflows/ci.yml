@@ -43,7 +43,7 @@ jobs:
             -v
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@0565863a31f2c7f16d31e6df4aec6bc444d5b62 # v5.4.0
+        uses: codecov/codecov-action@04b047e8bb82a0c002c8312c1c880fbc6a999d45 # v5
         if: matrix.python-version == '3.11'
         with:
           file: ./coverage.xml
@@ -101,7 +101,7 @@ jobs:
         run: pip install ruff
 
       - name: Run ruff
-        run: ruff check godml/ --select=E,W,F --ignore=E501,W503
+        run: ruff check godml/ --select=E,W,F --ignore=E501
 
   install-smoke-test:
     name: Smoke test (${{ matrix.os }}, Python ${{ matrix.python-version }})

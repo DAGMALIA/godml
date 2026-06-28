@@ -1,4 +1,7 @@
-import ast, os, json, re
+import ast
+import os
+import json
+import re
 
 DOC_INDEX = []
 
@@ -24,7 +27,7 @@ def parse_file(path):
             DOC_INDEX.append({
                 "name": node.name,
                 "path": path,
-                "signature": f"{node.name}(...)", 
+                "signature": f"{node.name}(...)",
                 "doc": doc.split("\n")[0],
                 "examples": extract_examples(doc)
             })
