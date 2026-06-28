@@ -103,7 +103,7 @@ jobs:
           cache: pip
 
       - name: Install ruff
-        run: pip install ruff
+        run: pip install "ruff==0.15.17"
 
       - name: Run ruff
         run: ruff check godml/ --select=E,W,F --ignore=E501
@@ -156,7 +156,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install Bandit
-        run: pip install bandit[sarif]
+        run: pip install "bandit[sarif]==1.9.4"
 
       - name: Run Bandit (HIGH/CRITICAL only)
         run: |
