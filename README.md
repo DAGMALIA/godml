@@ -1,372 +1,300 @@
-# 🤖 GODML — Governed, Observable & Declarative Machine Learning  
-**Framework de MLOps con Gobernanza, Trazabilidad y Supply Chain Verificada**
+<p align="center">
+  <img src="https://img.shields.io/pypi/v/godml?color=0066cc&label=godml&logo=pypi&logoColor=white" alt="PyPI">
+  <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue?logo=python&logoColor=white" alt="Python">
+  <img src="https://github.com/DAGMALIA/godml/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI">
+  <img src="https://img.shields.io/badge/SLSA-Level%203-green?logo=slsa&logoColor=white" alt="SLSA L3">
+  <img src="https://api.securityscorecards.dev/projects/github.com/DAGMALIA/godml/badge" alt="OpenSSF Scorecard">
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT">
+</p>
 
-[![PyPI - Version](https://img.shields.io/pypi/v/godml?color=blue)](https://pypi.org/project/godml/)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Supply Chain Verified](https://img.shields.io/badge/Supply%20Chain-Verified%20by%20Sigstore-2ea44f?style=flat-square&logo=trustpilot&logoColor=white)](https://search.sigstore.dev/?q=DAGMALIA)
-[![SLSA Level](https://img.shields.io/badge/SLSA-v1.0.0-blue.svg)](https://slsa.dev/)
-
----
-
-## 🚀 GODML v1.0.2 — *Stable Governance Release*
-
-La versión 1.0.2 marca un **hito en la madurez del framework**, incorporando trazabilidad completa, publicación verificada en PyPI y una cadena de suministro auditada mediante **Sigstore + SLSA**.
-
-### 🧩 Características clave
-- ✅ Framework **estable y modular**
-- 🔐 Supply Chain firmada (SBOM + Provenance)
-- 🧾 Cumplimiento **SLSA v1 y SPDX**
-- 📦 Publicación segura via **PyPI Trusted Publisher (OIDC)**
-- 🧠 Notebook API integrada (`GodmlNotebook`)
-- ⚙️ CLI declarativa (`godml run -f godml.yml`)
-- 🪶 Licencia MIT
+<h1 align="center">GODML</h1>
+<p align="center"><strong>Governed, Observable & Declarative Machine Learning Framework</strong></p>
+<p align="center">
+  Production-grade MLOps for teams that need traceability, compliance, and a verified supply chain — without the infrastructure overhead.
+</p>
 
 ---
 
-## 🔐 Supply Chain & Seguridad
-
-GODML adopta un enfoque de **transparencia verificable**, integrando herramientas de seguridad nativas:
-
-| Artefacto | Estándar | Firma | Transparencia |
-|------------|-----------|--------|----------------|
-| `sbom.spdx.json` | SPDX | ✅ Cosign OIDC | [Rekor Log](https://search.sigstore.dev/) |
-| `provenance.json` | SLSA v1 | ✅ Cosign OIDC | [Rekor Log](https://search.sigstore.dev/) |
-
-### 📜 Verificación reproducible
+## Quick start
 
 ```bash
-cosign verify-blob \
-  --bundle sbom.spdx.bundle \
-  --certificate-identity-regexp "github.com/DAGMALIA" \
-  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-  sbom.spdx.json
-```
-
-> Proyecto de Machine Learning generado automáticamente con **GODML Framework** - Governed, Observable & Declarative ML
-
----
-
-                                  🚀 GODML Framework
-                              https://pypi.org/project/godml/
-                                      https://python.org
-                                          LICENSE
-                              https://pypi.org/project/godml/
-                          Governed, Observable & Declarative Machine Learning
-                      Enterprise-grade MLOps platform for production-ready ML pipelines
-                  🚀 Quick Start • 📖 Documentation • 🏗️ Architecture • 🤝 Contributing
-------------------------------------------------------------------------------------------------------------------------
-```text
-🎯 Overview
-
-GODML is a comprehensive MLOps framework that unifies Governance, Observability, and Declarative configuration for enterprise Machine Learning workflows. Built for organizations that require complete traceability, regulatory compliance, and scalable model deployment.
-```
-
-```text
-🌟 Key Features
-
-    *   🏛️ Governance: Automatic traceability, metadata management, and compliance
-
-    *   👁️ Observability: Complete MLflow integration with real-time monitoring
-
-    *   📄 Declarative: Simple YAML configuration for reproducible pipelines
-
-    *   🚀 Production-Ready: Docker, Kubernetes, and cloud-native deployment
-
-    *   🛡️ Compliance: Built-in PCI-DSS, GDPR, and HIPAA support
-
-    *   🧠 AI-Powered: LLM-assisted pipeline optimization and recommendations
-```
-
-```text
-GODML Performance Metrics
-
-🎯 Business Impact
-
-        Metric	            Traditional ML	        With GODML	        Improvement
-Time to Production	           6 months	              2 weeks	         92% faster
-Model Accuracy	                  78%	                89%	             14% better
-Compliance Violations	        12/year	               0/year	        100% reduction
-Operational Cost	           $50K/month	         $15K/month	         70% savings
-```
-
-🚀 Quick Start
-
-Installation
-
-```bash
-# Install GODML
 pip install godml
-
-# Verify installation
-godml --version
+godml init my-project
+godml run -f godml.yml
 ```
-Create Your First Project
+
+That's it. No cloud account required for local training.
+
+---
+
+## What is GODML?
+
+GODML is a Python framework that wraps the full ML lifecycle — data prep, training, evaluation, monitoring, and deployment — behind a single declarative YAML config. Every run produces a signed, auditable artifact trail.
+
+```
+Raw data → Compliance check → Train → Evaluate → Registry → Deploy → Monitor
+               (PII/GDPR)    (XGB/RF/LR)  (cross-val)  (MLflow)  (Docker)  (drift)
+```
+
+### Why GODML over plain sklearn + MLflow?
+
+| Problem | Without GODML | With GODML |
+|---------|--------------|------------|
+| Reproducibility | Manual notebooks | Declarative YAML, locked hashes |
+| Compliance | Ad-hoc checks | Built-in PCI-DSS, GDPR, HIPAA |
+| Supply chain | No SBOM | SLSA L3 provenance + signed SBOM |
+| Audit trail | Scattered logs | Unified lineage per run |
+| Multi-model | Custom glue code | Registry + `notebook_api` |
+
+---
+
+## Installation
+
+### Core (no optional deps)
 
 ```bash
-# Initialize new project
-godml init my-ml-project
-cd my-ml-project
-
-# Configure your pipeline
-vim godml.yml
-
-# Train your model
-godml run -f godml.yml
-
-# Deploy to production
-godml deploy my-ml-project production
+pip install godml
 ```
 
-📄 Basic Configuration
+### With extras
 
-```yaml title="godml.yml (mínimo viable)"
-name: customer-churn-prediction
+```bash
+pip install "godml[advisor]"   # LLM-powered recommendations (gpt4all)
+pip install "godml[deep]"      # LSTM forecasting (tensorflow + keras)
+pip install "godml[aws]"       # SageMaker deployment
+pip install "godml[api]"       # REST inference server (fastapi + uvicorn)
+pip install "godml[dev]"       # Full dev suite (tests, lint, coverage)
+```
+
+---
+
+## Configuration
+
+A minimal `godml.yml`:
+
+```yaml
+name: customer-churn
 version: 1.0.0
 provider: mlflow
 
 dataset:
-  uri: ./data/customer_data.csv
+  uri: ./data/churn.csv
   hash: auto
 
 model:
   type: xgboost
   hyperparameters:
-    {"max_depth": 6}
-    {"learning_rate": 0.1}
-    {"n_estimators": 300}
+    max_depth: 6
+    learning_rate: 0.1
+    n_estimators: 300
 
 metrics:
-- name: auc
-  threshold: 0.85
-- name: accuracy
-  threshold: 0.80
+  - name: auc
+    threshold: 0.85
+  - name: accuracy
+    threshold: 0.80
 
 governance:
-  owner: "ml-team@company.com"
+  owner: ml-team@company.com
   tags:
-  - project: customer-retention
-  - compliance: gdpr
-  - environment: production
+    - compliance: gdpr
+    - environment: production
 
 deploy:
   realtime: true
   batch_output: ./outputs/predictions.csv
 ```
-🧪 Notebook Integration
 
-```text
-Quick Training
+Run it:
+
+```bash
+godml run -f godml.yml
 ```
+
+---
+
+## Notebook API
+
+For interactive work in Jupyter:
 
 ```python
-from godml import GodmlNotebook, quick_train
+from godml import GodmlNotebook
 
-# Method 1: Full pipeline setup
-godml = GodmlNotebook()
-godml.create_pipeline(
-    name="churn-model",
-    model_type="xgboost",
-    hyperparameters={"max_depth": 6, "eta": 0.1},
-    dataset_path="./data/churn.csv"
-)
-godml.train()
-godml.save_model(model_name="churn_v1", environment="production")
-
-# Method 2: One-liner training
-quick_train(
-    model_type="random_forest",
-    hyperparameters={"n_estimators": 300},
-    dataset_path="./data/churn.csv"
-)
+nb = GodmlNotebook()
+nb.load_data("./data/churn.csv", target="churn")
+nb.train_model("xgboost", {"max_depth": 6, "n_estimators": 300})
+nb.evaluate(["auc", "accuracy", "f1"])
+nb.save_model("churn_v1")
 ```
-AI-Powered Optimization
+
+### AI-powered advisor
 
 ```python
 from godml.notebook_api import advisor_full_report, tune_model
 
-# Get AI recommendations
+# Get model + metric recommendations for your dataset
 report = advisor_full_report(df, target="churn")
-print(f"Recommended models: {report['models']}")
-print(f"Suggested metrics: {report['metrics']}")
+print(report["recommended_models"])   # ['xgboost', 'random_forest']
+print(report["data_quality"])         # quality score + issues
 
-# Auto-tune hyperparameters
+# Auto-tune with Optuna
 result = tune_model(
     model_type="xgboost",
     X=X_train, y=y_train,
-    max_trials=100,
-    metric="roc_auc"
+    max_trials=50,
+    metric="auc",
 )
 print(f"Best AUC: {result['best_score']:.4f}")
 ```
 
-🔧 System Architecture
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                        🎯 GODML Framework                       │
-├─────────────────────────────────────────────────────────────────┤
-│  Frontend Layer                                                 │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────────┐ │
-│  │ 🌐 Web UI   │ │ 📓 Jupyter  │ │ 🖥️ CLI Tool                │ │
-│  └─────────────┘ └─────────────┘ └─────────────────────────────┘ │
-├─────────────────────────────────────────────────────────────────┤
-│  API Gateway                                                    │
-│  ┌─────────────────────────────────────────────────────────────┐ │
-│  │ 🚪 FastAPI Gateway (Authentication & Routing)              │ │
-│  └─────────────────────────────────────────────────────────────┘ │
-├─────────────────────────────────────────────────────────────────┤
-│  Core Services                                                  │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────────┐ │
-│  │🧠 Advisor   │ │⚙️ Config    │ │🎯 Pipeline Engine          │ │
-│  │Service      │ │Service      │ │                            │ │
-│  └─────────────┘ └─────────────┘ └─────────────────────────────┘ │
-├─────────────────────────────────────────────────────────────────┤
-│  ML Services                                                    │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────────┐ │
-│  │🔄 DataPrep  │ │🤖 Model     │ │📊 Monitoring               │ │
-│  │Service      │ │Service      │ │Service                     │ │
-│  └─────────────┘ └─────────────┘ └─────────────────────────────┘ │
-├─────────────────────────────────────────────────────────────────┤
-│  Infrastructure                                                 │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────────┐ │
-│  │💾 PostgreSQL│ │🗄️ Redis     │ │☁️ Cloud Storage            │ │
-│  │Database     │ │Cache        │ │(S3/Azure/GCS)              │ │
-│  └─────────────┘ └─────────────┘ └─────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+### Supported model types
+
+| Key | Algorithm |
+|-----|-----------|
+| `xgboost` / `xgb` | XGBoost |
+| `random_forest` / `rf` | scikit-learn RandomForest |
+| `logistic_regression` / `logreg` | scikit-learn LogisticRegression |
+| `lstm` | LSTM forecasting *(requires `[deep]`)* |
+
+---
+
+## Compliance
+
+```python
+from godml.compliance_service import PciDssCompliance, GdprCompliance
+
+compliance = PciDssCompliance()
+clean_df = compliance.apply(df)          # masks PAN, CVV, account numbers
+
+gdpr = GdprCompliance()
+report = gdpr.apply(df)                  # anonymizes PII per GDPR rules
 ```
 
-🌊 Data Flow Pipeline
+Built-in compliance modules: `PCI-DSS`, `GDPR`, `HIPAA`, `SOX`.  
+Custom rules: subclass `BaseCompliance` and implement `apply(df)`.
 
-```text
-📊 Raw Data → 🔄 DataPrep → 🛡️ Compliance → 🤖 Training → 📈 Validation → 📦 Registry → 🚀 Deployment → 📊 Monitoring
-     ↓              ↓             ↓             ↓             ↓             ↓             ↓             ↓
-   S3/Local    Transforms    PII Detection   XGBoost/RF   Cross-Val    MLflow Store   Docker/K8s   Drift Detection
+---
 
-
-🛡️ Enterprise Features
-
-Compliance & Security
-
-🔒 Data Protection: Encryption at rest and in transit
-
-🛡️ PII Detection: Automatic identification and masking
-
-📋 Regulatory Support: GDPR, PCI-DSS, HIPAA, SOX compliance
-
-🔍 Audit Trail: Complete lineage and change tracking
-
-Scalability & Performance
-
-☸️ Kubernetes Native: Cloud-native deployment
-
-🔄 Auto-scaling: Dynamic resource allocation
-
-⚡ Low Latency: <50ms prediction SLA
-
-📈 High Throughput: 10K+ predictions/second
-
-
-🏢 Enterprise Use Cases
-
-Financial Services
-
-    *   Fraud Detection: Real-time transaction scoring with PCI-DSS compliance
-
-    *   Credit Risk: Automated underwriting with regulatory reporting
-
-    *   Algorithmic Trading: Low-latency prediction models
-
-Healthcare
-
-    *   Diagnostic Assistance: HIPAA-compliant medical image analysis
-
-    *   Drug Discovery: Molecular property prediction pipelines
-
-    *   Clinical Trials: Patient stratification and outcome prediction
-
-Retail & E-commerce
-
-    *   Recommendation Systems: Personalized product suggestions
-
-    *   Demand Forecasting: Inventory optimization models
-
-    *   Price Optimization: Dynamic pricing strategies
+## Architecture
 
 ```
+┌──────────────────────────────────────────────────────┐
+│                    GODML Framework                   │
+├────────────────┬─────────────┬───────────────────────┤
+│  Interfaces    │  Notebook   │  CLI  │  REST API      │
+├────────────────┴─────────────┴───────────────────────┤
+│  Core Services                                       │
+│  ┌───────────┐ ┌───────────┐ ┌──────────────────────┐│
+│  │ Advisor   │ │ Config    │ │ Pipeline Engine      ││
+│  └───────────┘ └───────────┘ └──────────────────────┘│
+├──────────────────────────────────────────────────────┤
+│  ML Services                                         │
+│  ┌───────────┐ ┌───────────┐ ┌──────────────────────┐│
+│  │ DataPrep  │ │ Model     │ │ Monitoring           ││
+│  │ +PII scan │ │ Registry  │ │ +Drift detection     ││
+│  └───────────┘ └───────────┘ └──────────────────────┘│
+├──────────────────────────────────────────────────────┤
+│  Providers:  MLflow │ SageMaker │ Docker │ Local      │
+└──────────────────────────────────────────────────────┘
+```
 
-🛠️ CLI Reference
+---
 
-Project Management
+## Supply chain & security
+
+GODML ships with a **SLSA Level 3** supply chain — every release is built in an isolated GitHub Actions environment with unforgeable provenance.
+
+| Artifact | Standard | Signature | Transparency |
+|----------|----------|-----------|--------------|
+| `sbom.spdx.json` | SPDX 2.3 | Cosign OIDC (keyless) | [Rekor log](https://search.sigstore.dev/?q=DAGMALIA) |
+| `sbom.cyclonedx.json` | CycloneDX 1.6 | SLSA provenance | GitHub Release assets |
+| `provenance.intoto.jsonl` | SLSA v1 / in-toto | slsa-github-generator | [Rekor log](https://search.sigstore.dev/?q=DAGMALIA) |
+
+### Verify the SBOM yourself
 
 ```bash
-godml init <project-name>              # Initialize new project
-godml run -f <config.yml>              # Execute pipeline
+# Download from GitHub Releases
+cosign verify-blob \
+  --bundle sbom.spdx.bundle \
+  --certificate-identity-regexp "https://github.com/DAGMALIA/godml/.github/workflows/safety_scan.yml" \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+  sbom.spdx.json
 ```
 
-
-Deployment
+### Verify SLSA provenance
 
 ```bash
-godml deploy <project> <env>           # Deploy to environment
+slsa-verifier verify-artifact dist/godml-*.whl \
+  --provenance-path provenance.intoto.jsonl \
+  --source-uri github.com/DAGMALIA/godml \
+  --source-tag v1.1.0
 ```
 
-🌐 Cloud Deployment
+### CI security controls
 
-Docker Deployment
+| Control | Tool | Status |
+|---------|------|--------|
+| SAST | Bandit | ✅ Blocks on HIGH/CRITICAL |
+| Dependency CVEs | pip-audit + Safety | ✅ Weekly + per PR |
+| SHA-pinned actions | Dependabot | ✅ Auto-pinned |
+| PyPI publish | OIDC Trusted Publisher | ✅ No API tokens |
+| Branch protection | GitHub Ruleset | ✅ PR + status checks |
+| Tag protection | GitHub Ruleset | ✅ `v*` immutable |
+| Score | OpenSSF Scorecard | ✅ Published weekly |
+
+---
+
+## CLI reference
 
 ```bash
-# Build and run
-docker build -t my-godml-model .
-docker run -p 8080:8080 my-godml-model
-
-# Health check
-curl http://localhost:8080/health
+godml init <project>         # scaffold new project
+godml run -f godml.yml       # execute pipeline from config
+godml deploy <project> <env> # deploy model to environment
+godml --version              # print version
 ```
 
-```Text
-📈 Roadmap
+---
 
-🎯 2025 Q2 - Intelligence
-    *   🧠 Advanced AutoML capabilities
-    *   🤖 GPT-4 powered pipeline generation
-    *   📊 Interactive web dashboard
-    *   🔍 Explainable AI integration
+## Roadmap
 
-🎯 2025 Q3 - Scale
-    *   ☸️ Kubernetes operator
-    *   🌊 Real-time streaming ML
-    *   🔄 A/B testing framework
-    *   📈 Advanced drift detection
+### v1.2.0 — Q3 2026
+- [ ] Interactive drift dashboard (Streamlit)
+- [ ] A/B testing framework
+- [ ] Optuna distributed tuning
 
-🎯 2025 Q4 - Enterprise
-    *   🏢 Multi-tenant architecture
-    *   🔒 Zero-trust security model
-    *   🌐 Global edge deployment
-    *   📋 SOC2/ISO27001 certification
+### v1.3.0 — Q4 2026
+- [ ] Kubernetes operator
+- [ ] Real-time streaming inference
+- [ ] Multi-tenant model registry
 
-🤝 Contributing
+### v2.0.0 — 2027
+- [ ] Multi-cloud provider abstraction (Vertex AI, Azure ML)
+- [ ] Federated learning support
+- [ ] SOC2 / ISO27001 documentation kit
 
-We welcome contributions! Please see our Contributing Guide for details.
+---
 
-Development Setup
+## Contributing
 
--- Next Repo
-
-📄 License
-This project is licensed under the Apache License 2.0 - see the LICENSE file for details.
-
-📞 Support
+```bash
+git clone https://github.com/DAGMALIA/godml.git
+cd godml
+pip install -e ".[dev]"
+pytest tests/ --cov=godml
 ```
 
-    *   Enterprise Support: mailto:agtzrubio@dagmalia.com
-    *   Community Support: mailto:agtzrubio@dagmalia.com
-    *   Documentation: https://godmlcore.com/
-    *   Status Page: https://godmlcore.com/
+See [CONTRIBUTING.md](CONTRIBUTING.md) for branch conventions and PR checklist.
 
+---
 
+## License
 
-                                       Built with ❤️ by the GODM
-                                  https://github.com/godml/godml (Proximamente)
-                                    https://twitter.com/godml_ai (Proximamente)
-                                https://linkedin.com/company/godml (Proximamente)
-                                   Transforming Enterprise ML Operations 🚀
+MIT — see [LICENSE](LICENSE).
+
+---
+
+<p align="center">
+  Built by <a href="https://github.com/DAGMALIA">DAGMALIA</a> · 
+  <a href="https://pypi.org/project/godml/">PyPI</a> · 
+  <a href="mailto:agtzrubio@dagmalia.com">Support</a>
+</p>

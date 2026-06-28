@@ -2,25 +2,23 @@
 # Licensed under the MIT License
 
 import os
-import mlflow
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from godml.core_service.engine import BaseExecutor
-from godml.config_service.schema import PipelineDefinition
+from godml.config_service.schema import PipelineDefinition, ModelResult
 from godml.model_service.model_loader import load_custom_model_class
 from godml.monitoring_service.logger import get_logger
 from godml.utils.path_utils import normalize_path
 from godml.utils.predict_safely import predict_safely
 from godml.utils.log_model_generic import log_model_generic
 from godml.monitoring_service.metrics import evaluate_binary_classification
-from godml.config_service.schema import ModelResult
-import mlflow.models.signature
 
 logger = get_logger()
 
 
 class MLflowExecutor(BaseExecutor):
     def __init__(self, tracking_uri: str = None):
+        import mlflow  # lazy — only load when executor is actually used
         if tracking_uri:
             if tracking_uri.startswith("file:/"):
                 local_path = tracking_uri.replace("file:/", "", 1)
@@ -47,6 +45,8 @@ class MLflowExecutor(BaseExecutor):
         return X, y
 
     def run(self, pipeline: PipelineDefinition):
+        import mlflow
+        import mlflow.models.signature
         from godml import notebook_api as nb
         logger.info(f"🚀 INICIO DE PIPELINE: {pipeline.name}")
 
@@ -103,16 +103,13 @@ class MLflowExecutor(BaseExecutor):
         # ────────────────────────────────╮
         target = getattr(ds, "target", None)
         if not target:
-            if "survived" in df.columns:
-                target = "survived"
-            elif "Survived" in df.columns:
-                df = df.rename(columns={"Survived": "survived"})
-                target = "survived"
-            else:
-                raise ValueError(
-                    "El dataset debe contener una columna target. "
-                    "Define dataset.target en YAML o provee 'survived/Survived'."
-                )
+            raise ValueError(
+                "El campo 'dataset.target' es obligatorio en el YAML del pipeline. "
+                "Ejemplo:\n"
+                "  dataset:\n"
+                "    uri: ./data/train.csv\n"
+                "    target: mi_columna_objetivo"
+            )
 
         if target not in df.columns:
             raise ValueError(f"El dataset no contiene la columna target '{target}'.")
@@ -201,7 +198,7 @@ class MLflowExecutor(BaseExecutor):
 
         params = pipeline.model.hyperparameters.model_dump(exclude_none=True)
         model_type = pipeline.model.type.lower()
-        
+
         # 🧠 Ajuste automático basado en tipo de modelo y dataset
         params = auto_tune_hyperparameters(model_type, params, X_train, y_train)
 

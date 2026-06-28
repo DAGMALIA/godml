@@ -116,10 +116,10 @@ def run_pipeline(config_path="godml.yml"):
                 display_pipeline_summary(pipeline_info, result.metrics)
             else:
                 godml_logger.warning("⚠️ El executor no retornó métricas; mostrando logs estándar.")
-            
+
             godml_logger.info("\n📈 Final del pipeline")
             godml_logger.info("────────────────────────────────────────")
-            godml_logger.info(f"  • Estado   : ✅ Éxito")
+            godml_logger.info("  • Estado   : ✅ Éxito")
             godml_logger.info(f"  • Modelo   : {pipeline_info.get('model_name', '-')}")
             if result.metrics and 'auc' in result.metrics:
                 godml_logger.info(f"  • AUC      : {result.metrics.get('auc'):.4f}")

@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: godml
-Version: 1.0.1
+Version: 1.0.2
 Summary: Governed, Observable & Declarative Machine Learning Framework
 Author-email: Arturo Gutierrez Rubio Rojas <agtzrubio@dagmalia.com>
 Maintainer-email: Arturo Gutierrez Rubio Rojas <agtzrubio@dagmalia.com>
@@ -30,7 +30,7 @@ License-File: LICENSE_REPORT.md
 Requires-Dist: typer==0.12.3
 Requires-Dist: click==8.1.3
 Requires-Dist: protobuf>=4.25.8
-Requires-Dist: tensorflow==2.17.1
+Requires-Dist: tensorflow==2.17.0
 Requires-Dist: urllib3<3,>=2.5.0
 Requires-Dist: pandas==2.3.0
 Requires-Dist: numpy<2.0,>=1.24.0
@@ -358,23 +358,13 @@ Project Management
 ```bash
 godml init <project-name>              # Initialize new project
 godml run -f <config.yml>              # Execute pipeline
-godml validate -f <config.yml>         # Validate configuration
 ```
 
-Model Management
-
-```bash
-godml model list --env=production      # List models by environment
-godml model promote <name> --to=prod   # Promote model between environments
-godml model rollback <name> --version=1.2  # Rollback to previous version
-```
 
 Deployment
 
 ```bash
 godml deploy <project> <env>           # Deploy to environment
-godml scale <deployment> --replicas=5  # Scale deployment
-godml logs <service> --follow          # View service logs
 ```
 
 🌐 Cloud Deployment

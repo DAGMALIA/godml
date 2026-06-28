@@ -1,12 +1,8 @@
 # Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
 # Licensed under the MIT License
 
-from typing import Type, Dict, Any, List, Tuple
 import numpy as np
-import pandas as pd
 from sklearn.model_selection import StratifiedKFold, KFold
-from sklearn.metrics import accuracy_score, f1_score, mean_squared_error, r2_score
-from godml.model_service.base_model_interface import BaseModel
 
 
 def evaluate_with_cv(

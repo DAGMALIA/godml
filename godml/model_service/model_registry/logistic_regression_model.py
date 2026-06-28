@@ -1,7 +1,5 @@
 from godml.model_service.base_model_interface import BaseClassificationModel
 from sklearn.linear_model import LogisticRegression
-import joblib
-import os
 import numpy as np
 import pandas as pd
 from typing import Dict, Tuple, Any

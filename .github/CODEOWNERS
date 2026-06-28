@@ -1,0 +1,19 @@
+# CODEOWNERS — mandatory reviewers per path
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default: everything requires review from core maintainers
+*                                   @DAGMALIA/maintainers
+
+# Supply chain / CI — any workflow change requires security team sign-off
+.github/workflows/                  @DAGMALIA/maintainers @DAGMALIA/security
+.github/dependabot.yml              @DAGMALIA/maintainers @DAGMALIA/security
+.github/CODEOWNERS                  @DAGMALIA/maintainers
+
+# Core package — model, monitoring, compliance paths
+godml/providers/                    @DAGMALIA/maintainers
+godml/compliance_service/           @DAGMALIA/maintainers
+godml/monitoring_service/           @DAGMALIA/maintainers
+
+# Packaging + release config
+pyproject.toml                      @DAGMALIA/maintainers
+SECURITY.md                         @DAGMALIA/maintainers @DAGMALIA/security

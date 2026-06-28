@@ -22,7 +22,7 @@ class ComplianceRegistry:
         if compliance_type not in cls._registry:
             raise ValueError(f"❌ Norma de cumplimiento no registrada: {compliance_type}")
         return cls._registry[compliance_type]()
-    
+
     @classmethod
     def list_supported(cls) -> list:
         """

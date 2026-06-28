@@ -8,8 +8,8 @@ from sklearn.metrics import (
     recall_score,
     f1_score,
     roc_auc_score,
-    mean_squared_error, 
-    mean_absolute_error, 
+    mean_squared_error,
+    mean_absolute_error,
     r2_score,
     log_loss
 )
@@ -64,7 +64,7 @@ def evaluate_binary_classification(y_true, y_proba, threshold=0.5):
                 metrics["roc_auc_ovr"] = roc_auc_score(
                     y_true, y_proba, multi_class="ovr", average="macro", labels=unique_labels
                 )
-            except Exception as prob_err:
+            except Exception:
                 reason, code = analyze_metric_issue(y_true, y_proba)
                 logger.warning(f"⚠️ AUC no calculada ({code}): {reason}")
                 logger.info(explain_issue_and_action(reason, code))
@@ -111,4 +111,35 @@ def evaluate_regression(y_true, y_pred, metric_names=None):
                 results[name] = func(y_true, y_pred)
             except Exception as e:
                 logger.warning(f"⚠️ Error calculando {name}: {e}")
+    return results
+
+
+def compute_metrics(y_true, y_pred, metrics) -> dict:
+    """
+    Unified metric computation entry point used by notebook_api.
+
+    Accepts metrics as a list of names or a dict {name: threshold}.
+    Auto-detects task type (classification vs regression) from y_true cardinality.
+    Delegates to evaluate_binary_classification or evaluate_regression.
+    """
+    y_true_arr = np.array(y_true)
+    y_pred_arr = np.array(y_pred)
+
+    wanted = list(metrics.keys()) if isinstance(metrics, dict) else list(metrics)
+
+    n_classes = len(np.unique(y_true_arr))
+    regression_metrics = {"mse", "mae", "r2", "rmse"}
+    wants_regression = any(m.lower() in regression_metrics for m in wanted)
+
+    if wants_regression or n_classes > 20:
+        results = evaluate_regression(y_true_arr, y_pred_arr, metric_names=wanted)
+    else:
+        all_metrics = evaluate_binary_classification(y_true_arr, y_pred_arr)
+        if wanted:
+            results = {k: v for k, v in all_metrics.items() if k in wanted}
+            if not results:
+                results = all_metrics
+        else:
+            results = all_metrics
+
     return results

@@ -25,7 +25,7 @@ def load_pipeline(yaml_path: str) -> PipelineDefinition:
     try:
         # Validar path de forma segura
         validated_path = _validate_yaml_path(yaml_path)
-        
+
         # Cargar YAML de forma segura
         try:
             with open(validated_path, "r", encoding="utf-8") as f:
@@ -55,7 +55,7 @@ def load_pipeline(yaml_path: str) -> PipelineDefinition:
             return pipeline_def
         except Exception as e:
             raise ConfigurationError(f"Error creando definición de pipeline: {e}")
-            
+
     except (SecurityError, ConfigurationError, FileNotFoundError):
         raise
     except Exception as e:

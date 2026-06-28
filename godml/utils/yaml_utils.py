@@ -9,7 +9,6 @@ from godml.config_service.schema import (
     DeployConfig
 )
 from importlib.resources import files
-from pathlib import Path
 
 def update_dataset_hash_in_yaml(yaml_path: str, new_hash: str):
     """

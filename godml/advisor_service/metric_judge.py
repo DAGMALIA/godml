@@ -6,7 +6,7 @@ import json
 class MetricJudge:
     def analyze(self, df: pd.DataFrame, target: str, pretty: bool = False):
         y = df[target]
-        X = df.drop(columns=[target])
+        df.drop(columns=[target])
 
         # Detectar tipo de tarea
         if np.issubdtype(y.dtype, np.number) and len(np.unique(y)) > 10:

@@ -24,7 +24,7 @@ def analyze_metric_issue(y_true, y_pred_or_proba):
         if isinstance(y_pred_or_proba, np.ndarray):
             if y_pred_or_proba.ndim == 1:
                 return "La salida del modelo es unidimensional; probablemente se usó predict() en lugar de predict_proba().", "SHAPE_1D"
-            
+
             elif y_pred_or_proba.ndim == 2:
                 n_true_classes = len(np.unique(y_true))
                 n_pred_classes = y_pred_or_proba.shape[1]

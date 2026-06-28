@@ -1,0 +1,45 @@
+name: OpenSSF Scorecard
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "30 6 * * 1"  # Mondays 06:30 UTC
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Run OpenSSF Scorecard
+        uses: ossf/scorecard-action@99c09fe975337306107572b4fdf4db224cf8e2f2 # v2.4.3
+        with:
+          results_file: scorecard-results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - name: Upload Scorecard SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@1a818fd5f97ed0ee9a823421bd5b171add01227f # v4.36.2
+        with:
+          sarif_file: scorecard-results.sarif
+          category: scorecard
+
+      - name: Upload Scorecard results as artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: scorecard-results
+          path: scorecard-results.sarif
+          retention-days: 30
