@@ -80,6 +80,7 @@ godml = "godml.godml_cli:main"
 [project.urls]
 "Documentation" = "https://godmlcore.com"
 "Homepage" = "https://godmlcore.com"
+"Source" = "https://github.com/DAGMALIA/godml"
 "PyPI" = "https://pypi.org/project/godml/"
 "SLSA Framework" = "https://slsa.dev/"
 "Supply Chain Verified" = "https://search.sigstore.dev/?q=DAGMALIA"
