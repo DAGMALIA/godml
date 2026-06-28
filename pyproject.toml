@@ -71,7 +71,7 @@ dependencies = [
   # Network
   "urllib3>=2.0.0,<3",
   # Security
-  "protobuf>=4.25.0,<6",
+  "protobuf>=4.25.0,<8",
 ]
 
 [project.scripts]
