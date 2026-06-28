@@ -159,8 +159,8 @@ jobs:
           git config user.name "Arturo Gutierrez Rubio Rojas"
           git config user.email "agtzrubio@dagmalia.com"
           TAG="v${{ steps.version.outputs.version }}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists — skipping. PyPI publish already done."
+          if git ls-remote --tags origin "refs/tags/$TAG" | grep -q "$TAG"; then
+            echo "Tag $TAG already exists on remote — skipping. PyPI publish already done."
           else
             git tag -a "$TAG" -m "GODML $TAG — supply chain verified"
             git push origin "$TAG"
