@@ -103,7 +103,7 @@ jobs:
           cache: pip
 
       - name: Install ruff
-        run: pip install ruff
+        run: pip install "ruff==0.15.17"
 
       - name: Run ruff
         run: ruff check godml/ --select=E,W,F --ignore=E501
@@ -140,3 +140,31 @@ jobs:
           from godml.monitoring_service.metrics import compute_metrics
           print('Core services import OK without optional deps')
           "
+  # ── SAST — Bandit static analysis (all commits/PRs → feeds Scorecard SAST check) ─
+  sast:
+    name: SAST (Bandit)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.11"
+
+      - name: Install Bandit
+        run: pip install "bandit[sarif]==1.9.4"
+
+      - name: Run Bandit (HIGH/CRITICAL only)
+        run: |
+          bandit -r godml -f sarif -o bandit_report.sarif -lll || true
+
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        if: always()
+        with:
+          sarif_file: bandit_report.sarif
+          category: bandit

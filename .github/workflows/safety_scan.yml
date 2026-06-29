@@ -36,7 +36,7 @@ jobs:
       - name: 🏷️ Extract version
         id: version
         run: |
-          pip install toml-cli --quiet
+          pip install "toml-cli==0.8.2" --quiet
           VERSION=$(toml get --toml-path pyproject.toml project.version)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -52,7 +52,7 @@ jobs:
       # 5️⃣ Tests antes de publicar
       - name: 🧪 Run tests
         run: |
-          pip install pytest pytest-cov --quiet
+          pip install "pytest>=8.0.0,<10" "pytest-cov>=5.0.0,<8" --quiet
           pytest tests/ -v --tb=short
 
       # 6️⃣ Static code security scan (Bandit) — bloquea en HIGH/CRITICAL
