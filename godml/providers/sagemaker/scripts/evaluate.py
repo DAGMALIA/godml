@@ -33,10 +33,17 @@ os.makedirs(OUT_DIR, exist_ok=True)
 
 target_col = os.environ.get("GODML_TARGET_COL", "target")
 
-# Extract model archive
+# Extract model archive — filter members to prevent path traversal (B202)
+def _safe_members(tar: tarfile.TarFile):
+    for member in tar.getmembers():
+        member_path = os.path.realpath(os.path.join(MODEL_DIR, member.name))
+        if not member_path.startswith(os.path.realpath(MODEL_DIR)):
+            raise ValueError(f"Unsafe path in tarball: {member.name}")
+        yield member
+
 for archive in glob.glob(f"{MODEL_DIR}/*.tar.gz"):
     with tarfile.open(archive, "r:gz") as tar:
-        tar.extractall(MODEL_DIR)
+        tar.extractall(MODEL_DIR, members=_safe_members(tar))  # noqa: S202
 
 model_files = glob.glob(f"{MODEL_DIR}/**/*.joblib", recursive=True) + glob.glob(f"{MODEL_DIR}/*.joblib")
 if not model_files:
