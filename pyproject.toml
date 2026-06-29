@@ -173,7 +173,8 @@ omit = [
   # Deploy service requires Docker + FastAPI server
   "godml/deploy_service/*",
   # External cloud providers — require live AWS/SageMaker credentials
-  "godml/providers/sagemaker.py",
+  "godml/providers/sagemaker/*",
+  "godml/providers/sagemaker/scripts/*",
   "godml/dataprep_service/connectors/s3.py",
   # LSTM requires TensorFlow installation + GPU/CPU warmup
   "godml/model_service/model_registry/lstm_forecast_model.py",

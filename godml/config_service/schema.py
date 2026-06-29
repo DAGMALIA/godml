@@ -1,6 +1,26 @@
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Literal, Optional, Dict, Any, Union
 from pydantic import BaseModel, Field, ConfigDict
 from godml.dataprep_service.schema import Recipe as DataprepRecipe
+
+
+class AwsConfig(BaseModel):
+    role_arn: str
+    region: str = "us-east-1"
+    s3_bucket: str
+    s3_prefix: str = "godml"
+    kms_key_id: Optional[str] = None
+
+
+class ComputeConfig(BaseModel):
+    preprocessing: str = "ml.m5.large"
+    training: str = "ml.m5.2xlarge"
+    evaluation: str = "ml.m5.large"
+
+
+class RegistryConfig(BaseModel):
+    model_package_group: str
+    approval: Literal["manual", "auto"] = "manual"
+
 
 class DatasetConfig(BaseModel):
     uri: str
@@ -47,6 +67,9 @@ class PipelineDefinition(BaseModel):
     metrics: List[Metric]
     governance: Governance = Field(default_factory=lambda: Governance(owner="", tags=[]))
     deploy: DeployConfig
+    aws: Optional[AwsConfig] = None
+    compute: Optional[ComputeConfig] = None
+    registry: Optional[RegistryConfig] = None
 
 # 🧩 Resultado estandarizado de un pipeline GODML
 class ModelResult(BaseModel):
