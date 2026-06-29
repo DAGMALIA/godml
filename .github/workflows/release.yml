@@ -57,7 +57,7 @@ jobs:
 
       - name: Install + generate SBOM
         run: |
-          pip install -e . "cyclonedx-bom>=4,<6"
+          pip install -e . "cyclonedx-bom==4.6.4"
           cyclonedx-py environment --output-format JSON > sbom.cyclonedx.json
 
       - name: Upload SBOM

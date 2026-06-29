@@ -45,15 +45,13 @@ jobs:
       # 4️⃣ Install dependencies
       - name: 📦 Install project dependencies
         run: |
-          python -m pip install --upgrade pip setuptools wheel build
-          pip install -e ".[dev]" bandit[sarif] safety pip-audit pip-tools
+          pip install build==1.5.0 setuptools==80.9.0 wheel==0.45.1
+          pip install -e ".[dev]" bandit[sarif]==1.9.4 safety==3.5.1 pip-audit==2.9.0 pip-tools==7.4.1
           pip list --format=freeze > requirements.lock
 
       # 5️⃣ Tests antes de publicar
       - name: 🧪 Run tests
-        run: |
-          pip install "pytest>=8.0.0,<10" "pytest-cov>=5.0.0,<8" --quiet
-          pytest tests/ -v --tb=short
+        run: pytest tests/ -v --tb=short
 
       # 6️⃣ Static code security scan (Bandit) — bloquea en HIGH/CRITICAL
       - name: 🔍 Bandit Scan (Static Analysis)
