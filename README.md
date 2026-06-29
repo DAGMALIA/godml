@@ -2,7 +2,9 @@
   <img src="https://img.shields.io/pypi/v/godml?color=0066cc&label=godml&logo=pypi&logoColor=white" alt="PyPI">
   <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue?logo=python&logoColor=white" alt="Python">
   <img src="https://github.com/DAGMALIA/godml/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI">
+  <img src="https://github.com/DAGMALIA/godml/actions/workflows/safety_scan.yml/badge.svg?branch=main" alt="Supply Chain">
   <img src="https://img.shields.io/badge/SLSA-Level%203-green?logo=slsa&logoColor=white" alt="SLSA L3">
+  <img src="https://img.shields.io/badge/Sigstore-Verified-blueviolet?logo=sigstore&logoColor=white" alt="Sigstore">
   <img src="https://api.securityscorecards.dev/projects/github.com/DAGMALIA/godml/badge" alt="OpenSSF Scorecard">
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT">
 </p>

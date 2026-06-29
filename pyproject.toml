@@ -8,7 +8,7 @@ license = {text = "MIT"}
 name = "godml"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
-version = "1.1.0"
+version = "1.1.1"
 
 authors = [{name = "Arturo Gutierrez Rubio Rojas", email = "agtzrubio@dagmalia.com"}]
 
@@ -80,6 +80,7 @@ godml = "godml.godml_cli:main"
 [project.urls]
 "Documentation" = "https://godmlcore.com"
 "Homepage" = "https://godmlcore.com"
+"Source" = "https://github.com/DAGMALIA/godml"
 "PyPI" = "https://pypi.org/project/godml/"
 "SLSA Framework" = "https://slsa.dev/"
 "Supply Chain Verified" = "https://search.sigstore.dev/?q=DAGMALIA"
