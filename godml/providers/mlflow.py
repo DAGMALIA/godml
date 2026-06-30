@@ -21,12 +21,13 @@ class MLflowExecutor(BaseExecutor):
         import mlflow  # lazy — only load when executor is actually used
         if tracking_uri:
             if tracking_uri.startswith("file:/"):
-                local_path = tracking_uri.replace("file:/", "", 1)
-                normalized = normalize_path(local_path)
-                tracking_uri = f"file://{normalized}"
+                # MLflow 3.x dropped file-store support; redirect to sqlite
+                local_path = tracking_uri.replace("file:/", "", 1).lstrip("/")
+                tracking_uri = f"sqlite:///{normalize_path(local_path)}/mlflow.db"
             mlflow.set_tracking_uri(tracking_uri)
         else:
-            mlflow.set_tracking_uri("file:./mlruns")
+            # MLflow 3.x requires a database backend; default to local SQLite
+            mlflow.set_tracking_uri("sqlite:///mlflow.db")
 
         mlflow.set_experiment("godml-experiment")
 
