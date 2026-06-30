@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from godml.core_service.engine import BaseExecutor
 from godml.config_service.schema import PipelineDefinition, ModelResult
 from godml.model_service.model_loader import load_custom_model_class
-from godml.monitoring_service.logger import get_logger
+from godml.monitoring_service.logger import get_logger, print_pipeline_start, print_metrics_table, print_pipeline_result
 from godml.utils.path_utils import normalize_path
 from godml.utils.predict_safely import predict_safely
 from godml.utils.log_model_generic import log_model_generic
@@ -49,26 +49,14 @@ class MLflowExecutor(BaseExecutor):
         import mlflow
         import mlflow.models.signature
         from godml import notebook_api as nb
-        logger.info(f"🚀 INICIO DE PIPELINE: {pipeline.name}")
 
-        # ╭───────────────────────────────
-        # 1️⃣ Dataset + DataPrep (si existe)
-        # ────────────────────────────────╮
         ds = pipeline.dataset
         dataset_path = ds.uri
         dataset_path_abs = os.path.abspath(dataset_path)
+        batch_out = getattr(getattr(pipeline, "deploy", None), "batch_output", None) or ""
 
-        logger.info(
-            f"""
-    📂 Dataset Configuration
-    ────────────────────────────────────────
-      • CWD               : {os.getcwd()}
-      • dataset.uri       : {dataset_path}
-      • abs path          : {dataset_path_abs}
-      • target column     : {getattr(ds, 'target', None)}
-      • dataprep presente : {bool(getattr(ds, 'dataprep', None))}
-    """
-        )
+        print_pipeline_start(pipeline.name, dataset_path_abs, batch_out)
+        logger.info(f"dataset → {dataset_path_abs}  target={getattr(ds, 'target', None)}")
 
         if str(dataset_path).startswith("s3://"):
             raise ValueError("MLflowExecutor solo soporta datasets locales (CSV).")
@@ -266,12 +254,9 @@ class MLflowExecutor(BaseExecutor):
                     for metric_name, value in metrics_dict.items():
                         mlflow.log_metric(metric_name, value)
 
-                    logger.info(
-                        "📊 Métricas de entrenamiento\n"
-                        "────────────────────────────────────────\n"
-                        + "\n".join([f"  • {k:<10} : {v:.4f}" for k, v in metrics_dict.items()])
-                    )
-                    logger.info(f"✅ Entrenamiento finalizado. AUC: {metrics_dict.get('auc', 0):.4f}")
+                    thresholds = {m.name: m.threshold for m in pipeline.metrics}
+                    print_metrics_table(metrics_dict, thresholds)
+                    logger.info(f"AUC {metrics_dict.get('auc', 0):.4f}  accuracy {metrics_dict.get('accuracy', 0):.4f}")
 
                     # ╭───────────────────────────────
                     # 6️⃣ Validación por thresholds
@@ -321,15 +306,7 @@ class MLflowExecutor(BaseExecutor):
                                 except Exception as e:
                                     logger.error(f"❌ No se pudo guardar el modelo .pkl: {e}")
 
-                        # 📈 BLOQUE FINAL DE RESUMEN
-                        logger.info(
-                            "\n📈 Final del pipeline\n"
-                            "────────────────────────────────────────\n"
-                            f"  • Estado   : ✅ Éxito\n"
-                            f"  • Modelo   : {pipeline.name}-{model_type}\n"
-                            f"  • AUC      : {metrics_dict.get('auc', 0):.4f}\n"
-                            f"  • Output   : {output_path or 'N/A'}\n"
-                        )
+                        print_pipeline_result(True, pipeline.name, metrics_dict, output_path)
 
                         return ModelResult(
                             model=model,
@@ -340,26 +317,11 @@ class MLflowExecutor(BaseExecutor):
                         )
 
                     else:
-                        logger.error(
-                            "\n🚨 RESULTADO DEL PIPELINE: MÉTRICAS INSUFICIENTES 🚨\n"
-                            "══════════════════════════════════════════════════════════════════════\n"
-                            "⚠️  Las métricas no alcanzaron los umbrales esperados.\n"
-                            "💡  Recomendaciones:\n"
-                            "    • Ajusta los thresholds en godml.yml\n"
-                            "    • Mejora la calidad del dataset (usa dataset.dataprep)\n"
-                            "    • Prueba otros hiperparámetros (AutoTuning)\n"
-                            "══════════════════════════════════════════════════════════════════════"
-                        )
-                        raise RuntimeError("❌ Las métricas no alcanzaron los umbrales esperados.")
+                        print_pipeline_result(False, pipeline.name, metrics_dict, None)
+                        raise RuntimeError("Las métricas no alcanzaron los umbrales esperados.")
 
         except Exception as e:
-            logger.error(
-                "\n📉 Final del pipeline\n"
-                "────────────────────────────────────────\n"
-                f"  • Estado   : ❌ Fallo\n"
-                f"  • Error    : {str(e)}\n"
-                f"  • Modelo   : {pipeline.name}-{model_type}\n"
-            )
+            logger.error(str(e))
             raise
 
     # ==========================================================
