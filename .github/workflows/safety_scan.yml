@@ -21,7 +21,7 @@ jobs:
     steps:
       # 1️⃣ Checkout
       - name: 🧾 Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           token: ${{ secrets.RELEASE_PAT || github.token }}
 
@@ -129,7 +129,7 @@ jobs:
 
       # 1️⃣1️⃣ Install Cosign
       - name: 🔑 Install Cosign
-        uses: sigstore/cosign-installer@f713795cb21599bc4e5c4b58cbad1da852d7eeb9 # v3
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
         with:
           cosign-release: "v2.4.3"
 
