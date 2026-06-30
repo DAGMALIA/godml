@@ -8,8 +8,8 @@ logger = get_logger()
 def ensure_valid_tracking_uri() -> str:
     import mlflow
     uri = mlflow.get_tracking_uri()
-    if not uri or "C:/" in uri or uri.startswith("file:/C:"):
-        mlflow.set_tracking_uri("file:./mlruns")
+    if not uri or "C:/" in uri or uri.startswith("file:"):
+        mlflow.set_tracking_uri("sqlite:///mlflow.db")
     return mlflow.get_tracking_uri()
 
 
@@ -38,18 +38,21 @@ def log_model_generic(
     }
 
     try:
-        from sklearn.base import BaseEstimator
-        if isinstance(model, BaseEstimator):
-            mlflow.sklearn.log_model(sk_model=model, **log_args)
-            logger.info(f"Modelo sklearn registrado: {registered_model_name or model_name}")
-            return
-    except ImportError:
-        pass
-
-    try:
         from xgboost import Booster as XGBBooster
-        if isinstance(model, XGBBooster):
-            mlflow.xgboost.log_model(model, **log_args)
+        from xgboost.sklearn import XGBModel
+        if isinstance(model, (XGBBooster, XGBModel)):
+            # MLflow 3.x uses skops for sklearn-API XGBoost models and requires
+            # explicit trust for these types to prevent arbitrary code execution.
+            mlflow.xgboost.log_model(
+                model,
+                skops_trusted_types=[
+                    "xgboost.core.Booster",
+                    "xgboost.sklearn.XGBClassifier",
+                    "xgboost.sklearn.XGBRegressor",
+                    "xgboost.sklearn.XGBModel",
+                ],
+                **log_args,
+            )
             logger.info(f"Modelo XGBoost registrado: {registered_model_name or model_name}")
             return
     except ImportError:
@@ -58,9 +61,19 @@ def log_model_generic(
     try:
         import mlflow.lightgbm
         from lightgbm import Booster as LGBMBooster
-        if isinstance(model, LGBMBooster):
+        from lightgbm.sklearn import LGBMModel
+        if isinstance(model, (LGBMBooster, LGBMModel)):
             mlflow.lightgbm.log_model(model, **log_args)
             logger.info(f"Modelo LightGBM registrado: {registered_model_name or model_name}")
+            return
+    except ImportError:
+        pass
+
+    try:
+        from sklearn.base import BaseEstimator
+        if isinstance(model, BaseEstimator):
+            mlflow.sklearn.log_model(sk_model=model, **log_args)
+            logger.info(f"Modelo sklearn registrado: {registered_model_name or model_name}")
             return
     except ImportError:
         pass
