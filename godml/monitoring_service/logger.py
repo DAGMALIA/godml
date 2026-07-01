@@ -42,6 +42,8 @@ def setup_clean_logging():
     logging.getLogger("sagemaker").setLevel(logging.ERROR)
     logging.getLogger("mlflow").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.ERROR)
+    logging.getLogger("godml.model_service").setLevel(logging.WARNING)
+    logging.getLogger("godml.core_service").setLevel(logging.WARNING)
 
 
 # ============================================================================
@@ -75,11 +77,11 @@ class CleanFormatter(logging.Formatter):
         # Multi-line messages: indent continuation lines
         lines = msg.splitlines()
         if len(lines) == 1:
-            return f"  {color}{symbol}{_RESET} {time}  {msg}"
+            return f"\n  {color}{symbol}{_RESET} {time}  {msg}"
 
         first = lines[0]
         rest  = "\n".join(f"    {_DIM}{ln}{_RESET}" for ln in lines[1:])
-        return f"  {color}{symbol}{_RESET} {time}  {first}\n{rest}"
+        return f"\n  {color}{symbol}{_RESET} {time}  {first}\n{rest}"
 
 
 # ============================================================================
@@ -156,7 +158,9 @@ def print_metrics_table(metrics: dict, thresholds: dict | None = None) -> None:
                 icon = "[red]✗[/red]"
             t.add_row(metric, f"{value:.4f}", thr_str, icon)
 
+        print()
         c.print(t)
+        print()
     except Exception:
         for k, v in metrics.items():
             print(f"  {k}: {v:.4f}")

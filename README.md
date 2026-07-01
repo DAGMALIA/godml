@@ -1,36 +1,12 @@
 <p align="center">
-  <a href="https://pypi.org/project/godml/" target="_blank">
-    <img src="https://img.shields.io/pypi/v/godml?style=flat-square&logo=pypi&logoColor=white&color=4f46e5" alt="PyPI version">
-  </a>
-  <a href="https://pypi.org/project/godml/" target="_blank">
-    <img src="https://img.shields.io/pypi/pyversions/godml?style=flat-square&logo=python&logoColor=white&color=4f46e5" alt="Python versions">
-  </a>
-  <a href="https://github.com/DAGMALIA/godml/actions/workflows/ci.yml" target="_blank">
-    <img src="https://img.shields.io/github/actions/workflow/status/DAGMALIA/godml/ci.yml?branch=main&style=flat-square&logo=githubactions&logoColor=white&label=ci" alt="CI">
-  </a>
-  <a href="https://codecov.io/gh/DAGMALIA/godml" target="_blank">
-    <img src="https://img.shields.io/codecov/c/github/DAGMALIA/godml?style=flat-square&logo=codecov&logoColor=white&color=22c55e" alt="Coverage">
-  </a>
-  <a href="https://github.com/DAGMALIA/godml/blob/main/LICENSE" target="_blank">
-    <img src="https://img.shields.io/badge/license-MIT-7c3aed?style=flat-square" alt="MIT License">
-  </a>
-  <a href="https://www.godmlcore.com" target="_blank">
-    <img src="https://img.shields.io/badge/docs-godmlcore.com-0891b2?style=flat-square" alt="Docs">
-  </a>
-</p>
-<p align="center">
-  <a href="https://slsa.dev/" target="_blank">
-    <img src="https://img.shields.io/badge/SLSA-level%203-f59e0b?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAxTDMgNXY2YzAgNS41NSAzLjg0IDEwLjc0IDkgMTIgNS4xNi0xLjI2IDktNi40NSA5LTEyVjVsLTktNHoiLz48L3N2Zz4=&logoColor=white" alt="SLSA Level 3">
-  </a>
-  <a href="https://search.sigstore.dev/?q=DAGMALIA" target="_blank">
-    <img src="https://img.shields.io/badge/sigstore-keyless-7c3aed?style=flat-square" alt="Sigstore">
-  </a>
-  <a href="https://scorecard.dev/viewer/?uri=github.com/DAGMALIA/godml" target="_blank">
-    <img src="https://api.securityscorecards.dev/projects/github.com/DAGMALIA/godml/badge" alt="OpenSSF Scorecard">
-  </a>
-  <a href="https://github.com/DAGMALIA/godml/actions/workflows/safety_scan.yml" target="_blank">
-    <img src="https://img.shields.io/github/actions/workflow/status/DAGMALIA/godml/safety_scan.yml?branch=main&style=flat-square&logo=githubactions&logoColor=white&label=supply+chain&color=db2777" alt="Supply Chain">
-  </a>
+  <img src="https://img.shields.io/pypi/v/godml?color=0066cc&label=godml&logo=pypi&logoColor=white" alt="PyPI">
+  <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue?logo=python&logoColor=white" alt="Python">
+  <img src="https://github.com/DAGMALIA/godml/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI">
+  <img src="https://github.com/DAGMALIA/godml/actions/workflows/safety_scan.yml/badge.svg?branch=main" alt="Supply Chain">
+  <img src="https://img.shields.io/badge/SLSA-Level%203-green?logo=slsa&logoColor=white" alt="SLSA L3">
+  <img src="https://img.shields.io/badge/Sigstore-Verified-blueviolet?logo=sigstore&logoColor=white" alt="Sigstore">
+  <img src="https://api.securityscorecards.dev/projects/github.com/DAGMALIA/godml/badge" alt="OpenSSF Scorecard">
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT">
 </p>
 
 <h1 align="center">GODML</h1>
