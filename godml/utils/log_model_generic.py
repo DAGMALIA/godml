@@ -40,11 +40,17 @@ def log_model_generic(
     try:
         from xgboost import Booster as XGBBooster
         from xgboost.sklearn import XGBModel
-        if isinstance(model, (XGBBooster, XGBModel)):
-            # MLflow 3.x uses skops for sklearn-API XGBoost models and requires
-            # explicit trust for these types to prevent arbitrary code execution.
-            mlflow.xgboost.log_model(
-                model,
+        if isinstance(model, XGBBooster):
+            # Native XGBoost Booster — use xgboost flavor (no skops involved)
+            mlflow.xgboost.log_model(model, **log_args)
+            logger.info(f"Modelo XGBoost registrado: {registered_model_name or model_name}")
+            return
+        if isinstance(model, XGBModel):
+            # Sklearn-API XGBoost (XGBClassifier/XGBRegressor) — MLflow 3.x
+            # serializes these via skops and requires explicit trusted types;
+            # skops_trusted_types must go to mlflow.sklearn, not mlflow.xgboost.
+            mlflow.sklearn.log_model(
+                sk_model=model,
                 skops_trusted_types=[
                     "xgboost.core.Booster",
                     "xgboost.sklearn.XGBClassifier",
@@ -53,7 +59,7 @@ def log_model_generic(
                 ],
                 **log_args,
             )
-            logger.info(f"Modelo XGBoost registrado: {registered_model_name or model_name}")
+            logger.info(f"Modelo XGBoost (sklearn API) registrado: {registered_model_name or model_name}")
             return
     except ImportError:
         pass

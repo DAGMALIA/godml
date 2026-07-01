@@ -42,6 +42,8 @@ def setup_clean_logging():
     logging.getLogger("sagemaker").setLevel(logging.ERROR)
     logging.getLogger("mlflow").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.ERROR)
+    logging.getLogger("godml.model_service").setLevel(logging.WARNING)
+    logging.getLogger("godml.core_service").setLevel(logging.WARNING)
 
 
 # ============================================================================
