@@ -8,7 +8,11 @@ logger = get_logger()
 def ensure_valid_tracking_uri() -> str:
     import mlflow
     uri = mlflow.get_tracking_uri()
-    if not uri or "C:/" in uri or uri.startswith("file:"):
+    # MLflow 3.x dropped file-store support: solo redirige URIs `file:`/vacías.
+    # OJO: no filtrar por "C:/" — eso pisaba cualquier sqlite:///C:/... absoluto
+    # (Windows) a mitad del run, apuntando log_model() a un mlflow.db distinto
+    # del que abrió el run activo y causando "Run with id=... not found".
+    if not uri or uri.startswith("file:"):
         mlflow.set_tracking_uri("sqlite:///mlflow.db")
     return mlflow.get_tracking_uri()
 
@@ -46,19 +50,9 @@ def log_model_generic(
             logger.info(f"Modelo XGBoost registrado: {registered_model_name or model_name}")
             return
         if isinstance(model, XGBModel):
-            # Sklearn-API XGBoost (XGBClassifier/XGBRegressor) — MLflow 3.x
-            # serializes these via skops and requires explicit trusted types;
-            # skops_trusted_types must go to mlflow.sklearn, not mlflow.xgboost.
-            mlflow.sklearn.log_model(
-                sk_model=model,
-                skops_trusted_types=[
-                    "xgboost.core.Booster",
-                    "xgboost.sklearn.XGBClassifier",
-                    "xgboost.sklearn.XGBRegressor",
-                    "xgboost.sklearn.XGBModel",
-                ],
-                **log_args,
-            )
+            # Sklearn-API XGBoost (XGBClassifier/XGBRegressor) — se registra
+            # con el flavor sklearn, igual que cualquier BaseEstimator.
+            mlflow.sklearn.log_model(sk_model=model, **log_args)
             logger.info(f"Modelo XGBoost (sklearn API) registrado: {registered_model_name or model_name}")
             return
     except ImportError:

@@ -16,9 +16,16 @@ def is_valid_hash(hash_value: str) -> bool:
     return hash_value and hash_value != "auto"
 
 
+_UNBOUNDED_METRICS = {"mse", "mae", "rmse"}  # regresión: no acotadas a [0, 1]
+_SIGNED_METRICS = {"r2"}  # regresión: puede ser negativo (peor que predecir la media)
+
+
 def validate_metrics(metrics: List[Metric]) -> List[str]:
     errors = []
     for metric in metrics:
+        name = (metric.name or "").lower()
+        if name in _UNBOUNDED_METRICS or name in _SIGNED_METRICS:
+            continue
         if not (0 <= metric.threshold <= 1):
             errors.append(f"El umbral de la métrica '{metric.name}' está fuera del rango permitido (0-1).")
     return errors

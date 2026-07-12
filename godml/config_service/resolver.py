@@ -2,7 +2,7 @@
 import os
 import re
 
-env_var_pattern = re.compile(r"\$\{(\w+)(?::([^\}]+))?\}")
+env_var_pattern = re.compile(r"\$\{(\w+)(?::([^\}]*))?\}")
 
 def resolve_env_variables(config_dict):
     def resolve_value(value):

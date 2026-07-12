@@ -27,7 +27,10 @@ def doc_advisor(question: str):
 
 def metric_judge(X, y, task_type: str = "classification"):
     judge = MetricJudge()
-    return judge.suggest(X, y, task_type=task_type)
+    df = X.copy()
+    target_col = getattr(y, "name", None) or "target"
+    df[target_col] = y
+    return judge.analyze(df, target_col)
 
 
 def advisor_full_report(df: pd.DataFrame, target: str | None = None, derive_target: bool = False):

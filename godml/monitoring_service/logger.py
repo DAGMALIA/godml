@@ -173,12 +173,17 @@ def print_pipeline_result(success: bool, name: str, metrics: dict, output: str |
         from rich.text import Text
         c = Console()
         if success:
-            auc = metrics.get("auc", 0)
-            acc = metrics.get("accuracy", 0)
             body = Text()
             body.append("  ✓ Pipeline completado\n\n", style="bold green")
-            body.append(f"  AUC       {auc:.4f}\n", style="bold")
-            body.append(f"  Accuracy  {acc:.4f}\n", style="bold")
+            if "auc" in metrics or "accuracy" in metrics:
+                body.append(f"  AUC       {metrics.get('auc', 0):.4f}\n", style="bold")
+                body.append(f"  Accuracy  {metrics.get('accuracy', 0):.4f}\n", style="bold")
+            else:
+                # Pipeline de regresión (p.ej. lstm_forecast, linear_regression):
+                # no hay auc/accuracy, muestra las métricas que sí se calcularon.
+                for key in ("r2", "mse", "mae"):
+                    if key in metrics:
+                        body.append(f"  {key.upper():<9} {metrics[key]:.4f}\n", style="bold")
             if output:
                 body.append(f"\n  Output → {output}", style="dim")
             c.print(Panel(body, border_style="green", title=f"[bold green]{name}[/bold green]", padding=(0, 1)))
