@@ -265,3 +265,89 @@ class TestEvaluateWithCV:
         y = np.random.randn(60)
         avg, folds = evaluate_with_cv(LinearRegressionModel, X, y, "regression", {}, folds=3)
         assert len(folds) == 3
+
+
+# ── log_model_generic ───────────────────────────────────────────────────────
+# Regression coverage: mlflow.sklearn.log_model()'s skops_trusted_types kwarg
+# is required on newer mlflow/skops (else UntrustedTypesFoundException for
+# XGBoost's sklearn wrapper) but doesn't exist on older mlflow (TypeError).
+# _log_sklearn_model must handle both without the caller knowing which.
+
+class TestLogSklearnModel:
+    def test_passes_skops_trusted_types_when_supported(self):
+        from godml.utils.log_model_generic import _log_sklearn_model, _XGBOOST_SKOPS_TRUSTED_TYPES
+        with patch("mlflow.sklearn.log_model") as mock_log:
+            _log_sklearn_model(MagicMock(), {"name": "model"})
+        mock_log.assert_called_once()
+        assert mock_log.call_args.kwargs["skops_trusted_types"] == _XGBOOST_SKOPS_TRUSTED_TYPES
+
+    def test_falls_back_when_kwarg_unsupported(self):
+        from godml.utils.log_model_generic import _log_sklearn_model
+
+        def fake_log_model(*args, **kwargs):
+            if "skops_trusted_types" in kwargs:
+                raise TypeError("log_model() got an unexpected keyword argument 'skops_trusted_types'")
+
+        with patch("mlflow.sklearn.log_model", side_effect=fake_log_model) as mock_log:
+            _log_sklearn_model(MagicMock(), {"name": "model"})
+        assert mock_log.call_count == 2
+        assert "skops_trusted_types" not in mock_log.call_args.kwargs
+
+    def test_other_typeerrors_are_not_swallowed(self):
+        from godml.utils.log_model_generic import _log_sklearn_model
+
+        def fake_log_model(*args, **kwargs):
+            raise TypeError("some unrelated failure")
+
+        with patch("mlflow.sklearn.log_model", side_effect=fake_log_model):
+            with pytest.raises(TypeError, match="some unrelated failure"):
+                _log_sklearn_model(MagicMock(), {"name": "model"})
+
+
+class TestLogModelGeneric:
+    def test_xgboost_sklearn_api_routes_through_log_sklearn_model(self):
+        from godml.utils.log_model_generic import log_model_generic
+        from xgboost import XGBClassifier
+        model = XGBClassifier()
+        with patch("godml.utils.log_model_generic._log_sklearn_model") as mock_log:
+            log_model_generic(model, model_name="m", registered_model_name="rm")
+        mock_log.assert_called_once()
+        assert mock_log.call_args.args[0] is model
+
+    def test_native_booster_uses_xgboost_flavor_not_sklearn(self):
+        from godml.utils.log_model_generic import log_model_generic
+        from xgboost import Booster
+        model = MagicMock(spec=Booster)
+        with patch("mlflow.xgboost.log_model") as mock_xgb_log, \
+             patch("godml.utils.log_model_generic._log_sklearn_model") as mock_sklearn_log:
+            log_model_generic(model, model_name="m")
+        mock_xgb_log.assert_called_once()
+        mock_sklearn_log.assert_not_called()
+
+    def test_unsupported_model_type_raises(self):
+        from godml.utils.log_model_generic import log_model_generic
+        with pytest.raises(NotImplementedError):
+            log_model_generic(object(), model_name="m")
+
+
+class TestEnsureValidTrackingUri:
+    def test_leaves_absolute_windows_sqlite_uri_untouched(self, monkeypatch):
+        # Regression test: this used to reset ANY uri containing "C:/" to a
+        # relative "sqlite:///mlflow.db", silently redirecting log_model()
+        # away from the db that opened the active run.
+        import mlflow
+        from godml.utils.log_model_generic import ensure_valid_tracking_uri
+        monkeypatch.setattr(mlflow, "get_tracking_uri", lambda: "sqlite:///C:/tmp/mlflow.db")
+        calls = []
+        monkeypatch.setattr(mlflow, "set_tracking_uri", lambda uri: calls.append(uri))
+        ensure_valid_tracking_uri()
+        assert calls == []
+
+    def test_resets_missing_or_file_uri(self, monkeypatch):
+        import mlflow
+        from godml.utils.log_model_generic import ensure_valid_tracking_uri
+        monkeypatch.setattr(mlflow, "get_tracking_uri", lambda: "file:./mlruns")
+        calls = []
+        monkeypatch.setattr(mlflow, "set_tracking_uri", lambda uri: calls.append(uri))
+        ensure_valid_tracking_uri()
+        assert calls == ["sqlite:///mlflow.db"]

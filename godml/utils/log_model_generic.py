@@ -17,6 +17,37 @@ def ensure_valid_tracking_uri() -> str:
     return mlflow.get_tracking_uri()
 
 
+# Non-sklearn types that XGBoost's sklearn API wrapper (XGBClassifier/XGBRegressor)
+# embeds internally — skops' security model requires these to be explicitly
+# trusted, or mlflow.sklearn.log_model() raises UntrustedTypesFoundException.
+_XGBOOST_SKOPS_TRUSTED_TYPES = [
+    "xgboost.core.Booster",
+    "xgboost.sklearn.XGBClassifier",
+    "xgboost.sklearn.XGBRegressor",
+    "xgboost.sklearn.XGBModel",
+]
+
+
+def _log_sklearn_model(model, log_args: dict) -> None:
+    """
+    mlflow.sklearn.log_model() gained the `skops_trusted_types` kwarg (and
+    started requiring it for XGBoost's sklearn wrapper) partway through the
+    mlflow 2.x/3.x range godml supports (mlflow>=2.13.0,<4) — passing it on
+    older versions raises TypeError, and omitting it on newer versions raises
+    UntrustedTypesFoundException. Try the modern signature first and fall
+    back for older installs.
+    """
+    import mlflow.sklearn
+    try:
+        mlflow.sklearn.log_model(
+            sk_model=model,
+            skops_trusted_types=_XGBOOST_SKOPS_TRUSTED_TYPES,
+            **log_args,
+        )
+    except TypeError:
+        mlflow.sklearn.log_model(sk_model=model, **log_args)
+
+
 def log_model_generic(
     model,
     model_name: str = "model",
@@ -52,7 +83,7 @@ def log_model_generic(
         if isinstance(model, XGBModel):
             # Sklearn-API XGBoost (XGBClassifier/XGBRegressor) — se registra
             # con el flavor sklearn, igual que cualquier BaseEstimator.
-            mlflow.sklearn.log_model(sk_model=model, **log_args)
+            _log_sklearn_model(model, log_args)
             logger.info(f"Modelo XGBoost (sklearn API) registrado: {registered_model_name or model_name}")
             return
     except ImportError:
