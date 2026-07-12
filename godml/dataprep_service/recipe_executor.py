@@ -20,6 +20,7 @@ from .transforms.scale import StandardScale, MinMaxScale
 from .transforms.text import Lower, Strip, RegexReplace
 from .transforms.dedup import DropDuplicates
 from .transforms.quality import OutlierFlag
+from .transforms.window import Lag
 
 TRANSFORMS = {
     "drop_columns": DropColumns(),
@@ -38,6 +39,7 @@ TRANSFORMS = {
     "regex_replace": RegexReplace(),
     "drop_duplicates": DropDuplicates(),
     "outlier_flag": OutlierFlag(),
+    "lag": Lag(),
 }
 
 CONNECTORS = {

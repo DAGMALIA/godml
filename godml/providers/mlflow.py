@@ -11,7 +11,7 @@ from godml.monitoring_service.logger import get_logger, print_pipeline_start, pr
 from godml.utils.path_utils import normalize_path
 from godml.utils.predict_safely import predict_safely
 from godml.utils.log_model_generic import log_model_generic
-from godml.monitoring_service.metrics import evaluate_binary_classification
+from godml.monitoring_service.metrics import evaluate_binary_classification, evaluate_regression
 
 logger = get_logger()
 
@@ -19,6 +19,7 @@ logger = get_logger()
 class MLflowExecutor(BaseExecutor):
     def __init__(self, tracking_uri: str = None):
         import mlflow  # lazy — only load when executor is actually used
+        tracking_uri = tracking_uri or os.environ.get("MLFLOW_TRACKING_URI")
         if tracking_uri:
             if tracking_uri.startswith("file:/"):
                 # MLflow 3.x dropped file-store support; redirect to sqlite
@@ -29,7 +30,7 @@ class MLflowExecutor(BaseExecutor):
             # MLflow 3.x requires a database backend; default to local SQLite
             mlflow.set_tracking_uri("sqlite:///mlflow.db")
 
-        mlflow.set_experiment("godml-experiment")
+        mlflow.set_experiment(os.environ.get("MLFLOW_EXPERIMENT_NAME", "godml-experiment"))
 
     def preprocess_for_xgboost(self, df, target_col="target"):
         if target_col not in df.columns:
@@ -206,6 +207,8 @@ class MLflowExecutor(BaseExecutor):
             logger.error(f"❌ Error al cargar el modelo '{model_type}': {e}")
             raise
 
+        task_type = getattr(model_instance, "task_type", "classification")
+
         max_attempts = 3
         try:
             for attempt in range(max_attempts):
@@ -240,23 +243,47 @@ class MLflowExecutor(BaseExecutor):
                             model, preds, metrics_dict = train_result
                         elif len(train_result) == 2:
                             model, preds = train_result
-                            metrics_dict = evaluate_binary_classification(y_test, preds)
+                            metrics_dict = {}
                         else:
                             raise ValueError("❌ El método 'train' retornó una tupla con longitud inesperada.")
                     else:
                         raise ValueError("❌ El método 'train' debe retornar al menos (modelo, predicciones).")
 
-                    input_example = X_train.iloc[:5]
-                    output_example = predict_safely(model, input_example)
-                    signature = mlflow.models.signature.infer_signature(input_example, output_example)
+                    # Completa métricas que el modelo no haya calculado por sí mismo
+                    # (p.ej. LogisticRegressionModel solo devuelve 'accuracy'), sin pisar
+                    # las que ya vienen en metrics_dict. task_type decide clasificación vs regresión.
+                    # Para regresión, solo se recalcula si el modelo no trajo nada: algunos
+                    # modelos (p.ej. lstm_forecast) preprocesan/ventanean sus datos de test
+                    # internamente, así que (y_test, preds) del split externo puede tener otra
+                    # longitud y no sirve para recalcular sus métricas de forma genérica.
+                    if task_type == "regression":
+                        if not metrics_dict:
+                            metrics_dict = evaluate_regression(y_test, preds)
+                    else:
+                        default_metrics = evaluate_binary_classification(y_test, preds)
+                        metrics_dict = {**default_metrics, **metrics_dict}
 
-                    metrics_dict = evaluate_binary_classification(y_test, preds)
+                    input_example = X_train.iloc[:5]
+                    try:
+                        output_example = predict_safely(model, input_example)
+                        signature = mlflow.models.signature.infer_signature(input_example, output_example)
+                    except Exception as e:
+                        # Modelos con preprocesamiento propio (p.ej. lstm_forecast reescala y
+                        # ventanea antes de predecir) no aceptan el DataFrame crudo tal cual.
+                        # No es fatal: se registra el modelo sin signature/input_example.
+                        logger.warning(f"⚠️ No se pudo inferir signature/input_example para MLflow: {e}")
+                        input_example = None
+                        signature = None
+
                     for metric_name, value in metrics_dict.items():
                         mlflow.log_metric(metric_name, value)
 
                     thresholds = {m.name: m.threshold for m in pipeline.metrics}
                     print_metrics_table(metrics_dict, thresholds)
-                    logger.info(f"AUC {metrics_dict.get('auc', 0):.4f}  accuracy {metrics_dict.get('accuracy', 0):.4f}")
+                    if task_type == "regression":
+                        logger.info(f"R2 {metrics_dict.get('r2', 0):.4f}  MAE {metrics_dict.get('mae', 0):.4f}")
+                    else:
+                        logger.info(f"AUC {metrics_dict.get('auc', 0):.4f}  accuracy {metrics_dict.get('accuracy', 0):.4f}")
 
                     # ╭───────────────────────────────
                     # 6️⃣ Validación por thresholds

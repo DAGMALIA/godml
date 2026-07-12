@@ -61,7 +61,7 @@ def save_model_to_structure(model, model_name: str = None, environment: str = "e
     with open(metadata_path, "w") as f:
         json.dump(metadata, f, indent=2)
 
-    print(f"✅ Modelo {model_type} guardado: {model_path}")
+    print(f"Modelo {model_type} guardado: {model_path}")
     return str(model_path)
 
 def load_model_from_structure(model_name: str, environment: str = "production"):
@@ -83,7 +83,7 @@ def load_model_from_structure(model_name: str, environment: str = "production"):
     # ✅ Cargar con joblib
     model = joblib.load(model_path)
 
-    print(f"✅ Modelo cargado: {model_path}")
+    print(f"Modelo cargado: {model_path}")
     return model
 
 def list_models(environment=None):
@@ -136,7 +136,7 @@ def promote_model(model_name: str, from_env: str, to_env: str):
     model = load_model_from_structure(model_name, from_env)
     new_path = save_model_to_structure(model, model_name, to_env)
 
-    print(f"✅ Modelo promovido de {from_env} a {to_env}")
+    print(f"Modelo promovido de {from_env} a {to_env}")
     return new_path
 
 def _detect_model_type(model):
