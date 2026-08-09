@@ -2,6 +2,7 @@ import ast
 import os
 import json
 import re
+from pathlib import Path
 
 DOC_INDEX = []
 
@@ -32,14 +33,24 @@ def parse_file(path):
                 "examples": extract_examples(doc)
             })
 
-def build_index(out_file="godml_doc_index.json"):
+def build_index(out_file=None):
     base_dir = os.path.dirname(__file__)
-    files = ["godml_cli.py", "notebook_api.py"]
+    out_file = out_file or str(Path.home() / ".godml" / "godml_doc_index.json")
+
+    files = [os.path.join(base_dir, "godml_cli.py")]
+    notebook_api_dir = os.path.join(base_dir, "notebook_api")
+    for name in sorted(os.listdir(notebook_api_dir)):
+        if name.endswith(".py"):
+            files.append(os.path.join(notebook_api_dir, name))
+
     for file in files:
-        parse_file(os.path.join(base_dir, file))
-    with open(out_file, "w", encoding="utf-8") as f:
+        parse_file(file)
+
+    out_path = Path(out_file)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
         json.dump(DOC_INDEX, f, indent=2, ensure_ascii=False)
-    print(f"✅ Índice generado con {len(DOC_INDEX)} funciones → {out_file}")
+    print(f"Indice generado con {len(DOC_INDEX)} funciones en {out_path}")
 
 if __name__ == "__main__":
     build_index()

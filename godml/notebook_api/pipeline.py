@@ -22,13 +22,14 @@ class GodmlNotebook:
         model_type: str,
         hyperparameters: dict,
         dataset_path: str,
+        target: str | None = None,
         output_path: str | None = None,
     ):
         config = {
             "name": name,
             "version": "1.0.0",
             "provider": "mlflow",
-            "dataset": {"uri": dataset_path, "hash": "auto"},
+            "dataset": {"uri": dataset_path, "hash": "auto", "target": target},
             "model": {"type": model_type, "hyperparameters": hyperparameters},
             "metrics": [{"name": "auc", "threshold": 0.8}],
             "governance": {
@@ -64,7 +65,13 @@ class GodmlNotebook:
         return load_model_from_structure(model_name, environment)
 
 
-def quick_train(model_type: str, hyperparameters: dict, dataset_path: str, name: str | None = None):
+def quick_train(
+    model_type: str,
+    hyperparameters: dict,
+    dataset_path: str,
+    target: str | None = None,
+    name: str | None = None,
+):
     godml = GodmlNotebook()
     name = name or f"{model_type}-quick-train"
     godml.create_pipeline(
@@ -72,13 +79,18 @@ def quick_train(model_type: str, hyperparameters: dict, dataset_path: str, name:
         model_type=model_type,
         hyperparameters=hyperparameters,
         dataset_path=dataset_path,
+        target=target,
     )
     godml.train()
     return "Modelo entrenado exitosamente"
 
 
 def quick_train_with_metrics(
-    model_type: str, hyperparameters: dict, dataset_path: str, name: str | None = None
+    model_type: str,
+    hyperparameters: dict,
+    dataset_path: str,
+    target: str | None = None,
+    name: str | None = None,
 ):
     godml = GodmlNotebook()
     name = name or f"{model_type}-quick-train"
@@ -87,6 +99,7 @@ def quick_train_with_metrics(
         model_type=model_type,
         hyperparameters=hyperparameters,
         dataset_path=dataset_path,
+        target=target,
     )
     executor = get_executor(pipe.provider)
     result = executor.run(pipe)
