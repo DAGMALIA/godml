@@ -5,6 +5,7 @@ import pytest
 
 from godml.monitoring_service.observability import (
     BASELINE_FILENAME,
+    METRICS_ENABLED,
     DriftMonitor,
     ModelObserver,
     PSI_SIGNIFICANT_THRESHOLD,
@@ -15,6 +16,14 @@ from godml.monitoring_service.observability import (
     psi_severity,
     render_metrics,
     save_baseline,
+)
+
+# El PSI y el baseline no dependen de prometheus_client, pero la exposición sí.
+# Sin la extra instalada las métricas son no-ops y una aserción sobre el payload
+# no verificaría nada: mejor saltear explícitamente que pasar en falso.
+requiere_prometheus = pytest.mark.skipif(
+    not METRICS_ENABLED,
+    reason="requiere la extra observability (pip install godml[observability])",
 )
 
 
@@ -194,6 +203,7 @@ class TestDriftMonitor:
 
 class TestModelObserver:
 
+    @requiere_prometheus
     def test_expone_metricas_en_el_formato_prometheus(self, baseline, tmp_path):
         path = save_baseline(baseline, tmp_path)
         obs = ModelObserver(

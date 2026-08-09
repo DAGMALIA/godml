@@ -140,6 +140,10 @@ dev = [
   "pytest-mock>=3.14.0,<4",
   "moto[all]>=5.0.0,<6",
   "httpx>=0.27.0,<1",
+  # Sin esto los tests de observabilidad se ejecutan contra las métricas
+  # degradadas a no-op y dejan de verificar nada: prometheus_client es
+  # opcional en runtime, pero obligatorio para testear el camino real.
+  "godml[observability]",
 ]
 
 # pip install godml[all]
