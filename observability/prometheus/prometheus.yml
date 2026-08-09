@@ -1,0 +1,33 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    stack: godml
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Servicio de inferencia GODML. Los puertos por defecto salen de
+  # godml/deploy_service/env_config.py: dev=8000, qa=8001, prod=80.
+  #
+  # Solo se declara `dev`. Descomentar un target equivale a afirmar que ese
+  # ambiente debería estar arriba: un target declarado y ausente deja la alerta
+  # GodmlServiceDown encendida de forma permanente, que es exactamente el ruido
+  # que hace que la gente deje de mirar las alertas.
+  - job_name: godml-model
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["host.docker.internal:8000"]
+        labels:
+          environment: dev
+      # - targets: ["host.docker.internal:8001"]
+      #   labels:
+      #     environment: qa
+    # El servicio ya emite el label `environment` en cada métrica; conservamos
+    # el del target solo para identificar la instancia cuando está caída.
+    honor_labels: true

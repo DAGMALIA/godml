@@ -201,9 +201,24 @@ Usado para *health checks* de Docker, ECS o SageMaker.
 ---
 
 ### 4️⃣ `/version`
-**Método:** `GET`  
+**Método:** `GET`
 **Descripción:** Devuelve las versiones del servicio y del framework GODML.
 
+---
+
+### 5️⃣ `/metrics`
+**Método:** `GET`
+**Descripción:** Métricas en formato de exposición Prometheus: latencia, throughput,
+tasa de error, distribución de predicciones y PSI de drift por feature.
+Requiere `pip install godml[observability]`; sin esa extra el endpoint responde vacío
+y el servicio sigue funcionando normalmente.
+
+### 6️⃣ `/drift`
+**Método:** `GET`
+**Descripción:** Estado del drift en JSON (PSI por feature y su severidad), para
+inspección rápida sin necesidad de levantar Grafana.
+Solo devuelve valores si existe un `drift_baseline.json` junto al modelo, que
+`godml run` genera automáticamente durante el entrenamiento.
 
 ---
 

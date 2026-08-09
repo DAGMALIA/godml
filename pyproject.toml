@@ -125,6 +125,13 @@ data = [
   "pymysql>=1.1.0,<2",
 ]
 
+# pip install godml[observability]
+# Runtime observability: expone /metrics para Prometheus y calcula drift (PSI).
+# Sin esta extra el servicio funciona igual, con las métricas degradadas a no-ops.
+observability = [
+  "prometheus-client>=0.20.0,<1",
+]
+
 # pip install godml[dev]
 # Development & testing
 dev = [
@@ -143,6 +150,7 @@ all = [
   "godml[deep]",
   "godml[advisor]",
   "godml[data]",
+  "godml[observability]",
 ]
 
 [tool.setuptools.package-data]
