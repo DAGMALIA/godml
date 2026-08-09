@@ -21,6 +21,7 @@ import inspect
 import os
 import time
 from pathlib import Path
+from godml import __version__
 from godml.monitoring_service.logger import godml_logger, SecurityError
 from godml.monitoring_service.observability import (
     BASELINE_FILENAME,
@@ -192,7 +193,11 @@ def metadata():
 @app.get("/version")
 def version():
     return {
-        "godml_version": os.getenv("GODML_VERSION", "dev"),
+        # El default era la cadena "dev", así que el endpoint reportaba "dev" en
+        # cualquier despliegue que no seteara GODML_VERSION a mano — es decir,
+        # casi todos. Se conserva la variable como override para builds que
+        # quieran marcar algo distinto, pero el fallback ahora es la versión real.
+        "godml_version": os.getenv("GODML_VERSION") or __version__,
         "service_version": "1.1.0",
         "environment": ENVIRONMENT,
     }

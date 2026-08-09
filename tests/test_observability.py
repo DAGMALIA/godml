@@ -233,3 +233,32 @@ class TestModelObserver:
         snap = ModelObserver(model_name="sin-baseline", environment="dev").snapshot()
         assert snap["drift"]["enabled"] is False
         assert snap["drift"]["psi"] == {}
+
+
+class TestVersionEndpoint:
+
+    def test_reporta_la_version_real_y_no_la_cadena_dev(self, monkeypatch):
+        """
+        El default era literalmente "dev", así que cualquier despliegue que no
+        seteara GODML_VERSION —o sea, casi todos— reportaba "dev" y el endpoint
+        no servía para saber qué versión estaba sirviendo.
+        """
+        from fastapi.testclient import TestClient
+
+        from godml import __version__
+        from godml.deploy_service.server import app
+
+        monkeypatch.delenv("GODML_VERSION", raising=False)
+        # Sin context manager: evita el startup, que buscaría un modelo en disco.
+        respuesta = TestClient(app).get("/version").json()
+
+        assert respuesta["godml_version"] == __version__
+        assert respuesta["godml_version"] != "dev"
+
+    def test_la_variable_de_entorno_sigue_teniendo_prioridad(self, monkeypatch):
+        from fastapi.testclient import TestClient
+
+        from godml.deploy_service.server import app
+
+        monkeypatch.setenv("GODML_VERSION", "build-42")
+        assert TestClient(app).get("/version").json()["godml_version"] == "build-42"
