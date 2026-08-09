@@ -2,6 +2,7 @@
 # Licensed under the MIT License
 
 import os
+import tempfile
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from godml.core_service.engine import BaseExecutor
@@ -12,6 +13,7 @@ from godml.utils.path_utils import normalize_path
 from godml.utils.predict_safely import predict_safely
 from godml.utils.log_model_generic import log_model_generic
 from godml.monitoring_service.metrics import evaluate_binary_classification, evaluate_regression
+from godml.monitoring_service.observability import build_baseline, save_baseline
 
 logger = get_logger()
 
@@ -312,6 +314,29 @@ class MLflowExecutor(BaseExecutor):
                         )
                         logger.info(f"✅ Modelo registrado exitosamente: {pipeline.name}-{model_type}")
 
+                        # ╭───────────────────────────────
+                        # 🌊 Baseline de drift para observabilidad en runtime
+                        # ────────────────────────────────╮
+                        # Resume la distribución de X_train en bins y proporciones.
+                        # El servicio de inferencia lo compara contra el tráfico real
+                        # para exponer PSI por feature en Prometheus.
+                        drift_baseline = None
+                        try:
+                            drift_baseline = build_baseline(
+                                X_train,
+                                model_name=f"{pipeline.name}-{model_type}",
+                                model_version=str(pipeline.version),
+                            )
+                            with tempfile.TemporaryDirectory() as tmpdir:
+                                baseline_file = save_baseline(drift_baseline, tmpdir)
+                                mlflow.log_artifact(str(baseline_file), artifact_path="observability")
+                            logger.info(
+                                f"🌊 Baseline de drift generado sobre {len(drift_baseline['features'])} features"
+                            )
+                        except Exception as e:
+                            # El drift es complementario: si falla, el pipeline no debe caerse.
+                            logger.warning(f"⚠️ No se pudo generar el baseline de drift: {e}")
+
                         if getattr(pipeline, "deploy", None) and pipeline.deploy.batch_output:
                             output_path = os.path.abspath(pipeline.deploy.batch_output)
                             os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -330,6 +355,14 @@ class MLflowExecutor(BaseExecutor):
                                     joblib.dump(model, model_output_path)
 
                                     logger.info(f"💾 Modelo guardado en formato .pkl: {model_output_path}")
+
+                                    # El baseline viaja junto al .pkl: así el server
+                                    # lo encuentra sin configuración adicional.
+                                    if drift_baseline is not None:
+                                        baseline_path = save_baseline(
+                                            drift_baseline, os.path.dirname(model_output_path)
+                                        )
+                                        logger.info(f"🌊 Baseline de drift guardado en: {baseline_path}")
                                 except Exception as e:
                                     logger.error(f"❌ No se pudo guardar el modelo .pkl: {e}")
 

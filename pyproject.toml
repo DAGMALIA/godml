@@ -8,7 +8,7 @@ license = {text = "MIT"}
 name = "godml"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
-version = "1.2.4"
+version = "1.3.0"
 
 authors = [{name = "Arturo Gutierrez Rubio Rojas", email = "agtzrubio@dagmalia.com"}]
 
@@ -125,6 +125,13 @@ data = [
   "pymysql>=1.1.0,<2",
 ]
 
+# pip install godml[observability]
+# Runtime observability: expone /metrics para Prometheus y calcula drift (PSI).
+# Sin esta extra el servicio funciona igual, con las métricas degradadas a no-ops.
+observability = [
+  "prometheus-client>=0.20.0,<1",
+]
+
 # pip install godml[dev]
 # Development & testing
 dev = [
@@ -133,6 +140,10 @@ dev = [
   "pytest-mock>=3.14.0,<4",
   "moto[all]>=5.0.0,<6",
   "httpx>=0.27.0,<1",
+  # Sin esto los tests de observabilidad se ejecutan contra las métricas
+  # degradadas a no-op y dejan de verificar nada: prometheus_client es
+  # opcional en runtime, pero obligatorio para testear el camino real.
+  "godml[observability]",
 ]
 
 # pip install godml[all]
@@ -143,6 +154,7 @@ all = [
   "godml[deep]",
   "godml[advisor]",
   "godml[data]",
+  "godml[observability]",
 ]
 
 [tool.setuptools.package-data]

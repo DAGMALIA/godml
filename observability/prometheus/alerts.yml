@@ -1,0 +1,70 @@
+groups:
+  - name: godml-serving
+    rules:
+      - alert: GodmlModelNotLoaded
+        expr: godml_model_loaded == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Modelo {{ $labels.model }} no cargado en {{ $labels.environment }}"
+          description: "El servicio responde pero no tiene modelo en memoria: /predict devuelve 500."
+
+      - alert: GodmlServiceDown
+        expr: up{job="godml-model"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Servicio de inferencia inalcanzable ({{ $labels.instance }})"
+          description: "Prometheus no puede scrapear /metrics hace más de 2 minutos."
+
+      - alert: GodmlHighErrorRate
+        # Solo errores del modelo (5xx). Los 4xx viajan como client_error y no
+        # deben disparar guardia: son problemas del que llama, no del modelo.
+        expr: |
+          sum by (model, environment) (rate(godml_predictions_total{status="error"}[5m]))
+            /
+          sum by (model, environment) (rate(godml_predictions_total[5m]))
+            > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Tasa de error > 5% en {{ $labels.model }} ({{ $labels.environment }})"
+          description: "Valor actual: {{ $value | humanizePercentage }}."
+
+      - alert: GodmlHighLatency
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (model, environment, le) (rate(godml_prediction_latency_seconds_bucket[5m]))
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 de inferencia > 1s en {{ $labels.model }}"
+          description: "p95 actual: {{ $value | humanizeDuration }}."
+
+  - name: godml-drift
+    rules:
+      - alert: GodmlFeatureDriftSignificant
+        # PSI > 0.25 es el umbral clásico de "cambio significativo de población".
+        # El `for` largo evita alertar por un pico transitorio de la ventana.
+        expr: godml_feature_drift_psi > 0.25
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Drift significativo en '{{ $labels.feature }}' ({{ $labels.model }})"
+          description: "PSI = {{ $value | printf \"%.3f\" }}. Revisar si el modelo necesita reentrenamiento."
+
+      - alert: GodmlManyFeaturesDrifting
+        expr: godml_drift_features_significant >= 3
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $value }} features con drift significativo en {{ $labels.model }}"
+          description: "Drift generalizado: probablemente cambió el pipeline de datos upstream."

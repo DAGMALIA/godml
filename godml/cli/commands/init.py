@@ -7,6 +7,7 @@ import typer
 
 from godml.monitoring_service.logger import get_logger, SecurityError
 from godml.utils.path_utils import sanitize_for_log, validate_safe_path
+from godml.utils.scaffold import scaffold_deploy_service
 from godml.utils.yaml_utils import generate_default_yaml, generate_dockerfile_txt, generate_readme_md
 
 logger = get_logger()
@@ -39,6 +40,11 @@ def init_command(project_name: str) -> None:
         if not Path(dockerfile_path).exists():
             with open(dockerfile_path, "w", encoding="utf-8") as f:
                 f.write(generate_dockerfile_txt())
+
+        # El Dockerfile hace `COPY deploy_service`, así que el directorio tiene
+        # que existir o el build falla apenas se intenta. Antes solo lo creaba
+        # `godml deploy`, y el proyecto recién inicializado no era buildeable.
+        scaffold_deploy_service(project_path)
 
         logger.info(f"Proyecto '{sanitize_for_log(project_name)}' creado exitosamente.")
         logger.info(f"Ubicacion: {sanitize_for_log(str(project_path.absolute()))}")

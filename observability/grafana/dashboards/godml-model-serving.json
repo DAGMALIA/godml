@@ -1,0 +1,433 @@
+{
+  "uid": "godml-model-serving",
+  "title": "GODML — Model Serving",
+  "description": "Salud, rendimiento y drift de los modelos servidos por GODML.",
+  "tags": ["godml", "mlops", "serving"],
+  "timezone": "browser",
+  "editable": true,
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "environment",
+        "label": "Ambiente",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "godml-prometheus" },
+        "query": "label_values(godml_model_loaded, environment)",
+        "refresh": 2,
+        "includeAll": false,
+        "multi": false,
+        "sort": 1
+      },
+      {
+        "name": "model",
+        "label": "Modelo",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "godml-prometheus" },
+        "query": "label_values(godml_model_loaded{environment=\"$environment\"}, model)",
+        "refresh": 2,
+        "includeAll": false,
+        "multi": false,
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Modelo cargado",
+      "description": "1 = el modelo está en memoria y /predict puede responder.",
+      "datasource": { "type": "prometheus", "uid": "godml-prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "godml_model_loaded{model=\"$model\", environment=\"$environment\"}",
+          "instant": true,
+          "legendFormat": "{{version}}"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "NO CARGADO", "color": "#D4407E", "index": 0 },
+                "1": { "text": "CARGADO", "color": "#3D9970", "index": 1 }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#D4407E", "value": null },
+              { "color": "#3D9970", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Predicciones / s",
+      "description": "Throughput de inferencia sobre la ventana de 5 minutos.",
+      "datasource": { "type": "prometheus", "uid": "godml-prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(godml_predictions_total{model=\"$model\", environment=\"$environment\"}[5m]))",
+          "legendFormat": "req/s"
+        }
+      ],
+      "options": {
+        "colorMode": "none",
+        "graphMode": "area",
+        "textMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 2,
+          "color": { "mode": "fixed", "fixedColor": "#5B8FF9" }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Tasa de error del modelo",
+      "description": "Solo errores 5xx. Los 4xx se contabilizan como client_error y no entran acá: son problemas del cliente, no del modelo. El `or vector(0)` hace que el panel muestre 0% cuando nunca hubo un error, en lugar de 'No data': sin errores la serie status=\"error\" no existe y en PromQL vacío/algo es vacío.",
+      "datasource": { "type": "prometheus", "uid": "godml-prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum(rate(godml_predictions_total{model=\"$model\", environment=\"$environment\", status=\"error\"}[5m])) or vector(0)) / clamp_min(sum(rate(godml_predictions_total{model=\"$model\", environment=\"$environment\"}[5m])), 0.0001)",
+          "legendFormat": "error rate"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 2,
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#3D9970", "value": null },
+              { "color": "#C68F2E", "value": 0.01 },
+              { "color": "#D4407E", "value": 0.05 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Latencia p95",
+      "description": "Percentil 95 de la latencia de inferencia extremo a extremo.",
+      "datasource": { "type": "prometheus", "uid": "godml-prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(godml_prediction_latency_seconds_bucket{model=\"$model\", environment=\"$environment\"}[5m])))",
+          "legendFormat": "p95"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#3D9970", "value": null },
+              { "color": "#C68F2E", "value": 0.5 },
+              { "color": "#D4407E", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Latencia de inferencia — percentiles",
+      "description": "Rampa de un solo tono: los percentiles son magnitudes ordenadas, no categorías. p50 claro → p99 oscuro.",
+      "datasource": { "type": "prometheus", "uid": "godml-prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(godml_prediction_latency_seconds_bucket{model=\"$model\", environment=\"$environment\"}[$__rate_interval])))",
+          "legendFormat": "p50"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(godml_prediction_latency_seconds_bucket{model=\"$model\", environment=\"$environment\"}[$__rate_interval])))",
+          "legendFormat": "p95"
+        },
+        {
+          "refId": "C",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(godml_prediction_latency_seconds_bucket{model=\"$model\", environment=\"$environment\"}[$__rate_interval])))",
+          "legendFormat": "p99"
+        }
+      ],
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true, "calcs": ["lastNotNull"] },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "axisLabel": "",
+            "axisSoftMin": 0
+          }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "p50" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#AECBFF" } }] },
+          { "matcher": { "id": "byName", "options": "p95" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#5B8FF9" } }] },
+          { "matcher": { "id": "byName", "options": "p99" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#2F5DB3" } }] }
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Predicciones por resultado",
+      "description": "success / client_error (4xx) / error (5xx). Separar los 4xx evita que un payload mal formado se lea como falla del modelo.",
+      "datasource": { "type": "prometheus", "uid": "godml-prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (status) (rate(godml_predictions_total{model=\"$model\", environment=\"$environment\"}[$__rate_interval]))",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true, "calcs": ["lastNotNull"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": { "mode": "normal", "group": "A" }
+          }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "success" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#5B8FF9" } }] },
+          { "matcher": { "id": "byName", "options": "client_error" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#C68F2E" } }] },
+          { "matcher": { "id": "byName", "options": "error" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#D4407E" } }] }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "type": "heatmap",
+      "title": "Distribución de las predicciones",
+      "description": "Cómo se reparten los scores que el modelo emite en vivo. Un corrimiento de la masa hacia un extremo suele preceder al drift de features.",
+      "datasource": { "type": "prometheus", "uid": "godml-prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 13 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (le) (increase(godml_prediction_value_bucket{model=\"$model\", environment=\"$environment\"}[$__rate_interval]))",
+          "format": "heatmap",
+          "legendFormat": "{{le}}"
+        }
+      ],
+      "options": {
+        "calculate": false,
+        "cellGap": 2,
+        "cellValues": { "unit": "short" },
+        "color": {
+          "mode": "scheme",
+          "scheme": "Blues",
+          "steps": 32,
+          "reverse": false,
+          "exponent": 0.5,
+          "fill": "#5B8FF9"
+        },
+        "exemplars": { "color": "rgba(255,0,255,0.7)" },
+        "filterValues": { "le": 1e-9 },
+        "legend": { "show": true },
+        "rowsFrame": { "layout": "auto", "value": "Predicciones" },
+        "tooltip": { "mode": "single", "yHistogram": true },
+        "yAxis": { "axisPlacement": "left", "unit": "short", "reverse": false }
+      },
+      "fieldConfig": { "defaults": { "custom": { "hideFrom": { "legend": false, "tooltip": false, "viz": false } } }, "overrides": [] }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Drift de features — PSI",
+      "description": "PSI contra el baseline de entrenamiento. < 0.10 estable · 0.10–0.25 moderado · > 0.25 significativo. El color viene del umbral, no de la identidad de la feature.",
+      "datasource": { "type": "prometheus", "uid": "godml-prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 13 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "godml_feature_drift_psi{model=\"$model\", environment=\"$environment\"}",
+          "legendFormat": "{{feature}}"
+        }
+      ],
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true, "calcs": ["lastNotNull"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "decimals": 3,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#3D9970", "value": null },
+              { "color": "#C68F2E", "value": 0.1 },
+              { "color": "#D4407E", "value": 0.25 }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "gradientMode": "scheme",
+            "thresholdsStyle": { "mode": "dashed" }
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 9,
+      "type": "table",
+      "title": "Drift por feature — estado actual",
+      "description": "Vista tabular del PSI: identidad por texto, no por color. Ordenada de mayor a menor.",
+      "datasource": { "type": "prometheus", "uid": "godml-prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sort_desc(godml_feature_drift_psi{model=\"$model\", environment=\"$environment\"})",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true, "stack": true, "model": true, "environment": true }, "renameByName": { "feature": "Feature", "Value": "PSI" } } }
+      ],
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "PSI", "desc": true }],
+        "footer": { "show": false }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 4,
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" } },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#3D9970", "value": null },
+              { "color": "#C68F2E", "value": 0.1 },
+              { "color": "#D4407E", "value": 0.25 }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "PSI" },
+            "properties": [
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              { "id": "custom.width", "value": 140 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Tráfico HTTP por endpoint",
+      "description": "Requests por segundo agrupados por ruta. El scrape de /metrics se excluye en el servicio para no inflar el RPS.",
+      "datasource": { "type": "prometheus", "uid": "godml-prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 22 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (path) (rate(godml_http_requests_total{environment=\"$environment\"}[$__rate_interval]))",
+          "legendFormat": "{{path}}"
+        }
+      ],
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true, "calcs": ["lastNotNull"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      }
+    }
+  ]
+}
