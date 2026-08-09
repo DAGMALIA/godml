@@ -37,13 +37,25 @@ def generate_readme_md(project_name: str) -> str:
         raise RuntimeError(f"Error generando README para {project_name}: {e}")
 
 
-def generate_dockerfile_txt() -> str:
+def generate_dockerfile_txt(godml_version: str | None = None) -> str:
     """
-    Carga la plantilla DOCKERFILE_TEMPLATE.txt desde godml.utils.
+    Carga DOCKERFILE_TEMPLATE.txt e inyecta la versión de godml a instalar.
+
+    La versión solía estar hardcodeada como tag de una imagen preconstruida, y
+    cuando esa imagen no se publicaba para la versión en cuestión el
+    `docker build` de todos los proyectos generados fallaba con "not found".
+    Derivarla de la versión instalada garantiza que el contenedor sirva con la
+    misma versión que entrenó el modelo.
     """
     try:
+        from godml import __version__ as installed_version
+
         template_path = files("godml.utils").joinpath("DOCKERFILE_TEMPLATE.txt")
-        return template_path.read_text(encoding="utf-8")
+        template = template_path.read_text(encoding="utf-8")
+        # Se usa un placeholder con delimitadores propios en vez de str.format:
+        # un Dockerfile puede contener llaves (variables de shell, JSON) y
+        # format() las interpretaría.
+        return template.replace("__GODML_VERSION__", godml_version or installed_version)
     except Exception as e:
         raise RuntimeError(f"Error generando Dockerfile por defecto: {e}")
 

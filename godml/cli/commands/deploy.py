@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-import importlib.resources as pkg_resources
 import os
 import subprocess
 from pathlib import Path
-from shutil import which, copytree
+from shutil import which
 from subprocess import CalledProcessError
 
 import typer
 
 from godml.monitoring_service.logger import get_logger, SecurityError
 from godml.utils.path_utils import sanitize_for_log, validate_safe_path
+from godml.utils.scaffold import scaffold_deploy_service
 from godml.utils.yaml_utils import generate_dockerfile_txt
 from ..validators import load_yaml_config, validate_docker_available, validate_docker_tag, validate_environment_vars
 
@@ -60,12 +60,8 @@ def deploy_command(project_name: str, environment: str) -> None:
         safe_tag = validate_docker_tag(tag)
         safe_environment, safe_host, safe_port = validate_environment_vars(environment, host, port)
 
-        deploy_path = validate_safe_path("deploy_service")
-        if not Path(deploy_path).exists():
-            logger.info("Generando deploy_service desde plantilla...")
-            with pkg_resources.path("godml.templates.deploy_template", "") as template_path:
-                safe_template_path = validate_safe_path(str(template_path))
-                copytree(str(safe_template_path), str(deploy_path))
+        validate_safe_path("deploy_service")
+        scaffold_deploy_service(Path.cwd())
 
         dockerfile_path = validate_safe_path("Dockerfile")
         if not Path(dockerfile_path).exists():

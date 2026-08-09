@@ -1,17 +1,54 @@
-# Dockerfile para tu modelo (basado en imagen oficial GODML)
-FROM dagmalia/godml:0.4.10 AS godml-deploy
+# Dockerfile para tu modelo, generado por GODML.
+#
+# Parte de python:slim e instala godml desde PyPI en lugar de heredar de una
+# imagen preconstruida. El motivo es el orden de publicación: la librería se
+# libera primero y la imagen (repo godml-image) se construye después, a partir
+# de ella. Un `FROM dagmalia/godml:<version>` obliga a que ese segundo paso ya
+# haya ocurrido, y cuando no ocurrió el build falla con "not found" — fue el
+# caso del tag 0.4.10. Dependiendo solo de PyPI, este Dockerfile funciona apenas
+# la versión está publicada.
+#
+# La versión no está hardcodeada: godml inyecta la instalada al generar el
+# archivo, para que el contenedor sirva con la misma versión que entrenó.
+FROM python:3.11-slim
 
-# Copia tus artefactos de modelo
+# tini como PID 1: reapea zombies y propaga SIGTERM para que el contenedor
+# frene limpio. curl es para el HEALTHCHECK de más abajo.
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y tini curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Las dependencias van antes que el modelo: así reentrenar no invalida esta
+# capa y el rebuild es casi instantáneo.
+RUN pip install --no-cache-dir "godml[api,observability]==__GODML_VERSION__"
+
 WORKDIR /app
+
+# Tus artefactos: modelo, configuración y el servicio de inferencia.
+# `drift_baseline.json` viaja dentro de models/ y habilita las métricas de
+# drift; si no existe, el servicio arranca igual sin ellas.
 COPY models ./models
 COPY godml.yml .
 COPY deploy_service ./deploy_service
 
-# Configura variables por entorno
-ENV MODE=api \
-    GODML_ENV=dev \
+ENV GODML_ENV=dev \
     HOST=0.0.0.0 \
-    PORT=8000
+    PORT=8000 \
+    PYTHONPATH=/app \
+    PYTHONUNBUFFERED=1
+
+# El servicio de inferencia no necesita root.
+RUN useradd --create-home --uid 10001 godml && chown -R godml:godml /app
+USER godml
+
+EXPOSE 8000
+
+# /health reporta si el modelo llegó a cargarse, no solo si el proceso vive.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -fsS http://localhost:8000/health || exit 1
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["python", "-m", "uvicorn", "godml.deploy_service.server:app", "--host", "0.0.0.0", "--port", "8000"]
+# Corre TU deploy_service/server.py, no el módulo del paquete: por eso el COPY
+# de arriba tiene sentido y podés customizar la inferencia. Las métricas quedan
+# en /metrics y el estado de drift en /drift.
+CMD ["python", "-m", "uvicorn", "deploy_service.server:app", "--host", "0.0.0.0", "--port", "8000"]
