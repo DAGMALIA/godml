@@ -36,6 +36,12 @@ class Hyperparameters(BaseModel):
     n_estimators: Optional[int] = None
     max_features: Optional[str] = None
     random_state: Optional[int] = None
+    # lstm_forecast: LstmForecastModel.train() lee estos campos directamente
+    look_back: Optional[int] = None
+    units: Optional[int] = None
+    learning_rate: Optional[float] = None
+    epochs: Optional[int] = None
+    batch_size: Optional[int] = None
 
 class ModelConfig(BaseModel):
     type: str

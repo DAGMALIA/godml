@@ -2,8 +2,10 @@
 # Licensed under the MIT License
 
 from pathlib import Path
+import re
 import yaml
 from godml.config_service.schema import PipelineDefinition
+from godml.config_service.resolver import resolve_env_variables
 from godml.utils.path_utils import normalize_path
 from godml.monitoring_service.logger import SecurityError, ConfigurationError, godml_logger
 
@@ -38,13 +40,28 @@ def load_pipeline(yaml_path: str) -> PipelineDefinition:
         if content is None:
             raise ConfigurationError("Archivo YAML está vacío")
 
-        # Normalizar rutas si están presentes
+        # Resolver variables de entorno (${VAR} / ${VAR:default}) antes de validar
+        try:
+            content = resolve_env_variables(content)
+        except Exception as e:
+            raise ConfigurationError(f"Error resolviendo variables de entorno: {e}")
+
+        # Normalizar rutas locales si están presentes (deja intactas las URIs remotas:
+        # s3://, gs://, azure://, http(s):// — normalize_path las corrompía tratándolas
+        # como rutas de Windows, p.ej. "s3://bucket/x" -> "C:\...\s3:\bucket\x")
+        def _is_remote_uri(value: str) -> bool:
+            return bool(re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*://", value))
+
         try:
             if "dataset" in content and "uri" in content["dataset"]:
-                content["dataset"]["uri"] = normalize_path(content["dataset"]["uri"])
+                uri = content["dataset"]["uri"]
+                if not _is_remote_uri(uri):
+                    content["dataset"]["uri"] = normalize_path(uri)
 
             if "deploy" in content and "batch_output" in content["deploy"]:
-                content["deploy"]["batch_output"] = normalize_path(content["deploy"]["batch_output"])
+                batch_output = content["deploy"]["batch_output"]
+                if not _is_remote_uri(batch_output):
+                    content["deploy"]["batch_output"] = normalize_path(batch_output)
         except Exception as e:
             raise ConfigurationError(f"Error normalizando rutas: {e}")
 

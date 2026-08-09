@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.metadata
 from typing import Optional
 
 import typer
@@ -11,7 +12,29 @@ from .commands.serve import serve_command
 from .commands.deploy import deploy_command
 from godml.dataprep_service.cli import app as dataprep_app
 
+
+def _version_callback(value: bool) -> None:
+    if value:
+        version = importlib.metadata.version("godml")
+        typer.echo(f"godml {version}")
+        raise typer.Exit()
+
+
 app = typer.Typer(help="GODML CLI")
+
+
+@app.callback()
+def _main(
+    version: Optional[bool] = typer.Option(
+        None,
+        "--version",
+        "-V",
+        help="Muestra la versión instalada de godml.",
+        callback=_version_callback,
+        is_eager=True,
+    ),
+) -> None:
+    pass
 
 
 @app.command()
