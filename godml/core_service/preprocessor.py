@@ -5,6 +5,7 @@
 from typing import Optional
 import pandas as pd
 import logging
+from godml.compliance_service.errors import ComplianceError
 from godml.dataprep_service.lineage.openlineage_emitter import emit
 
 logger = logging.getLogger(__name__)
@@ -49,22 +50,25 @@ class ComplianceEngine:
         compliance_type = str(compliance_type).lower().strip()
         policy = str(policy or "mask_sensitive").lower().strip()
 
-        # 🔒 Compatibilidad con PCI-DSS
+        # Fail-closed (F1-01): compliance was requested, so any failure aborts
+        # instead of returning the unprocessed DataFrame.
         if compliance_type != "pci-dss":
-            logger.warning(
-                f"⚠️ [ComplianceEngine] Estándar '{compliance_type}' aún no soportado."
+            raise ComplianceError(
+                f"Compliance standard '{compliance_type}' is not supported "
+                "(supported: pci-dss); refusing to continue with unprocessed data."
             )
-            return df
 
         try:
             from godml.compliance_service.pci_dss import PciDssCompliance
-        except Exception as e:  # noqa: BLE001
-            logger.error(f"❌ [ComplianceEngine] Error al importar PCI-DSS: {e}")
-            return df
+        except ImportError as e:
+            raise ComplianceError(
+                "Compliance 'pci-dss' was requested but its engine could not be imported."
+            ) from e
 
         logger.info(
             f"🔒 [ComplianceEngine] Aplicando {compliance_type.upper()} con política '{policy}'..."
         )
+        # Lineage is best-effort observability; it never blocks compliance.
         try:
             emit("COMPLIANCE_APPLY", {"standard": compliance_type, "policy": policy})
         except Exception as e:  # noqa: BLE001
@@ -75,12 +79,12 @@ class ComplianceEngine:
         try:
             engine = PciDssCompliance(policy=policy)
             df_out = engine.apply(df.copy())
-            logger.info(
-                f"✅ [ComplianceEngine] Cumplimiento aplicado correctamente. Columnas finales: {list(df_out.columns)}"
-            )
-            return df_out
-        except Exception as e:  # noqa: BLE001
-            logger.error(
-                f"❌ [ComplianceEngine] Error durante la aplicación del cumplimiento: {e}"
-            )
-            return df
+        except Exception as e:
+            raise ComplianceError(
+                f"Compliance '{compliance_type}' (policy '{policy}') failed: {e}"
+            ) from e
+
+        logger.info(
+            f"✅ [ComplianceEngine] Cumplimiento aplicado correctamente. Columnas finales: {list(df_out.columns)}"
+        )
+        return df_out

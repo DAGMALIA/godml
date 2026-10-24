@@ -149,16 +149,18 @@ class MLflowExecutor(BaseExecutor):
                     df_out[col] = df_out[col].cat.codes
             return df_out
 
+        from godml.core_service.pipeline_runner import run_pipeline_preprocessing
+        from godml.utils.path_utils import normalize_path, validate_safe_path
+
+        # Ejecuta preprocesamiento centralizado (aplica ComplianceEngine y guarda compliant_output si viene).
+        # Fail-closed (F1-01): outside the try below, so a ComplianceError aborts
+        # the run instead of training on unprocessed data.
+        logger.info(
+            "🧩 Ejecutando preprocesamiento del pipeline (compliance, guardado opcional)..."
+        )
+        df = run_pipeline_preprocessing(pipeline, df)
+
         try:
-            from godml.core_service.pipeline_runner import run_pipeline_preprocessing
-            from godml.utils.path_utils import normalize_path, validate_safe_path
-
-            # Ejecuta preprocesamiento centralizado (aplica ComplianceEngine y guarda compliant_output si viene)
-            logger.info(
-                "🧩 Ejecutando preprocesamiento del pipeline (compliance, guardado opcional)..."
-            )
-            df = run_pipeline_preprocessing(pipeline, df)
-
             # Si el runner guardó a dataset.compliant_output, úsalo como dataset.uri para el resto del flujo
             compliant_output = getattr(pipeline.dataset, "compliant_output", None)
             if compliant_output:
@@ -192,7 +194,7 @@ class MLflowExecutor(BaseExecutor):
                 )
 
         except Exception as e:  # noqa: BLE001
-            logger.warning(f"⚠️ Error en preprocesamiento/compliance centralizado: {e}")
+            logger.warning(f"⚠️ Error en el saneo posterior a compliance: {e}")
 
         # ╭───────────────────────────────
         # 3️⃣ Split (estratificado si aplica)

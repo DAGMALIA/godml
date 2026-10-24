@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 from yaml import safe_load
 
+from godml.compliance_service.errors import ComplianceError
+
 from .schema import Recipe
 from .lineage.openlineage_emitter import emit
 from .connectors.csv import CSVConnector
@@ -114,16 +116,18 @@ def _apply_compliance(
     if not standard:
         return df
 
+    # Fail-closed (F1-01): an unsupported standard aborts instead of silently
+    # returning the unprocessed DataFrame.
     if standard != "pci-dss":
-        emit(
-            "COMPLIANCE_SKIPPED", {"reason": f"standard '{standard}' no soportado aún"}
+        raise ComplianceError(
+            f"Compliance standard '{standard}' is not supported "
+            "(supported: pci-dss); refusing to continue with unprocessed data."
         )
-        return df
 
     try:
         from godml.compliance_service.pci_dss import PciDssCompliance
     except Exception as e:
-        raise RuntimeError(
+        raise ComplianceError(
             "Compliance 'pci-dss' solicitado, pero no se pudo importar "
             "godml.compliance_service.pci_dss.PciDssCompliance."
         ) from e

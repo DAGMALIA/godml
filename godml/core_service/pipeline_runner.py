@@ -29,27 +29,25 @@ def run_pipeline_preprocessing(
         f"🔒 Aplicando cumplimiento normativo: {compliance_type} (policy={policy})"
     )
 
-    try:
-        # ✅ 1. Aplicar cumplimiento in-memory
-        df_compliant = ComplianceEngine.apply(df.copy(), compliance_type, policy)
+    # Fail-closed (F1-01): a ComplianceError propagates; the raw DataFrame is
+    # never returned when compliance was requested.
+    # ✅ 1. Aplicar cumplimiento in-memory
+    df_compliant = ComplianceEngine.apply(df.copy(), compliance_type, policy)
 
-        # ✅ 2. Guardar dataset compliant si está definido en el YAML
-        compliant_path = getattr(pipeline.dataset, "compliant_output", None)
-        if compliant_path:
-            try:
-                normalized_path = normalize_path(compliant_path)
-                validate_safe_path(normalized_path, base_dir=os.getcwd())
+    # ✅ 2. Guardar dataset compliant si está definido en el YAML.
+    # A failed save is logged and the in-memory (already compliant) data is used.
+    compliant_path = getattr(pipeline.dataset, "compliant_output", None)
+    if compliant_path:
+        try:
+            normalized_path = normalize_path(compliant_path)
+            validate_safe_path(normalized_path, base_dir=os.getcwd())
 
-                os.makedirs(os.path.dirname(normalized_path), exist_ok=True)
-                df_compliant.to_csv(normalized_path, index=False)
-                logger.info(f"✅ Dataset compliant guardado en: {normalized_path}")
-            except Exception as e:  # noqa: BLE001
-                logger.error(f"❌ No se pudo guardar dataset compliant: {e}")
-        else:
-            logger.warning("⚠️ No se definió 'dataset.compliant_output' en el YAML.")
+            os.makedirs(os.path.dirname(normalized_path), exist_ok=True)
+            df_compliant.to_csv(normalized_path, index=False)
+            logger.info(f"✅ Dataset compliant guardado en: {normalized_path}")
+        except Exception as e:  # noqa: BLE001
+            logger.error(f"❌ No se pudo guardar dataset compliant: {e}")
+    else:
+        logger.warning("⚠️ No se definió 'dataset.compliant_output' en el YAML.")
 
-        return df_compliant
-
-    except Exception as e:  # noqa: BLE001
-        logger.error(f"❌ Error durante la aplicación del cumplimiento: {e}")
-        return df
+    return df_compliant

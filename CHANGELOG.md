@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Security
+
+- Compliance is now fail-closed. When `governance.compliance` is set and
+  cannot be applied, `godml run` aborts with `ComplianceError`
+  (`godml.compliance_service.errors`) instead of logging the error and
+  training on the unprocessed data. This covers engine failures, a missing
+  compliance engine and unsupported standards: a YAML with
+  `compliance: gdpr` (or any value other than `pci-dss`) now fails instead of
+  being silently skipped. Applies to `ComplianceEngine.apply`,
+  `run_pipeline_preprocessing`, the MLflow executor and the dataprep recipe
+  hook.
+
 ### Changed
 
 - License text: the `LICENSE` file now contains the MIT license. GoDML has
