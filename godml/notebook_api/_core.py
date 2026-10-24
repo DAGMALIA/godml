@@ -65,7 +65,7 @@ def _fit_any(m, X, y, hyperparams: Dict[str, Any] | None = None):
                     return
                 except TypeError:
                     continue
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
     raise AttributeError(
         "El modelo no expone 'fit', 'train' ni sub-atributos compatibles"
@@ -88,7 +88,7 @@ def _predict_any(m, X):
                     if hasattr(proba, "ndim") and proba.ndim == 2 and proba.shape[1] > 1
                     else proba
                 )
-            except Exception:
+            except Exception:  # noqa: BLE001, S110
                 pass
         if hasattr(obj, "predict"):
             return obj.predict(X)
@@ -108,7 +108,7 @@ def _predict_any(m, X):
             out = _try_one(v)
             if out is not None:
                 return out
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
     raise AttributeError("No se encontró método de predicción compatible")
 
@@ -129,11 +129,11 @@ def _get_model(model_type: str, **hyperparams):
                 try:
                     model.set_params(**hyperparams)
                     return model
-                except Exception:
+                except Exception:  # noqa: BLE001, S110
                     pass
             for k, v in hyperparams.items():
                 try:
                     setattr(model, k, v)
-                except Exception:
+                except Exception:  # noqa: BLE001, S110
                     pass
         return model

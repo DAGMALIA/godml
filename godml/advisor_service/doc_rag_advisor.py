@@ -51,7 +51,7 @@ class DocRAGAdvisor:
                 return json.load(f)
         except FileNotFoundError:
             return []
-        except Exception:
+        except Exception:  # noqa: BLE001
             return []
 
     def retrieve_docs(self, question: str, top_k: int = 1) -> list:

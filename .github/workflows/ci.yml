@@ -102,11 +102,21 @@ jobs:
           python-version: "3.11"
           cache: pip
 
-      - name: Install ruff
-        run: pip install "ruff==0.15.17"
+      # Same install as the test job so mypy sees the same third-party types.
+      - name: Install project + dev tools
+        run: |
+          pip install --upgrade pip
+          pip install -e ".[dev]"
 
-      - name: Run ruff
-        run: ruff check godml/ --select=E,W,F --ignore=E501
+      # Rules and debt list live in pyproject.toml ([tool.ruff], [tool.mypy]).
+      - name: ruff check
+        run: ruff check .
+
+      - name: ruff format
+        run: ruff format --check .
+
+      - name: mypy
+        run: mypy
 
   install-smoke-test:
     name: Smoke test (${{ matrix.os }}, Python ${{ matrix.python-version }})

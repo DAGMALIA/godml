@@ -74,7 +74,7 @@ def evaluate_binary_classification(y_true, y_proba, threshold=0.5):
                     average="macro",
                     labels=unique_labels,
                 )
-            except Exception:
+            except Exception:  # noqa: BLE001
                 reason, code = analyze_metric_issue(y_true, y_proba)
                 logger.warning(f"⚠️ AUC no calculada ({code}): {reason}")
                 logger.info(explain_issue_and_action(reason, code))
@@ -94,7 +94,7 @@ def evaluate_binary_classification(y_true, y_proba, threshold=0.5):
                 "f1": f1_score(y_true, y_pred_binary, zero_division=0),
             }
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.warning(f"⚠️ Error calculando métricas: {e}")
         return {"error": str(e)}
 
@@ -118,7 +118,7 @@ def evaluate_regression(y_true, y_pred, metric_names=None):
         if func:
             try:
                 results[name] = func(y_true, y_pred)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.warning(f"⚠️ Error calculando {name}: {e}")
     return results
 

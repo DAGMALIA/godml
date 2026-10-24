@@ -1,4 +1,3 @@
-import pytest
 from godml.compliance_service.compliance_utils import (
     hash_sha256,
     hash_truncated,

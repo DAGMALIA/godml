@@ -65,7 +65,7 @@ class AdvisorOrchestrator:
                 else:
                     # Si ya es dict de Python → lo normalizamos a JSON válido
                     json.loads(json.dumps(raw_recipe))
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 print(f"⚠️ Error validando receta: {e}")
                 {"error": "Receta inválida", "raw": str(raw_recipe)}
 

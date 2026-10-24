@@ -52,6 +52,6 @@ def serve_command(environment: str = "dev") -> None:
     except ConfigurationError as e:
         logger.error(f"Error de configuración: {sanitize_for_log(str(e))}")
         raise typer.Exit(1)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Error en serve: {sanitize_for_log(str(e))}")
         raise typer.Exit(1)

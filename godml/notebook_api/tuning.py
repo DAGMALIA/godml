@@ -78,7 +78,7 @@ def tune_model(
     if use_optuna:
         try:
             import optuna  # noqa: F401
-        except Exception:
+        except Exception:  # noqa: BLE001
             print("Optuna no está instalado; continuo con RandomizedSearchCV.")
             use_optuna = False
 
@@ -95,7 +95,7 @@ def tune_model(
     try:
         tmp = EstCls()
         est_params = tmp.get_params()
-    except Exception:
+    except Exception:  # noqa: BLE001
         est_params = {}
     est_kwargs = {}
     if "random_state" in est_params:

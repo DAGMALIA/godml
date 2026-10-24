@@ -58,7 +58,7 @@ class ComplianceEngine:
 
         try:
             from godml.compliance_service.pci_dss import PciDssCompliance
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"❌ [ComplianceEngine] Error al importar PCI-DSS: {e}")
             return df
 
@@ -67,7 +67,7 @@ class ComplianceEngine:
         )
         try:
             emit("COMPLIANCE_APPLY", {"standard": compliance_type, "policy": policy})
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(
                 f"⚠️ [ComplianceEngine] No se pudo emitir evento OpenLineage: {e}"
             )
@@ -79,7 +79,7 @@ class ComplianceEngine:
                 f"✅ [ComplianceEngine] Cumplimiento aplicado correctamente. Columnas finales: {list(df_out.columns)}"
             )
             return df_out
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(
                 f"❌ [ComplianceEngine] Error durante la aplicación del cumplimiento: {e}"
             )

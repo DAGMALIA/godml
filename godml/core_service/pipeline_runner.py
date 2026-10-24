@@ -43,13 +43,13 @@ def run_pipeline_preprocessing(
                 os.makedirs(os.path.dirname(normalized_path), exist_ok=True)
                 df_compliant.to_csv(normalized_path, index=False)
                 logger.info(f"✅ Dataset compliant guardado en: {normalized_path}")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"❌ No se pudo guardar dataset compliant: {e}")
         else:
             logger.warning("⚠️ No se definió 'dataset.compliant_output' en el YAML.")
 
         return df_compliant
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"❌ Error durante la aplicación del cumplimiento: {e}")
         return df

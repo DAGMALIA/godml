@@ -46,7 +46,7 @@ class RAGAdvisor:
                 return json.load(f)
         except FileNotFoundError:
             return []
-        except Exception:
+        except Exception:  # noqa: BLE001
             return []
 
     def retrieve_examples(self, dataset_summary: str, top_k: int = 2) -> list:
@@ -111,7 +111,7 @@ Receta:
             recipe_dict = json.loads(cleaned)
             validated = RecipeSchema(**recipe_dict)
             return validated.model_dump()
-        except Exception:
+        except Exception:  # noqa: BLE001
             return self.fallback_recipe()
 
     def fallback_recipe(self) -> dict:

@@ -20,7 +20,7 @@ def emit_lineage(event_type: str, payload: Dict[str, Any]) -> None:
         from godml.dataprep_service.lineage.openlineage_emitter import emit
 
         emit(event_type, payload)
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
 
 

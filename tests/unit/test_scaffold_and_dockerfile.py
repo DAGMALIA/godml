@@ -5,8 +5,6 @@ hardcodeado que dejó de existir, y `godml init` escribía un `COPY deploy_servi
 sobre un directorio que solo creaba `godml deploy`.
 """
 
-import pytest
-
 from godml import __version__
 from godml.utils.scaffold import DEPLOY_SERVICE_DIRNAME, scaffold_deploy_service
 from godml.utils.yaml_utils import generate_dockerfile_txt

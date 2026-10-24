@@ -129,6 +129,6 @@ def deploy_command(project_name: str, environment: str) -> None:
     except SecurityError as e:
         logger.error(f"Error de seguridad: {sanitize_for_log(str(e))}")
         raise typer.Exit(1)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Error general: {sanitize_for_log(str(e))}")
         raise typer.Exit(1)

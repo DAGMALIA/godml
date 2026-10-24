@@ -34,7 +34,7 @@ class LstmForecastModel(BaseRegressionModel):
             print(
                 f"[LSTMForecastModel] ✅ Configurado desde YAML: look_back={self.look_back}, target='{self.target_hint}'"
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(
                 f"[LSTMForecastModel] ⚠️ Error aplicando configuración YAML ({e}), usando valores por defecto."
             )
@@ -95,7 +95,7 @@ class LstmForecastModel(BaseRegressionModel):
             else:
                 scaled = self.scaler.transform(series.reshape(-1, 1)).flatten()
             return scaled
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"[LSTMForecastModel] ⚠️ Fallback de escalado aplicado: {e}")
             return series
 
@@ -209,5 +209,5 @@ class LstmForecastModel(BaseRegressionModel):
             )
             return preds
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise RuntimeError(f"Error durante predicción: {e}")

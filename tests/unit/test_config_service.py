@@ -4,12 +4,6 @@ import yaml
 from godml.config_service.resolver import resolve_env_variables
 from godml.config_service.schema import (
     PipelineDefinition,
-    DatasetConfig,
-    ModelConfig,
-    Governance,
-    DeployConfig,
-    Metric,
-    Hyperparameters,
 )
 from godml.config_service.loader import load_config
 from godml.monitoring_service.logger import ConfigurationError

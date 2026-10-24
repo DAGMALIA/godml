@@ -28,7 +28,7 @@ def _is_safe_absolute_path(path: str) -> bool:
     try:
         resolved = Path(path).resolve()
         return any(str(resolved).startswith(str(base)) for base in _SAFE_BASE_DIRS)
-    except Exception:
+    except Exception:  # noqa: BLE001
         return False
 
 

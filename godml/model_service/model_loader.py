@@ -75,7 +75,7 @@ def load_custom_model_class(
 
             try:
                 model_instance = model_class()
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 raise ModelLoadError(f"Error instanciando modelo ad-hoc: {e}")
 
         elif source == "core":
@@ -135,7 +135,7 @@ def load_custom_model_class(
                 if not resolved_file.is_file():
                     raise FileNotFoundError(f"Archivo no encontrado: {model_file}")
 
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 raise SecurityError(f"Error validando archivo local: {e}")
 
             # Importación local controlada
@@ -177,7 +177,7 @@ def load_custom_model_class(
                     if path_added and models_dir_str in sys.path:
                         sys.path.remove(models_dir_str)
 
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 raise ModelLoadError(f"Error cargando modelo local: {e}")
 
         # Validación final
@@ -189,5 +189,5 @@ def load_custom_model_class(
 
     except (SecurityError, ModelLoadError, FileNotFoundError, TypeError):
         raise
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise ModelLoadError(f"Error inesperado: {e}")

@@ -45,10 +45,10 @@ def predict_safely(model, input_data):
                 return model.predict(input_data)
             else:
                 raise PredictionError(f"Tipo de modelo no soportado: {type(model)}")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise PredictionError(f"Error durante predicción: {e}")
 
     except PredictionError:
         raise
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise PredictionError(f"Error inesperado en predicción: {e}")

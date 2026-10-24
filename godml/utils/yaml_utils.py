@@ -36,7 +36,7 @@ def generate_readme_md(project_name: str) -> str:
         from godml import __version__
 
         return template.format(project_name=project_name, godml_version=__version__)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise RuntimeError(f"Error generando README para {project_name}: {e}")
 
 
@@ -59,7 +59,7 @@ def generate_dockerfile_txt(godml_version: str | None = None) -> str:
         # un Dockerfile puede contener llaves (variables de shell, JSON) y
         # format() las interpretaría.
         return template.replace("__GODML_VERSION__", godml_version or installed_version)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise RuntimeError(f"Error generando Dockerfile por defecto: {e}")
 
 
@@ -109,5 +109,5 @@ def generate_default_yaml(project_name: str) -> str:
 
         return yaml_str
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise RuntimeError(f"Error generando YAML para {project_name}: {e}")

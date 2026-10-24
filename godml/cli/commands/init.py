@@ -62,6 +62,6 @@ def init_command(project_name: str) -> None:
     except OSError as e:
         logger.error(f"Error del sistema: {sanitize_for_log(str(e))}")
         raise typer.Exit(1)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Error inesperado: {sanitize_for_log(str(e))}")
         raise typer.Exit(1)

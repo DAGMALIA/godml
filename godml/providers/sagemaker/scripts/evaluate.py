@@ -79,7 +79,7 @@ try:
         "precision": float(precision_score(y_test, preds, zero_division=0)),
         "recall": float(recall_score(y_test, preds, zero_division=0)),
     }
-except Exception as exc:
+except Exception as exc:  # noqa: BLE001
     print(
         f"Warning: binary classification metrics failed ({exc}), falling back to accuracy only"
     )

@@ -143,7 +143,7 @@ class MLflowExecutor(BaseExecutor):
                 if df_out[col].dtype == "O":  # object → category.codes
                     try:
                         df_out[col] = df_out[col].astype("category").cat.codes
-                    except Exception:
+                    except Exception:  # noqa: BLE001
                         df_out = df_out.drop(columns=[col])
                 elif str(df_out[col].dtype).startswith("category"):
                     df_out[col] = df_out[col].cat.codes
@@ -174,7 +174,7 @@ class MLflowExecutor(BaseExecutor):
                         logger.warning(
                             f"⚠️ 'dataset.compliant_output' definido pero no existe en disco: {normalized}"
                         )
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     logger.warning(f"⚠️ Validación de ruta compliant_output falló: {e}")
 
             # Post-compliance: garantiza que XGBoost no reciba columnas object
@@ -191,7 +191,7 @@ class MLflowExecutor(BaseExecutor):
                     f"⚠️ Aún hay columnas no numéricas tras saneo: {non_numeric} (se intentó codificar)."
                 )
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(f"⚠️ Error en preprocesamiento/compliance centralizado: {e}")
 
         # ╭───────────────────────────────
@@ -304,7 +304,7 @@ class MLflowExecutor(BaseExecutor):
                         signature = mlflow.models.signature.infer_signature(
                             input_example, output_example
                         )
-                    except Exception as e:
+                    except Exception as e:  # noqa: BLE001
                         # Modelos con preprocesamiento propio (p.ej. lstm_forecast reescala y
                         # ventanea antes de predecir) no aceptan el DataFrame crudo tal cual.
                         # No es fatal: se registra el modelo sin signature/input_example.
@@ -382,7 +382,7 @@ class MLflowExecutor(BaseExecutor):
                             logger.info(
                                 f"🌊 Baseline de drift generado sobre {len(drift_baseline['features'])} features"
                             )
-                        except Exception as e:
+                        except Exception as e:  # noqa: BLE001
                             # El drift es complementario: si falla, el pipeline no debe caerse.
                             logger.warning(
                                 f"⚠️ No se pudo generar el baseline de drift: {e}"
@@ -434,7 +434,7 @@ class MLflowExecutor(BaseExecutor):
                                         logger.info(
                                             f"🌊 Baseline de drift guardado en: {baseline_path}"
                                         )
-                                except Exception as e:
+                                except Exception as e:  # noqa: BLE001
                                     logger.error(
                                         f"❌ No se pudo guardar el modelo .pkl: {e}"
                                     )
@@ -474,7 +474,7 @@ class MLflowExecutor(BaseExecutor):
             ext_warns = validate_pipeline(pipeline)
             for w in ext_warns:
                 warnings_.append(str(w))
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
 
         ds = getattr(pipeline, "dataset", None)
@@ -496,7 +496,7 @@ class MLflowExecutor(BaseExecutor):
                             errors.append(
                                 f"dataset.uri: archivo no encontrado -> {uri}"
                             )
-                    except Exception as e:
+                    except Exception as e:  # noqa: BLE001
                         warnings_.append(
                             f"No se pudo validar dataset.uri ('{uri}'): {e}"
                         )
@@ -525,7 +525,7 @@ class MLflowExecutor(BaseExecutor):
                         project_path, model_type.lower(), source
                     )
                     logger.setLevel(previous_level)
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     logger.setLevel(previous_level)
                     errors.append(
                         f"model: no se pudo cargar '{model_type}' desde source='{source}': {e}"

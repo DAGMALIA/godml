@@ -57,7 +57,7 @@ def analyze_metric_issue(y_true, y_pred_or_proba):
             "UNKNOWN_TYPE",
         )
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return f"Error interno en el analizador de métricas: {e}", "INTERNAL"
 
 

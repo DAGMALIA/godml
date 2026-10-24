@@ -141,7 +141,7 @@ def print_pipeline_start(name: str, dataset: str, output: str) -> None:
         body.append(f"  dataset   {dataset}\n", style="dim")
         body.append(f"  output    {output}", style="dim")
         c.print(Panel(body, border_style="#4f46e5", padding=(0, 1)))
-    except Exception:
+    except Exception:  # noqa: BLE001
         print(f"\n  ▶ {name}  |  {dataset}\n")
 
 
@@ -173,7 +173,7 @@ def print_metrics_table(metrics: dict, thresholds: dict | None = None) -> None:
         print()
         c.print(t)
         print()
-    except Exception:
+    except Exception:  # noqa: BLE001
         for k, v in metrics.items():
             print(f"  {k}: {v:.4f}")
 
@@ -226,7 +226,7 @@ def print_pipeline_result(
                     padding=(0, 1),
                 )
             )
-    except Exception:
+    except Exception:  # noqa: BLE001
         status = "✓ OK" if success else "✗ FAILED"
         print(f"\n  {status}  {name}\n")
 

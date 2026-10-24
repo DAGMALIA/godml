@@ -19,12 +19,12 @@ def train_model(
     if seed is not None and hasattr(model, "set_random_state"):
         try:
             model.set_random_state(seed)
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
     if hyperparams and hasattr(model, "set_hyperparameters"):
         try:
             model.set_hyperparameters(hyperparams)
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
     _fit_any(model, X, y, hyperparams or {})
     return type("ModelResultLike", (), {"model": model, "metrics": None})()
@@ -42,7 +42,7 @@ def evaluate(
         from godml.monitoring_service.metrics import compute_metrics as _cm
 
         return _cm(y_true, y_pred, metrics)
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
     try:
         from sklearn import metrics as sk

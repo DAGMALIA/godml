@@ -1,7 +1,6 @@
 # test_path_utils_security.py
 import pytest
 import tempfile
-import os
 from pathlib import Path
 from godml.utils.path_utils import (
     SecurityError,
@@ -93,25 +92,25 @@ if __name__ == "__main__":
     try:
         test.test_normalize_path_secure()
         print("✅ Test normalize_path security: PASSED")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"❌ Test normalize_path security: FAILED - {e}")
 
     try:
         test.test_validate_safe_path_security()
         print("✅ Test validate_safe_path security: PASSED")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"❌ Test validate_safe_path security: FAILED - {e}")
 
     try:
         test.test_safe_join_security()
         print("✅ Test safe_join security: PASSED")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"❌ Test safe_join security: FAILED - {e}")
 
     try:
         test.test_sanitize_for_log_security()
         print("✅ Test sanitize_for_log security: PASSED")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"❌ Test sanitize_for_log security: FAILED - {e}")
 
     print("🎉 Tests de seguridad completados")

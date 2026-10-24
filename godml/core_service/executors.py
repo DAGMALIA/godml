@@ -23,7 +23,7 @@ def get_executor(provider_name: str):
         if provider in _providers_map:
             try:
                 return _providers_map[provider]()
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 raise ConfigurationError(
                     f"Error inicializando executor {provider}: {e}"
                 )
@@ -35,5 +35,5 @@ def get_executor(provider_name: str):
 
     except ConfigurationError:
         raise
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise ConfigurationError(f"Error inesperado obteniendo executor: {e}")

@@ -1,6 +1,5 @@
 import pytest
 import numpy as np
-import pandas as pd
 from godml.model_service.base_model_interface import BaseModel
 from godml.model_service.model_registry.xgboost_model import XgboostModel
 from godml.model_service.model_registry.random_forest_model import RandomForestModel

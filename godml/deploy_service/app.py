@@ -49,5 +49,5 @@ def predict(req: PredictionRequest):
         df = pd.DataFrame(req.data, columns=req.columns)
         predictions = model.predict(df)
         return {"predictions": predictions.tolist()}
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=400, detail=str(e))

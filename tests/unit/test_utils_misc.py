@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -204,7 +203,7 @@ class TestModelStorage:
         assert _detect_model_type(Dummy()) == "unknown"
 
     def test_save_without_model_name_generates_name(self, tmp_path, monkeypatch):
-        from godml.utils.model_storage import save_model_to_structure, list_models
+        from godml.utils.model_storage import save_model_to_structure
 
         monkeypatch.chdir(tmp_path)
         from sklearn.ensemble import RandomForestClassifier

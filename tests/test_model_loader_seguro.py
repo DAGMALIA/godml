@@ -121,19 +121,19 @@ if __name__ == "__main__":
     try:
         test.test_load_core_model_linear_regression()
         print("✅ Test core linear_regression: PASSED")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"❌ Test core linear_regression: FAILED - {e}")
 
     try:
         test.test_adhoc_model_registration()
         print("✅ Test adhoc registration: PASSED")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"❌ Test adhoc registration: FAILED - {e}")
 
     try:
         test.test_security_invalid_model_type()
         print("✅ Test security validation: PASSED")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"❌ Test security validation: FAILED - {e}")
 
     print("🎉 Tests completados")

@@ -51,7 +51,7 @@ class GodmlNotebook:
         result = executor.run(self.pipeline)
         try:
             self.last_trained_model = getattr(result, "model", None)
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.last_trained_model = None
         return "Entrenamiento completado"
 
@@ -124,7 +124,7 @@ def train_from_yaml(yaml_path: str = "./godml/godml.yml"):
         executor = get_executor(pipeline.provider)
         executor.run(pipeline)
         return f"Modelo {pipeline.model.type} entrenado desde {yaml_path}"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return f"Error: {e}"
 
 
@@ -137,11 +137,11 @@ def quick_train_yaml(
         try:
             hp_cls = type(pipeline.model.hyperparameters)
             pipeline.model.hyperparameters = hp_cls(**hyperparameters)
-        except Exception:
+        except Exception:  # noqa: BLE001
             pipeline.model.hyperparameters = hyperparameters
         pipeline.name = f"{pipeline.name}-{model_type}"
         executor = get_executor(pipeline.provider)
         executor.run(pipeline)
         return f"Modelo {model_type} entrenado con configuración de {yaml_path}"
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return f"Error: {e}"

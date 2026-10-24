@@ -25,7 +25,7 @@ def _validate_yaml_path(yaml_path: str) -> Path:
         if path.suffix.lower() not in [".yml", ".yaml"]:
             raise ValueError(f"Archivo debe ser .yml o .yaml: {yaml_path}")
         return path
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise SecurityError(f"Error validando path YAML: {e}")
 
 
@@ -40,7 +40,7 @@ def load_pipeline(yaml_path: str) -> PipelineDefinition:
                 content = yaml.safe_load(f)
         except yaml.YAMLError as e:
             raise ConfigurationError(f"Error parseando YAML: {e}")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise ConfigurationError(f"Error leyendo archivo: {e}")
 
         if content is None:
@@ -49,7 +49,7 @@ def load_pipeline(yaml_path: str) -> PipelineDefinition:
         # Resolver variables de entorno (${VAR} / ${VAR:default}) antes de validar
         try:
             content = resolve_env_variables(content)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise ConfigurationError(f"Error resolviendo variables de entorno: {e}")
 
         # Normalizar rutas locales si están presentes (deja intactas las URIs remotas:
@@ -68,7 +68,7 @@ def load_pipeline(yaml_path: str) -> PipelineDefinition:
                 batch_output = content["deploy"]["batch_output"]
                 if not _is_remote_uri(batch_output):
                     content["deploy"]["batch_output"] = normalize_path(batch_output)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise ConfigurationError(f"Error normalizando rutas: {e}")
 
         # Crear y validar definición del pipeline
@@ -76,10 +76,10 @@ def load_pipeline(yaml_path: str) -> PipelineDefinition:
             pipeline_def = PipelineDefinition(**content)
             godml_logger.info(f"✅ Pipeline cargado desde {yaml_path}")
             return pipeline_def
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise ConfigurationError(f"Error creando definición de pipeline: {e}")
 
     except (SecurityError, ConfigurationError, FileNotFoundError):
         raise
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise ConfigurationError(f"Error inesperado cargando pipeline: {e}")

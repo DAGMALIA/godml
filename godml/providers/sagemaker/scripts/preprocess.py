@@ -54,7 +54,7 @@ if compliance:
         engine = ComplianceRegistry.get(compliance)
         df = engine.apply(df, policy=policy)
         print(f"Compliance '{compliance}' applied with policy '{policy}'")
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         print(f"Warning: compliance step skipped ({exc})")
 
 # Validate target column

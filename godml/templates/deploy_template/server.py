@@ -90,7 +90,7 @@ def validate_model_path(model_path: Path) -> None:
         if not resolved_path.is_file():
             raise ValueError(f"Path no es un archivo: {resolved_path}")
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise SecurityError(f"Error validando path del modelo: {e}")
 
 
@@ -109,7 +109,7 @@ def load_model():
         try:
             app.state.model = joblib.load(model_path)
             godml_logger.info(f"✅ Modelo cargado correctamente desde: {model_path}")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             godml_logger.error(f"❌ Error cargando archivo del modelo: {e}")
             raise RuntimeError(f"Error cargando modelo: {e}")
 
@@ -132,7 +132,7 @@ def load_model():
         )
         app.state.observer.set_model_loaded(True)
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         godml_logger.error(f"❌ Error en startup del servidor: {e}")
         raise RuntimeError(str(e))
 
@@ -201,7 +201,7 @@ def predict(input_data: InputData, request: Request):
             )
             return {"prediction": prediction_result}
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             godml_logger.error(f"❌ Error durante predicción: {str(e)}")
             raise HTTPException(
                 status_code=400, detail=f"Error en predicción: {str(e)}"
@@ -213,7 +213,7 @@ def predict(input_data: InputData, request: Request):
         status = "client_error" if e.status_code < 500 else "error"
         observer.record_prediction(latency=time.time() - start, status=status)
         raise
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         observer.record_prediction(latency=time.time() - start, status="error")
         godml_logger.error(f"❌ Error inesperado en predict: {str(e)}")
         raise HTTPException(status_code=500, detail="Error interno del servidor")
@@ -229,7 +229,7 @@ def health_check():
             "model_loaded": model_loaded,
             "working_directory": str(Path.cwd()),
         }
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return {"status": "error", "error": str(e)}
 
 

@@ -1,7 +1,6 @@
 import pytest
 import numpy as np
 import pandas as pd
-from pathlib import Path
 
 from godml.notebook_api import (
     train_model,

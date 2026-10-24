@@ -95,7 +95,7 @@ def load_model():
         validate_model_path(model_path)
         app.state.model = joblib.load(model_path)
         godml_logger.info(f"✅ Modelo cargado: {model_path}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         godml_logger.error(f"⚠️ Error al cargar modelo: {e}")
         app.state.model = None  # Permite dry-run (CI/CD)
 
@@ -177,7 +177,7 @@ def predict(input_data: InputData, request: Request):
         status = "client_error" if e.status_code < 500 else "error"
         observer.record_prediction(latency=time.time() - start, status=status)
         raise e
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         observer.record_prediction(latency=time.time() - start, status="error")
         godml_logger.error(f"❌ Error en predict: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -257,7 +257,7 @@ async def timing_and_logging(request: Request, call_next):
         if IS_DEV:
             godml_logger.info(f"📡 {request.method} {request.url.path} - {duration}s")
         status = response.status_code
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         duration = time.time() - start
         godml_logger.error(f"🔥 Error inesperado: {exc}")
         response = JSONResponse(status_code=500, content={"detail": str(exc)})

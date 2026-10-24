@@ -1,4 +1,3 @@
-import pytest
 import pandas as pd
 from godml.compliance_service.pii_detector import PiiDetector
 

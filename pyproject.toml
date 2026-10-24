@@ -144,6 +144,10 @@ dev = [
   # degradadas a no-op y dejan de verificar nada: prometheus_client es
   # opcional en runtime, pero obligatorio para testear el camino real.
   "godml[observability]",
+  # Lint, types and hooks (F0-04)
+  "ruff>=0.15.17,<0.16",
+  "mypy>=1.19,<2",
+  "pre-commit>=4.0,<5",
 ]
 
 # pip install godml[all]
@@ -164,6 +168,50 @@ all = [
 exclude = ["tests*", "venv*", "*.egg-info*"]
 include = ["godml*"]
 where = ["."]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+# pycodestyle + pyflakes (as the previous CI lint) plus the fail-closed rules:
+# no silent `except Exception: pass` and no blind excepts. Pre-existing
+# violations are tagged `# noqa: S110` / `# noqa: BLE001` as tracked debt
+# (F1 removes them); new ones fail CI.
+extend-select = ["E", "W", "S110", "BLE001"]
+ignore = ["E501"]  # line length is the formatter's job
+
+[tool.ruff.lint.per-file-ignores]
+# Example notebooks re-import across cells and demo optional steps.
+"*.ipynb" = ["F811", "BLE001"]
+
+[tool.mypy]
+# Gradual mode (F0-04): default strictness, every module is checked.
+python_version = "3.11"
+files = ["godml"]
+ignore_missing_imports = true
+
+# Debt: modules with type errors at F0-04 (46 errors). Remove an entry once
+# the module is clean; never add new ones.
+[[tool.mypy.overrides]]
+module = [
+  "godml.advisor_service.advisor_orchestrator",
+  "godml.compliance_service.validation_helpers",
+  "godml.dataprep_service.recipe_executor",
+  "godml.dataprep_service.transforms.quality",
+  "godml.dataprep_service.transforms.text",
+  "godml.dataprep_service.transforms.window",
+  "godml.model_service.model_registry.lstm_forecast_model",
+  "godml.model_service.model_registry.model_registry",
+  "godml.monitoring_service.observability",
+  "godml.notebook_api.advisor",
+  "godml.notebook_api.pipeline",
+  "godml.providers.mlflow",
+  "godml.providers.sagemaker.scripts.preprocess",
+  "godml.utils.model_storage",
+  "godml.utils.predict_safely",
+]
+ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

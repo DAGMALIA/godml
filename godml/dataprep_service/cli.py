@@ -33,7 +33,7 @@ def _load_governance_from_yaml(path: Path) -> Optional[dict]:
         return gov_model.model_dump()
     except FileNotFoundError:
         raise typer.BadParameter(f"Archivo no encontrado: {path}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         typer.echo(f"⚠️ Error cargando governance: {e}")
         return None
 

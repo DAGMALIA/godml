@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
@@ -103,7 +101,8 @@ class TestTrainModel:
 class TestPredict:
     def test_predict_wrapper(self):
         from godml.notebook_api.training import train_model, predict
-        import pandas as pd, numpy as np
+        import pandas as pd
+        import numpy as np
 
         np.random.seed(0)
         X = pd.DataFrame(np.random.randn(40, 3), columns=["a", "b", "c"])
@@ -115,7 +114,7 @@ class TestPredict:
     def test_predict_with_raw_model(self):
         from godml.notebook_api.training import predict
         from sklearn.linear_model import LogisticRegression
-        import pandas as pd, numpy as np
+        import pandas as pd
 
         clf = LogisticRegression()
         clf.fit([[1, 0], [0, 1], [1, 1], [0, 0]], [0, 1, 0, 1])
@@ -132,7 +131,8 @@ class TestCompareModels:
 
     def test_compare_with_results(self):
         from godml.notebook_api.training import train_model, compare_models
-        import pandas as pd, numpy as np
+        import pandas as pd
+        import numpy as np
 
         np.random.seed(0)
         X = pd.DataFrame(np.random.randn(40, 3), columns=["a", "b", "c"])

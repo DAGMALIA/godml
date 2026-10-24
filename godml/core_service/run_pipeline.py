@@ -102,7 +102,7 @@ def run_pipeline(config_path="godml.yml"):
             raise ConfigurationError(
                 f"Archivo de configuración no encontrado: {config_path}"
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise ConfigurationError(f"Error cargando configuración: {e}")
 
         # 2️⃣ Obtener executor
@@ -110,7 +110,7 @@ def run_pipeline(config_path="godml.yml"):
             executor = get_executor(config.provider)
         except ValueError as e:
             raise ConfigurationError(f"Provider no soportado: {e}")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise PipelineError(f"Error obteniendo executor: {e}")
 
         # 3️⃣ Validar configuración (sin log redundante del modelo)
@@ -118,7 +118,7 @@ def run_pipeline(config_path="godml.yml"):
             logging.getLogger("GODML").setLevel(logging.WARNING)  # silencio temporal
             executor.validate(config)
             logging.getLogger("GODML").setLevel(logging.INFO)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise PipelineError(f"Error validando configuración: {e}")
 
         # 4️⃣ Ejecutar pipeline principal
@@ -158,10 +158,10 @@ def run_pipeline(config_path="godml.yml"):
                 godml_logger.info(f"  • Output   : {pipeline_info['output_path']}")
             godml_logger.info("────────────────────────────────────────\n")
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise PipelineError(f"Error ejecutando pipeline: {e}")
 
     except (ConfigurationError, PipelineError):
         raise
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise PipelineError(f"Error inesperado en pipeline: {e}")

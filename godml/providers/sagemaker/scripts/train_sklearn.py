@@ -74,7 +74,7 @@ def main() -> None:
     try:
         auc = roc_auc_score(y, model.predict_proba(X)[:, 1])
         print(f"Train AUC: {auc:.4f}")
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
 
     os.makedirs(args.model_dir, exist_ok=True)

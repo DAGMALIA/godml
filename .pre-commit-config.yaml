@@ -1,0 +1,18 @@
+# Install once: pip install -e ".[dev]" && pre-commit install
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: 3b3f7c3f57fe9925356faf5fe6230835138be230  # frozen: v0.15.17
+    hooks:
+      - id: ruff-check
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      # Runs the project's mypy config ([tool.mypy] in pyproject.toml) on the
+      # installed environment, so third-party types match CI.
+      - id: mypy
+        name: mypy
+        entry: mypy
+        language: system
+        types: [python]
+        pass_filenames: false
