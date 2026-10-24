@@ -216,7 +216,7 @@ Formato: **ID** · estado · descripción → *criterio de aceptación*
 Cada fix lleva primero un test que reproduce el bug.
 
 - **F1-01** ✅ Compliance fail-closed: `ComplianceEngine.apply`, `run_pipeline_preprocessing` y `MLflowExecutor.run` dejan de devolver el df original ante error → *test: excepción en compliance aborta el pipeline*
-- **F1-02** ⬜ No subir el dataset crudo a MLflow; registrar solo hash y esquema (o el dataset ya cumplido si se pide explícitamente) → *test: el artefacto de MLflow no contiene columnas PII*
+- **F1-02** 🟨 No subir el dataset crudo a MLflow; registrar solo hash y esquema (o el dataset ya cumplido si se pide explícitamente) → *test: el artefacto de MLflow no contiene columnas PII*
 - **F1-03** ⬜ Quitar `except Exception: pass` en `MLflowExecutor.validate`; los `ValidationError` críticos se propagan
 - **F1-04** ⬜ SageMaker `preprocess.py`: corregir `ComplianceRegistry.get` → `get_compliance` y la firma de `apply`; fallar si compliance no puede aplicarse
 - **F1-05** ⬜ Verificar `dataset.hash` en `godml run` cuando está fijado; error si no coincide

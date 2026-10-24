@@ -27,6 +27,9 @@ class DatasetConfig(BaseModel):
     compliant_output: Optional[str] = None
     hash: Optional[str] = "auto"
     target: Optional[str] = None
+    # Upload the training data (after compliance) to MLflow. Off by default:
+    # only the source hash and schema are logged (F1-02).
+    log_dataset: bool = False
     dataprep: Optional[Union[DataprepRecipe, List[DataprepRecipe], Dict[str, Any]]] = (
         None
     )

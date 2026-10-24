@@ -17,6 +17,7 @@ from godml.monitoring_service.logger import (
 from godml.utils.path_utils import normalize_path
 from godml.utils.predict_safely import predict_safely
 from godml.utils.log_model_generic import log_model_generic
+from godml.utils.hash import calculate_file_hash
 from godml.monitoring_service.metrics import (
     evaluate_binary_classification,
     evaluate_regression,
@@ -24,6 +25,18 @@ from godml.monitoring_service.metrics import (
 from godml.monitoring_service.observability import build_baseline, save_baseline
 
 logger = get_logger()
+
+
+def _dataset_metadata(source_path: str, df: pd.DataFrame) -> dict:
+    """Hash of the source file and schema of the training data; no rows (F1-02)."""
+    return {
+        "uri": source_path,
+        "sha256": calculate_file_hash(source_path)
+        if os.path.exists(source_path)
+        else None,
+        "rows": int(len(df)),
+        "columns": {col: str(dtype) for col, dtype in df.dtypes.items()},
+    }
 
 
 class MLflowExecutor(BaseExecutor):
@@ -248,8 +261,20 @@ class MLflowExecutor(BaseExecutor):
                     # ──────────────────────────────────────
                     # Etiquetas y artefactos
                     # ──────────────────────────────────────
-                    if os.path.exists(dataset_path):
-                        mlflow.log_artifact(dataset_path, artifact_path="dataset")
+                    # F1-02: the source file may hold raw PII, so it is never
+                    # uploaded. Log its hash and schema; the post-compliance
+                    # data only when dataset.log_dataset is set.
+                    mlflow.log_dict(
+                        _dataset_metadata(dataset_path, df),
+                        "dataset/dataset_metadata.json",
+                    )
+                    if pipeline.dataset.log_dataset:
+                        with tempfile.TemporaryDirectory() as tmpdir:
+                            compliant_csv = os.path.join(
+                                tmpdir, "compliant_dataset.csv"
+                            )
+                            df.to_csv(compliant_csv, index=False)
+                            mlflow.log_artifact(compliant_csv, artifact_path="dataset")
                     mlflow.set_tag("dataset.uri", pipeline.dataset.uri)
                     mlflow.set_tag("version", pipeline.version)
                     mlflow.set_tag("dataset.target", target)
