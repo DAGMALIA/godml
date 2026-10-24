@@ -182,8 +182,9 @@ Requisito: el paquete debe ser `noarch: python` (puro Python). **Implica retirar
 | D5 | Rama `1.x` solo con fixes de seguridad durante **6 meses** tras 2.0.0 | ✅ decidido 2026-10-24 |
 | D6 | Fuente única de versión: `importlib.metadata.version("godml")` | ✅ decidido 2026-10-24 |
 | D7 | Build conda con **rattler-build** (`recipe.yaml` v1) | ✅ decidido 2026-10-24 |
-| D8 | Resuelta por el usuario (texto de la versión nueva del plan no recibido en sesión; reemplazar esta fila al pegarlo) | ✅ 2026-10-24 |
+| D8 | Titularidad: el mantenedor revisó su contrato y no hay cláusula que reclame GoDML. El correo corporativo en commits se debe a la config de git en su PC personal. No se reescribe historial; se unifica con .mailmap hacia la identidad de Dagmalia (F0-14) | ✅ resuelto 2026-10-24 |
 | D9 | F0-04: el formateo masivo (`ruff format`) va en un **commit aislado primero**, registrado en `.git-blame-ignore-revs` | ✅ 2026-10-24 |
+| D10 | Retirar Safety del CI; pip-audit bloqueante es la fuente única de auditoría de CVE | ✅ decidido 2026-10-24 |
 
 ---
 
@@ -205,8 +206,9 @@ Formato: **ID** · estado · descripción → *criterio de aceptación*
 - **F0-10** ✅ Cobertura real: eliminar la lista `omit` de `[tool.coverage.run]` (salvo tests y código generado); `fail_under` se fija a la cobertura real actual (~41 %) y sube por fase → *el reporte de CI coincide con la cobertura sin exclusiones*
 - **F0-11** ✅ Quitar `-p no:warnings` de `addopts`; usar `filterwarnings` explícitos y tratar como error los `DeprecationWarning` emitidos por `godml` → *los warnings de terceros siguen visibles; los propios fallan el test*
 - **F0-12** ✅ `LICENSE_REPORT.md` generado automáticamente (pip-licenses) en CI en lugar de mantenerse a mano
-- **F0-13** ⬜ *(descripción pendiente: definida en una versión del plan que no llegó a la sesión)*
+- **F0-13** ✅ Extras de desarrollo mínimos: reemplazar moto[all] por los servicios que usan los tests (p. ej. moto[s3,sagemaker]); separar `dev` en `dev` + `test-<pilar>`; el job `licenses` deja de instalar .[all] (sin tensorflow) y agrega --fail-on para copyleft fuerte → *ningún test se salta por dependencia faltante y `dev` no arrastra fastapi/boto3 de forma oculta*
 - **F0-14** ✅ `.mailmap` que unifica las identidades del mantenedor en `Arturo Gutiérrez Rubio Rojas <agtzrubio@dagmalia.com>`, sin reescribir historial → *`git shortlog -sne` muestra una sola identidad humana*
+- **F0-15** ⬜ Retirar Safety (D10): eliminar el workflow/job y sus 15 ignores; actualizar SECURITY.md
 
 ### F1 — Hotfixes críticos 1.x (1.3.1)
 
@@ -225,7 +227,7 @@ Cada fix lleva primero un test que reproduce el bug.
 - **F1-11** ⬜ Server: reordenar features por `feature_names_in_` / `feature_names`; devolver `predict_proba` cuando exista
 - **F1-12** ⬜ `import godml` sin efectos colaterales: quitar filtros globales de warnings, creación de `logs/` al importar y `logging.basicConfig`
 - **F1-13** ⬜ Corregir `_is_safe_absolute_path` y `validate_model_path` con `Path.is_relative_to`
-- **F1-14** ⬜ README honesto: quitar GDPR/HIPAA/SOX, corregir ejemplos de notebook/advisor/tune, agregar `target` al quick start y a `godml init`; corregir `godml/utils/README_TEMPLATE.txt` (no imponer badge MIT a proyectos de usuarios, Python 3.11+)
+- **F1-14** ⬜ README honesto: quitar GDPR/HIPAA/SOX, corregir ejemplos de notebook/advisor/tune, agregar `target` al quick start y a `godml init`; corregir `godml/utils/README_TEMPLATE.txt` (no imponer badge MIT a proyectos de usuarios, Python 3.11+); corregir nombres de assets en la sección de verificación del README (`multiple.intoto.jsonl`, `sbom.cyclonedx.json`)
 - **F1-15** ⬜ Publicar 1.3.1 con CHANGELOG
 
 ### F2 — Arquitectura 2.0 (2.0.0a1)
@@ -339,6 +341,7 @@ Claude Code agrega una entrada por sesión (la más reciente arriba).
 
 | Fecha | Tareas | Resultado | Notas / bloqueos |
 |---|---|---|---|
+| 2026-10-24 | F0-13 | ✅ `moto[all]` eliminado: **ningún test usa moto** (ni boto3/sagemaker directo). `dev` = pytest, pytest-cov, pytest-mock, ruff, mypy, types-PyYAML, pre-commit; nuevos `test-serve` (`godml[api]` + httpx para `TestClient`) y `test-observe` (`godml[observability]`). CI (`test`, `lint`, release) instala `.[dev,test-serve,test-observe]`. Job `licenses`: `.[api,aws,advisor,data,observability]` (sin tensorflow) + gate `--fail-on` de copyleft fuerte (nombres exactos GPL/AGPL classifier + SPDX; partial-match descartado porque `GPL-3.0` ⊂ `LGPL-3.0`). Verificado en venvs limpios: `.[dev]` ya no trae boto3/moto/httpx/prometheus (122 paquetes vs 159 antes); `.[dev,test-*]`: 367 pasan, **0 skips**, cobertura 48.43 %; gate pasa con la lista real y falla (exit 1) con una licencia presente | fastapi y uvicorn siguen llegando **desde el core**: `mlflow` → `mlflow-skinny` 3.x los exige (también en `pip install godml` pelado) → F8-01 (mlflow al extra `train`). Hallazgo: en entorno limpio mypy fallaba por stubs de PyYAML faltantes (local pasaba por `types-PyYAML` instalado aparte), lo que habría roto el job `lint` de F0-04 → `types-PyYAML` agregado a `dev`. El gate no detecta expresiones compuestas (`MIT OR GPL-3.0-only`) |
 | 2026-10-24 | F0-12 | ✅ Job `licenses` en `ci.yml`: instala `.[all]` + `pip-licenses==5.5.5` (5.0 dejaba 66 paquetes como UNKNOWN por no leer PEP 639), genera `LICENSE_REPORT.md` (resumen + tabla con URLs), lo sube como artifact `license-report` y al resumen del job. El `LICENSE_REPORT.md` manual (desactualizado: listaba lightgbm, omitía gpt4all/fastapi) sale del repo y queda en `.gitignore`. Script del paso probado localmente bajo `bash -eo pipefail` | Corrida local (env `dev`): sin licencias GPL; 2 paquetes sin licencia declarada en metadatos (`huey`, `skops`). Posible siguiente paso: gate `--fail-on` para copyleft fuerte |
 | 2026-10-24 | F0-07 | ✅ SECURITY.md reescrito solo con hechos verificados: enforcement real por herramienta (Bandit HIGH bloquea; pip-audit bloquea; Safety no bloquea), los **15** IDs de Safety que ignora el workflow (el doc listaba 8) marcados como pendientes de revalidar (puestos para mlflow 3.4.0; CI hoy resuelve 3.17.2 y pip-audit no reporta nada), lockfile sin hashes y no usado por CI (antes decía "hash-verified"), artefactos reales del Release (wheel, sdist, `multiple.intoto.jsonl`, CycloneDX sin firmar; SPDX firmado solo como artifact del workflow), bind `0.0.0.0` por defecto (antes decía lo contrario), fecha de revisión 2026-10-24. Sección duplicada en español fusionada. Ignore `PYSEC-2024-230` (certifi, **sí** tenía fix en 2024.7.4) eliminado de ambos workflows; pip-audit sigue limpio sin él | Revalidar IDs de Safety requiere cuenta Safety. README: la sección de verificación cita `provenance.intoto.jsonl` y `sbom.spdx.json` como assets del Release, pero los reales son `multiple.intoto.jsonl` y `sbom.cyclonedx.json` → F1-14. Versión ES de SECURITY.md pendiente para F9 (D3) |
 | 2026-10-24 | F0-06 | ✅ Eliminado `godml/deploy_service/.github/workflows/docker-ci.yml` (acciones sin pinear `@v3/@v4`, push a Docker Hub con tag `latest`). No se usaba: GitHub solo ejecuta workflows en `.github/` raíz y el scaffold copia desde `godml/templates/`, no desde `deploy_service`. No quedan otros `.github/` anidados | — |
