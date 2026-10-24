@@ -1,62 +1,96 @@
 # 🔐 GODML Security & Supply Chain Policy
-# 🔐 GODML Security & Supply Chain Policy  
-[![Supply Chain Verified](https://img.shields.io/badge/Supply%20Chain-Verified-brightgreen)](#)
-[![SBOM SPDX](https://img.shields.io/badge/SBOM-SPDX-blue)](#)
-[![SLSA Provenance](https://img.shields.io/badge/SLSA-v1-orange)](#)
-[![Trusted Publisher](https://img.shields.io/badge/PyPI-Trusted%20Publisher-purple)](#)
 
+[![SBOM](https://img.shields.io/badge/SBOM-CycloneDX%20%2B%20SPDX-blue)](#-release-artifacts)
+[![SLSA Provenance](https://img.shields.io/badge/SLSA-L3%20provenance-orange)](#-release-artifacts)
+[![Trusted Publisher](https://img.shields.io/badge/PyPI-Trusted%20Publisher-purple)](#-release-artifacts)
+
+This document describes the controls that are **actually enforced today** in
+this repository's CI/CD. Planned improvements are listed separately and are
+not claimed as implemented.
 
 ## 🧱 Overview
 
-GODML follows a **secure-by-default** and **supply chain–verified** approach to software delivery.  
-All code, dependencies, and build artifacts are validated, signed, and published through a fully auditable CI/CD pipeline.
+Two workflows build and publish GODML:
 
-The release workflow includes:
-- **Static analysis** (Bandit) for code-level security.
-- **Dependency vulnerability scanning** (Safety).
-- **Software Bill of Materials (SBOM)** generation in SPDX format.
-- **Provenance and attestation** using [SLSA v1](https://slsa.dev/spec/v1.0) and [Sigstore Cosign](https://docs.sigstore.dev/).
-- **Trusted publishing** to PyPI using OIDC authentication.
+- **`safety_scan.yml`** (every push to `main`): tests, Bandit, Safety,
+  pip-audit, SPDX SBOM signed with Cosign, then pushes the `v<version>` tag.
+- **`release.yml`** (on that tag): builds sdist and wheel, generates a
+  CycloneDX SBOM and SLSA L3 provenance, creates the GitHub Release and
+  publishes to PyPI with Trusted Publishing (OIDC, no API token).
 
----
-
-## 🧩 Security Principles
-
-1. **Defense in Depth** — Multi-layered validation from source to artifact.  
-2. **Zero Trust Builds** — All workflows are isolated and use ephemeral GitHub-hosted runners.  
-3. **Keyless Signing** — Every release artifact is signed via OIDC tokens and verified by Cosign.  
-4. **Secure by Default** — No service binds externally unless explicitly configured.  
-5. **Transparency** — All security exceptions and mitigations are traceable in CI logs and this document.
+`ci.yml` runs on every push and pull request to `main`/`develop`.
 
 ---
 
 ## 🧪 Security Scans
 
-| Tool | Purpose | Enforcement |
-|------|----------|-------------|
-| **Bandit** | Detects insecure code patterns (e.g., hardcoded secrets, unsafe bindings) | Required |
-| **Safety** | Detects dependency CVEs | Required (with documented exceptions) |
-| **Anchore SBOM** | Generates SPDX-compliant dependency inventory | Required |
-| **Cosign** | Signs artifacts and provenance | Required |
-| **SLSA Provenance** | Ensures build integrity and auditability | Required |
+| Tool | Purpose | Where | Enforcement |
+|------|---------|-------|-------------|
+| **Bandit** | Insecure code patterns | `ci.yml` (SAST job), `safety_scan.yml` | **Blocking** on HIGH severity (`-lll`). MEDIUM/LOW are reported in SARIF, not blocking |
+| **pip-audit** | Dependency CVEs (PyPI advisory DB / OSV) | `ci.yml` (core install), `safety_scan.yml` (dev install) | **Blocking**, no ignored IDs |
+| **Safety** | Dependency CVEs (Safety DB) | `safety_scan.yml` | **Non-blocking** (`continue-on-error`; needs the `SAFETY_API_KEY` secret). Ignored IDs below |
+| **ruff** (`S110`, `BLE001`) + **mypy** | No silent `except Exception: pass`, no blind excepts, type checks | `ci.yml` (lint job), pre-commit | **Blocking** for new code. Pre-existing cases are tagged `# noqa` as tracked debt |
 
-Reports are attached as pipeline artifacts under the job:  
-**“🔐 GODML Supply Chain + PyPI Release”**.
+Scan reports (Bandit, pip-audit, signed SPDX SBOM) are uploaded as the
+`supplychain-artifacts` workflow artifact of **“🔐 GODML Supply Chain + PyPI
+Release”**. Bandit SARIF is also sent to the repository's Security tab.
+
+---
+
+## 📦 Release Artifacts
+
+| Artifact | Format | Signed | Where |
+|----------|--------|--------|-------|
+| Wheel and sdist | `.whl`, `.tar.gz` | Covered by SLSA provenance | GitHub Release + PyPI |
+| SLSA provenance | `multiple.intoto.jsonl` (SLSA L3, `slsa-github-generator`) | ✅ Sigstore | GitHub Release |
+| SBOM | CycloneDX JSON (`sbom.cyclonedx.json`) | ❌ | GitHub Release |
+| SBOM | SPDX JSON (`sbom.spdx.json`) | ✅ Cosign keyless (OIDC → Rekor) | Workflow artifact only, not on the Release |
+
+---
+
+## 🔗 Dependency Locking
+
+- `requirements.lock` was generated with `pip-compile` from `pyproject.toml`
+  (last regenerated 2025-10-29). It **does not contain hashes** and CI does
+  **not** install from it.
+- Before the Safety scan, `safety_scan.yml` overwrites `requirements.lock` in
+  the runner with `pip list --format=freeze`, so Safety scans the environment
+  CI actually resolved (not the committed file).
+- CI installs from the version ranges in `pyproject.toml`. A reproducible
+  lockfile with hashes is planned (GoDML 2.0 plan, F8-02).
 
 ---
 
 ## 🧾 Known Vulnerabilities & Accepted Risks
 
-The pinned lockfile (`requirements.lock`) uses `mlflow==3.4.0`, which has 8 reported vulnerabilities without available fixes.
+**Safety ignored IDs** (in `safety_scan.yml`):
+`62727, 62800, 62801, 71577, 71578, 71579, 71584, 71587, 71691, 71692, 71693,
+71701, 71703, 71706, 71707`.
 
-**Justification and mitigation:**
-- Vulnerabilities have **no known exploit path** within GODML’s runtime context.
-- GODML executes within **isolated CI/CD containers** and **private network scopes**.
-- Dependencies are **pinned and hash-verified** via `requirements.lock`.
-- Continuous monitoring in [Safety Platform](https://platform.safetycli.com/codebases/godml/findings?branch=main).
-- Risk is **formally accepted under supply chain policy** and documented in CI logs as:
+They were added when the resolved MLflow was **3.4.0**, for advisories without
+an available fix at the time. With the current range (`mlflow>=2.13.0,<4`) CI
+resolves a newer MLflow (3.17.2 on 2026-10-24), and pip-audit reports **no
+known vulnerabilities** in that environment. The Safety ignores have **not yet
+been re-validated** against the Safety DB; each one must be confirmed or
+removed at the next review.
 
-::notice::Residual risk: MLflow 3.4.0 vulnerabilities documented and accepted under supply chain policy
+**pip-audit:** no ignored IDs. (`PYSEC-2024-230`, a certifi advisory fixed in
+2024.7.4, was ignored until 2026-10-24 and no longer applied.)
+
+Mitigations for MLflow-related risk: GODML is meant to load only models its
+own pipeline produced. The deploy service checks model paths
+(`validate_model_path`), but that check has a known weakness being fixed in
+1.3.1 (plan F1-13); until then, only serve models from directories you
+control.
+
+---
+
+## 🌐 Network Exposure
+
+The generated deploy service binds to `0.0.0.0` by default (dev, qa and prod
+configs, and `HOST` in `deploy_service/main.py`) so that it is reachable from
+inside a container. Set `HOST` (or the `host` key in the deploy config) to
+restrict it when running outside a container.
 
 ---
 
@@ -85,30 +119,17 @@ GODML adheres to the principles of **responsible disclosure**:
 ## 🧬 Supply Chain Integrity Summary
 
 | Component | Control | Status |
-|------------|----------|---------|
-| Code signing | Sigstore (OIDC keyless) | ✅ Implemented |
-| Dependency locking | `requirements.lock` with hashes | ✅ Implemented |
-| SBOM tracking | SPDX JSON format | ✅ Implemented |
-| Provenance (SLSA) | v1 provenance document signed | ✅ Implemented |
-| Vulnerability policy | Safety scan + risk justification | ✅ Implemented |
+|-----------|---------|--------|
+| Build provenance | SLSA L3 (`slsa-github-generator`), attached to the Release | ✅ Implemented |
+| SBOM | CycloneDX on the Release; SPDX signed with Cosign as workflow artifact | ✅ Implemented (signed SBOM not yet on the Release) |
 | PyPI publishing | Trusted Publisher (OIDC) | ✅ Implemented |
+| Code scanning | Bandit HIGH blocking; ruff fail-closed rules for new code | ✅ Implemented |
+| Dependency scanning | pip-audit blocking; Safety best-effort | ✅ Implemented (Safety non-blocking) |
+| Dependency locking | `requirements.lock` without hashes, not used by CI | ⚠️ Partial — hashed lockfile planned |
+| Third-party actions | Pinned by commit SHA (except `slsa-github-generator`, which requires a tag) | ✅ Implemented |
 
 ---
 
-**Last reviewed:** 2025-10-14  
-**Maintainer:** [Arturo Gutierrez Rubio Rojas](mailto:agtzrubio@dagmalia.com)  
+**Last reviewed:** 2026-10-24
+**Maintainer:** [Arturo Gutierrez Rubio Rojas](mailto:agtzrubio@dagmalia.com)
 **Organization:** [DAGMALIA — Governed, Observable & Declarative ML](https://dagmalia.com)
-
-## ⚠️ Vulnerabilidades conocidas ignoradas temporalmente
-
-Actualmente, el paquete `mlflow==3.4.0` contiene las siguientes vulnerabilidades no parchadas oficialmente:
-
-- 71577, 71578, 71579, 71584, 71587, 71691, 71692, 71693
-
-Estas han sido marcadas como `ignored` en nuestra política debido a que:
-
-- No existe aún una versión segura publicada.
-- No se cargan modelos de fuentes externas (RCE mitigado).
-- Se monitorea semanalmente su estado vía Safety CLI.
-
-Ver: https://data.safetycli.com/p/pypi/mlflow/eda/?from=3.4.0
