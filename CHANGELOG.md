@@ -14,14 +14,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   training on the unprocessed data. This covers engine failures, a missing
   compliance engine and unsupported standards: a YAML with
   `compliance: gdpr` (or any value other than `pci-dss`) now fails instead of
-  being silently skipped.
+  being silently skipped. Applies to `ComplianceEngine.apply`,
+  `run_pipeline_preprocessing`, the MLflow executor and the dataprep recipe
+  hook.
 
   **Action required if your YAML sets an unsupported standard:** data
   processed with it was never protected by that standard (earlier versions
   skipped it silently). Set `governance.compliance: pci-dss` or remove the
-  `compliance` key. Applies to `ComplianceEngine.apply`,
-  `run_pipeline_preprocessing`, the MLflow executor and the dataprep recipe
-  hook.
+  `compliance` key.
+
+- The MLflow executor no longer uploads the source dataset (`dataset.uri`) as
+  a run artifact. That file is read before compliance, so the upload exposed
+  raw PII even with PCI-DSS configured. Runs now log
+  `dataset/dataset_metadata.json` (source SHA-256, row count and column
+  types). Set `dataset.log_dataset: true` to also upload the training data
+  after compliance (`dataset/compliant_dataset.csv`).
+
+  **Action required if you used MLflow with 1.x:** earlier runs may contain
+  the raw dataset under the `dataset/` artifact path; review and delete those
+  artifacts from your tracking server if they hold personal data.
 
 ### Changed
 
