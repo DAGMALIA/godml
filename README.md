@@ -237,7 +237,7 @@ slsa-verifier verify-artifact dist/godml-*.whl \
 | Control | Tool | Status |
 |---------|------|--------|
 | SAST | Bandit | ✅ Blocks on HIGH/CRITICAL |
-| Dependency CVEs | pip-audit + Safety | ✅ Weekly + per PR |
+| Dependency CVEs | pip-audit (blocking) | ✅ Every push and PR |
 | SHA-pinned actions | Dependabot | ✅ Auto-pinned |
 | PyPI publish | OIDC Trusted Publisher | ✅ No API tokens |
 | Branch protection | GitHub Ruleset | ✅ PR + status checks |

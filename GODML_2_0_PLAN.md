@@ -13,8 +13,8 @@ Este documento es la fuente de verdad del proyecto 2.0. Claude Code lo lee al in
 
 | Fase | Nombre | Versión objetivo | Estado |
 |---|---|---|---|
-| F0 | Fundaciones del repo | 1.3.1 | 🟨 |
-| F1 | Hotfixes críticos 1.x (protege usuarios actuales) | 1.3.1 | ⬜ |
+| F0 | Fundaciones del repo | 1.3.1 | ✅ |
+| F1 | Hotfixes críticos 1.x (protege usuarios actuales) | 1.3.1 | 🟨 |
 | F2 | Arquitectura 2.0: core, spec v2, plugins | 2.0.0a1 | ⬜ |
 | F3 | Pilar **Govern** | 2.0.0a1 | ⬜ |
 | F4 | Pilar **Train** | 2.0.0a2 | ⬜ |
@@ -24,7 +24,7 @@ Este documento es la fuente de verdad del proyecto 2.0. Claude Code lo lee al in
 | F8 | Empaquetado: PyPI por pilar + conda-forge | 2.0.0rc1 | ⬜ |
 | F9 | Docs, ejemplos, migración y lanzamiento | 2.0.0 | ⬜ |
 
-**Fase activa:** F0
+**Fase activa:** F1
 
 ---
 
@@ -208,7 +208,7 @@ Formato: **ID** · estado · descripción → *criterio de aceptación*
 - **F0-12** ✅ `LICENSE_REPORT.md` generado automáticamente (pip-licenses) en CI en lugar de mantenerse a mano
 - **F0-13** ✅ Extras de desarrollo mínimos: reemplazar moto[all] por los servicios que usan los tests (p. ej. moto[s3,sagemaker]); separar `dev` en `dev` + `test-<pilar>`; el job `licenses` deja de instalar .[all] (sin tensorflow) y agrega --fail-on para copyleft fuerte → *ningún test se salta por dependencia faltante y `dev` no arrastra fastapi/boto3 de forma oculta*
 - **F0-14** ✅ `.mailmap` que unifica las identidades del mantenedor en `Arturo Gutiérrez Rubio Rojas <agtzrubio@dagmalia.com>`, sin reescribir historial → *`git shortlog -sne` muestra una sola identidad humana*
-- **F0-15** ⬜ Retirar Safety (D10): eliminar el workflow/job y sus 15 ignores; actualizar SECURITY.md
+- **F0-15** ✅ Retirar Safety (D10): eliminar el workflow/job y sus 15 ignores; actualizar SECURITY.md
 
 ### F1 — Hotfixes críticos 1.x (1.3.1)
 
@@ -341,6 +341,7 @@ Claude Code agrega una entrada por sesión (la más reciente arriba).
 
 | Fecha | Tareas | Resultado | Notas / bloqueos |
 |---|---|---|---|
+| 2026-10-24 | F0-15, cierre F0 | ✅ Safety retirado (D10): paso `pyupio/safety-action` + 15 ignores + justificación eliminados de `safety_scan.yml`; ya no se instalan `safety` ni `pip-tools`, ni se sobrescribe `requirements.lock` con `pip freeze`; quitada la fila del resumen y el aviso de "riesgo residual MLflow aceptado". SECURITY.md: pip-audit como única auditoría, sin advisories ignorados. README: fila de CVE corregida (decía "Weekly", no hay schedule). **F0 cerrada**: F0-01…F0-15 ✅ | El archivo conserva el nombre `safety_scan.yml`: renombrarlo rompe la identidad Cosign (`--certificate-identity-regexp`) que documenta el README y el badge. El secreto `SAFETY_API_KEY` puede borrarse del repo en GitHub |
 | 2026-10-24 | F0-13 | ✅ `moto[all]` eliminado: **ningún test usa moto** (ni boto3/sagemaker directo). `dev` = pytest, pytest-cov, pytest-mock, ruff, mypy, types-PyYAML, pre-commit; nuevos `test-serve` (`godml[api]` + httpx para `TestClient`) y `test-observe` (`godml[observability]`). CI (`test`, `lint`, release) instala `.[dev,test-serve,test-observe]`. Job `licenses`: `.[api,aws,advisor,data,observability]` (sin tensorflow) + gate `--fail-on` de copyleft fuerte (nombres exactos GPL/AGPL classifier + SPDX; partial-match descartado porque `GPL-3.0` ⊂ `LGPL-3.0`). Verificado en venvs limpios: `.[dev]` ya no trae boto3/moto/httpx/prometheus (122 paquetes vs 159 antes); `.[dev,test-*]`: 367 pasan, **0 skips**, cobertura 48.43 %; gate pasa con la lista real y falla (exit 1) con una licencia presente | fastapi y uvicorn siguen llegando **desde el core**: `mlflow` → `mlflow-skinny` 3.x los exige (también en `pip install godml` pelado) → F8-01 (mlflow al extra `train`). Hallazgo: en entorno limpio mypy fallaba por stubs de PyYAML faltantes (local pasaba por `types-PyYAML` instalado aparte), lo que habría roto el job `lint` de F0-04 → `types-PyYAML` agregado a `dev`. El gate no detecta expresiones compuestas (`MIT OR GPL-3.0-only`) |
 | 2026-10-24 | F0-12 | ✅ Job `licenses` en `ci.yml`: instala `.[all]` + `pip-licenses==5.5.5` (5.0 dejaba 66 paquetes como UNKNOWN por no leer PEP 639), genera `LICENSE_REPORT.md` (resumen + tabla con URLs), lo sube como artifact `license-report` y al resumen del job. El `LICENSE_REPORT.md` manual (desactualizado: listaba lightgbm, omitía gpt4all/fastapi) sale del repo y queda en `.gitignore`. Script del paso probado localmente bajo `bash -eo pipefail` | Corrida local (env `dev`): sin licencias GPL; 2 paquetes sin licencia declarada en metadatos (`huey`, `skops`). Posible siguiente paso: gate `--fail-on` para copyleft fuerte |
 | 2026-10-24 | F0-07 | ✅ SECURITY.md reescrito solo con hechos verificados: enforcement real por herramienta (Bandit HIGH bloquea; pip-audit bloquea; Safety no bloquea), los **15** IDs de Safety que ignora el workflow (el doc listaba 8) marcados como pendientes de revalidar (puestos para mlflow 3.4.0; CI hoy resuelve 3.17.2 y pip-audit no reporta nada), lockfile sin hashes y no usado por CI (antes decía "hash-verified"), artefactos reales del Release (wheel, sdist, `multiple.intoto.jsonl`, CycloneDX sin firmar; SPDX firmado solo como artifact del workflow), bind `0.0.0.0` por defecto (antes decía lo contrario), fecha de revisión 2026-10-24. Sección duplicada en español fusionada. Ignore `PYSEC-2024-230` (certifi, **sí** tenía fix en 2024.7.4) eliminado de ambos workflows; pip-audit sigue limpio sin él | Revalidar IDs de Safety requiere cuenta Safety. README: la sección de verificación cita `provenance.intoto.jsonl` y `sbom.spdx.json` como assets del Release, pero los reales son `multiple.intoto.jsonl` y `sbom.cyclonedx.json` → F1-14. Versión ES de SECURITY.md pendiente para F9 (D3) |
