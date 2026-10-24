@@ -193,7 +193,7 @@ Formato: **ID** · estado · descripción → *criterio de aceptación*
 
 - **F0-01** ✅ Licencia MIT (D1): reemplazar el texto de `LICENSE` por MIT estándar con línea de copyright del autor; usar `license = "MIT"` (SPDX) en `pyproject.toml`; verificar classifiers, headers y README; revisar en el historial si hubo contribuciones externas (si las hay, pedir consentimiento para el cambio de texto) y nota en CHANGELOG aclarando que el proyecto siempre se distribuyó como MIT → *`MIT` es el único identificador de licencia en todo el repo*
 - **F0-02** ✅ Fuente única de versión (D6); eliminar versiones hardcodeadas en banners, plantillas, `service_version` y SECURITY.md → *`grep` de versiones literales sin resultados fuera de pyproject*
-- **F0-03** ⬜ Eliminar `godml.egg-info/` del repo y verificar `.gitignore`
+- **F0-03** ✅ Eliminar `godml.egg-info/` del repo y verificar `.gitignore`
 - **F0-04** ⬜ Tooling: ruff (lint + format), mypy (modo gradual), pre-commit; regla que prohíba `except Exception: pass` (ruff `S110`, `BLE001`) → *CI falla con violaciones*
 - **F0-05** ⬜ CI que realmente bloquea: quitar `|| true` de bandit y pip-audit; matriz de Python según D2
 - **F0-06** ⬜ Eliminar workflow suelto `godml/deploy_service/.github/workflows/docker-ci.yml` (acciones sin pinear)
@@ -335,6 +335,7 @@ Claude Code agrega una entrada por sesión (la más reciente arriba).
 
 | Fecha | Tareas | Resultado | Notas / bloqueos |
 |---|---|---|---|
+| 2026-10-24 | F0-03 | ✅ `godml.egg-info/` (6 archivos) sacado del índice; `.gitignore` ya tenía `*.egg-info/` (línea 8). No hay otros artefactos de build versionados; CI no lo referencia. Tras `pip install -e .`, `git status` queda limpio | — |
 | 2026-10-24 | F0-02 | ✅ `godml.__version__` sale de `importlib.metadata` (fallback `0.0.0+unknown` sin instalar). `server.py` dejó de reportar `1.1.0` (FastAPI `version` y `service_version` = `__version__`); banners `v1.0.2` de `run_pipeline.py`, docstrings con versión y plantilla README (`v1.0.0` → `{godml_version}`) corregidos; README (`--source-tag`) y SECURITY.md sin versión del paquete. Test de guarda `tests/unit/test_version.py` (falla con literales) | Queda `v1.2.0/v1.3.0/v2.0.0` en el Roadmap del README: son metas, no la versión actual, y el roadmap está desactualizado (1.3.0 salió sin esos ítems) → F1-14 |
 | 2026-10-24 | F0-01 (reaplicada) | ✅ Commit de licencia reaplicado sobre main + 2 headers nuevos de 1.3.0 (`observability.py`, `scaffold.py`) → 22 archivos con `SPDX-License-Identifier: MIT`. `CHANGELOG.md` creado con la nota de licencia | Historial: todos los autores humanos son el mantenedor (varias identidades) + dependabot; no se requiere consentimiento de terceros |
 | 2026-10-24 | F0-09 | ✅ No requería merge: `chore/bump-version-1.2.2` ya estaba en main vía squash del PR #69 (`ae98b32`, tag v1.2.4; árbol idéntico a `8dcddbb`). main está en **1.3.0** (PR #75 observability), publicada en PyPI (última: 1.3.0) → la siguiente es 1.3.1, como dice el plan. Editable reinstalado: reporta 1.3.0 | **La línea base de F0-08 se había medido sobre la rama vieja (1.2.4).** Base nueva sobre main `57b0290`: 358 tests pasan; cobertura reportada 57.95 % (1750/3020), **real 48.22 %** (1978/4102); ruff 26; `BLE001` 95 / `S110` 12; ruff format 111 archivos; mypy 46 errores en 15 archivos; bandit 8 MEDIUM / 20 LOW. F0-01 se reaplica sobre main |
