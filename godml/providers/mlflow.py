@@ -495,14 +495,13 @@ class MLflowExecutor(BaseExecutor):
         errors = []
         warnings_ = []
 
-        try:
-            from godml.core_service.validators import validate_pipeline
+        # Governance checks (F1-03): a ValidationError (blank owner, metric
+        # threshold out of range, batch deploy without output) must block the
+        # run, so it is not caught here.
+        from godml.core_service.validators import validate_pipeline
 
-            ext_warns = validate_pipeline(pipeline)
-            for w in ext_warns:
-                warnings_.append(str(w))
-        except Exception:  # noqa: BLE001, S110
-            pass
+        for w in validate_pipeline(pipeline):
+            warnings_.append(str(w))
 
         ds = getattr(pipeline, "dataset", None)
         if ds is None:

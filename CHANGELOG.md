@@ -34,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the raw dataset under the `dataset/` artifact path; review and delete those
   artifacts from your tracking server if they hold personal data.
 
+- `godml run` now enforces the governance validation it already ran: a blank
+  `governance.owner`, a metric threshold outside its valid range or a batch
+  deploy without `deploy.batch_output` stop the run with `ValidationError`.
+  The MLflow executor used to swallow that error (`except Exception: pass`).
+
 ### Changed
 
 - License text: the `LICENSE` file now contains the MIT license. GoDML has
