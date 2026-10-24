@@ -1,6 +1,6 @@
 # godml/monitoring_service/observability.py
 # Copyright (c) 2025 Arturo Gutierrez Rubio Rojas
-# Licensed under the MIT License
+# SPDX-License-Identifier: MIT
 """
 Observabilidad de runtime para modelos servidos por GODML.
 

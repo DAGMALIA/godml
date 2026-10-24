@@ -1,6 +1,6 @@
 # godml/model_service/model_registry/xgboost_model.py
 # Copyright (c) 2025 Arturo Gutierrez Rubio Rojas
-# Licensed under the MIT License
+# SPDX-License-Identifier: MIT
 
 import numpy as np
 import pandas as pd

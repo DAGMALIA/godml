@@ -1,5 +1,5 @@
 # Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
-# Licensed under the MIT License
+# SPDX-License-Identifier: MIT
 
 from godml.cli.app import app
 

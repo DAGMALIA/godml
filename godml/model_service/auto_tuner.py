@@ -1,6 +1,6 @@
 # godml/model_service/auto_tuner.py
 # Copyright (c) 2025 Arturo Gutierrez Rubio Rojas
-# Licensed under the MIT License
+# SPDX-License-Identifier: MIT
 
 import logging
 import numpy as np

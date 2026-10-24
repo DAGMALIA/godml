@@ -1,5 +1,5 @@
 # Copyright (c) 2025 Arturo Gutierrez Rubio Rojas
-# Licensed under the MIT License
+# SPDX-License-Identifier: MIT
 """
 Scaffolding del servicio de inferencia de un proyecto GODML.
 

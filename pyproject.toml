@@ -4,7 +4,8 @@ requires = ["setuptools>=78.1.1", "wheel"]
 
 [project]
 description = "Governed, Observable & Declarative Machine Learning Framework"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 name = "godml"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
@@ -35,7 +36,6 @@ classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",

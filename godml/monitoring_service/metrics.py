@@ -1,6 +1,6 @@
 # godml/monitoring_service/metrics.py
 # Copyright (c) 2025 Arturo Gutierrez Rubio Rojas
-# Licensed under the MIT License
+# SPDX-License-Identifier: MIT
 from godml.monitoring_service.metric_diagnostics import analyze_metric_issue, explain_issue_and_action
 from sklearn.metrics import (
     accuracy_score,

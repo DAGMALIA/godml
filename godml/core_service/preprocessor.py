@@ -1,6 +1,6 @@
 # core_service/preprocessor.py
 # Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
-# Licensed under the MIT License
+# SPDX-License-Identifier: MIT
 
 from typing import Optional
 import pandas as pd

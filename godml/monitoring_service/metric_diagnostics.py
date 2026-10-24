@@ -1,6 +1,6 @@
 # godml/monitoring_service/metric_diagnostics.py
 # Copyright (c) 2025 Arturo Gutierrez Rubio Rojas
-# Licensed under the MIT License
+# SPDX-License-Identifier: MIT
 
 import numpy as np
 import logging

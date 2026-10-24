@@ -1,5 +1,5 @@
 # Copyright (c) 2024
-# Licensed under the MIT License
+# SPDX-License-Identifier: MIT
 
 import pandas as pd
 from .base_compliance import BaseCompliance
