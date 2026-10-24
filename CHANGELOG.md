@@ -4,7 +4,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.4.0] - Unreleased
 
 ### Security
 
@@ -14,7 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   training on the unprocessed data. This covers engine failures, a missing
   compliance engine and unsupported standards: a YAML with
   `compliance: gdpr` (or any value other than `pci-dss`) now fails instead of
-  being silently skipped. Applies to `ComplianceEngine.apply`,
+  being silently skipped.
+
+  **Action required if your YAML sets an unsupported standard:** data
+  processed with it was never protected by that standard (earlier versions
+  skipped it silently). Set `governance.compliance: pci-dss` or remove the
+  `compliance` key. Applies to `ComplianceEngine.apply`,
   `run_pipeline_preprocessing`, the MLflow executor and the dataprep recipe
   hook.
 

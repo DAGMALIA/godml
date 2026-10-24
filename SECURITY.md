@@ -75,7 +75,7 @@ workflows and documented here with its justification and review date.
 Mitigations for MLflow-related risk: GODML is meant to load only models its
 own pipeline produced. The deploy service checks model paths
 (`validate_model_path`), but that check has a known weakness being fixed in
-1.3.1 (plan F1-13); until then, only serve models from directories you
+1.4.0 (plan F1-13); until then, only serve models from directories you
 control.
 
 ---

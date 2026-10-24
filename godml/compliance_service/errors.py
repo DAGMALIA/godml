@@ -10,3 +10,18 @@ class ComplianceError(RuntimeError):
     unprocessed data. Subclasses RuntimeError because the dataprep hook raised
     RuntimeError before (F1-01); F2-06 moves it under the 2.0 error hierarchy.
     """
+
+
+SUPPORTED_STANDARDS = ("pci-dss",)
+
+
+def unsupported_standard(standard: str) -> ComplianceError:
+    """Error for a `governance.compliance` value GoDML cannot apply."""
+    supported = ", ".join(SUPPORTED_STANDARDS)
+    return ComplianceError(
+        f"Compliance standard '{standard}' is not supported (supported: {supported}). "
+        f"Data processed with this setting was never protected by '{standard}': "
+        "GoDML versions before 1.4.0 skipped it silently. "
+        "To fix it, set `governance.compliance: pci-dss` or remove the "
+        "`compliance` key. See CHANGELOG 1.4.0."
+    )

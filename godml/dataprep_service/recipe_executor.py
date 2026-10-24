@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 from yaml import safe_load
 
-from godml.compliance_service.errors import ComplianceError
+from godml.compliance_service.errors import ComplianceError, unsupported_standard
 
 from .schema import Recipe
 from .lineage.openlineage_emitter import emit
@@ -119,10 +119,7 @@ def _apply_compliance(
     # Fail-closed (F1-01): an unsupported standard aborts instead of silently
     # returning the unprocessed DataFrame.
     if standard != "pci-dss":
-        raise ComplianceError(
-            f"Compliance standard '{standard}' is not supported "
-            "(supported: pci-dss); refusing to continue with unprocessed data."
-        )
+        raise unsupported_standard(standard)
 
     try:
         from godml.compliance_service.pci_dss import PciDssCompliance

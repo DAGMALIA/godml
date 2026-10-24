@@ -13,8 +13,8 @@ Este documento es la fuente de verdad del proyecto 2.0. Claude Code lo lee al in
 
 | Fase | Nombre | Versión objetivo | Estado |
 |---|---|---|---|
-| F0 | Fundaciones del repo | 1.3.1 | ✅ |
-| F1 | Hotfixes críticos 1.x (protege usuarios actuales) | 1.3.1 | 🟨 |
+| F0 | Fundaciones del repo | 1.4.0 | ✅ |
+| F1 | Hotfixes críticos 1.x (protege usuarios actuales) | 1.4.0 | 🟨 |
 | F2 | Arquitectura 2.0: core, spec v2, plugins | 2.0.0a1 | ⬜ |
 | F3 | Pilar **Govern** | 2.0.0a1 | ⬜ |
 | F4 | Pilar **Train** | 2.0.0a2 | ⬜ |
@@ -185,6 +185,7 @@ Requisito: el paquete debe ser `noarch: python` (puro Python). **Implica retirar
 | D8 | Titularidad: el mantenedor revisó su contrato y no hay cláusula que reclame GoDML. El correo corporativo en commits se debe a la config de git en su PC personal. No se reescribe historial; se unifica con .mailmap hacia la identidad de Dagmalia (F0-14) | ✅ resuelto 2026-10-24 |
 | D9 | F0-04: el formateo masivo (`ruff format`) va en un **commit aislado primero**, registrado en `.git-blame-ignore-revs` | ✅ 2026-10-24 |
 | D10 | Retirar Safety del CI; pip-audit bloqueante es la fuente única de auditoría de CVE | ✅ decidido 2026-10-24 |
+| D11 | La versión de hotfixes se publica como 1.4.0 (no 1.3.1) porque fail-closed cambia comportamiento visible (compliance no soportado ahora aborta) | ✅ 2026-10-24 |
 
 ---
 
@@ -192,7 +193,7 @@ Requisito: el paquete debe ser `noarch: python` (puro Python). **Implica retirar
 
 Formato: **ID** · estado · descripción → *criterio de aceptación*
 
-### F0 — Fundaciones del repo (1.3.1)
+### F0 — Fundaciones del repo (1.4.0)
 
 - **F0-01** ✅ Licencia MIT (D1): reemplazar el texto de `LICENSE` por MIT estándar con línea de copyright del autor; usar `license = "MIT"` (SPDX) en `pyproject.toml`; verificar classifiers, headers y README; revisar en el historial si hubo contribuciones externas (si las hay, pedir consentimiento para el cambio de texto) y nota en CHANGELOG aclarando que el proyecto siempre se distribuyó como MIT → *`MIT` es el único identificador de licencia en todo el repo*
 - **F0-02** ✅ Fuente única de versión (D6); eliminar versiones hardcodeadas en banners, plantillas, `service_version` y SECURITY.md → *`grep` de versiones literales sin resultados fuera de pyproject*
@@ -210,7 +211,7 @@ Formato: **ID** · estado · descripción → *criterio de aceptación*
 - **F0-14** ✅ `.mailmap` que unifica las identidades del mantenedor en `Arturo Gutiérrez Rubio Rojas <agtzrubio@dagmalia.com>`, sin reescribir historial → *`git shortlog -sne` muestra una sola identidad humana*
 - **F0-15** ✅ Retirar Safety (D10): eliminar el workflow/job y sus 15 ignores; actualizar SECURITY.md
 
-### F1 — Hotfixes críticos 1.x (1.3.1)
+### F1 — Hotfixes críticos 1.x (1.4.0)
 
 Cada fix lleva primero un test que reproduce el bug.
 
@@ -228,7 +229,7 @@ Cada fix lleva primero un test que reproduce el bug.
 - **F1-12** ⬜ `import godml` sin efectos colaterales: quitar filtros globales de warnings, creación de `logs/` al importar y `logging.basicConfig`
 - **F1-13** ⬜ Corregir `_is_safe_absolute_path` y `validate_model_path` con `Path.is_relative_to`
 - **F1-14** ⬜ README honesto: quitar GDPR/HIPAA/SOX, corregir ejemplos de notebook/advisor/tune, agregar `target` al quick start y a `godml init`; corregir `godml/utils/README_TEMPLATE.txt` (no imponer badge MIT a proyectos de usuarios, Python 3.11+); corregir nombres de assets en la sección de verificación del README (`multiple.intoto.jsonl`, `sbom.cyclonedx.json`)
-- **F1-15** ⬜ Publicar 1.3.1 con CHANGELOG
+- **F1-15** ⬜ Publicar 1.4.0 con CHANGELOG
 
 ### F2 — Arquitectura 2.0 (2.0.0a1)
 
@@ -241,6 +242,7 @@ Cada fix lleva primero un test que reproduce el bug.
 - **F2-07** ⬜ Logging de librería correcto (`getLogger("godml")` + `NullHandler`); salida bonita solo en la CLI
 - **F2-08** ⬜ CLI con imports perezosos por pilar; `godml --help` arranca en menos de 300 ms solo con core
 - **F2-09** ⬜ Test de modularidad: por cada extra, entorno limpio con solo ese extra y sus tests pasando
+- **F2-10** ⬜ Sacar mlflow del core al extra `train` (hoy mlflow-skinny arrastra fastapi/uvicorn a `pip install godml`); el core no debe importarlo
 
 ### F3 — Pilar Govern (2.0.0a1)
 
@@ -328,7 +330,7 @@ Cada fix lleva primero un test que reproduce el bug.
 
 | # | Momento | Tema |
 |---|---|---|
-| 1 | Al cerrar F1 | "GoDML 1.3.1: más seguro, fail-closed" + anuncio del camino a 2.0 |
+| 1 | Al cerrar F1 | "GoDML 1.4.0: más seguro, fail-closed" + anuncio del camino a 2.0 |
 | 2 | Al cerrar F2 | Los 5 pilares y la instalación por pilar |
 | 3–7 | Al cerrar cada pilar | Un post por pilar con caso de uso y snippet |
 | 8 | F9 | Lanzamiento 2.0 + conda-forge + historia del repo central de 500+ modelos |
@@ -341,6 +343,7 @@ Claude Code agrega una entrada por sesión (la más reciente arriba).
 
 | Fecha | Tareas | Resultado | Notas / bloqueos |
 |---|---|---|---|
+| 2026-10-24 | D11, F2-10, ajuste F1-01 | ✅ Plan: D11 (hotfixes como **1.4.0**), "1.3.1" → "1.4.0" en tablero, encabezados F0/F1, F1-15 y §6 (también SECURITY.md); F2-10 agregada. F1-01: el error de estándar no soportado (`unsupported_standard()` en `compliance_service/errors.py`, usado por `ComplianceEngine` y el hook de dataprep) dice que los datos **nunca estuvieron protegidos**, cómo corregirlo (`pci-dss` o quitar la clave) y remite a CHANGELOG 1.4.0; tests endurecidos (fallaban antes del cambio). CHANGELOG: sección renombrada `[1.4.0] - Unreleased` con "Action required" | Sin cambiar: texto de D2 ("1.3.1 conserva `>=3.11,<3.14`") y de F0-09, y filas antiguas del log. El guard de versión (F0-02) exime `compliance_service/errors.py` (cita una release fija); sin eso, el bump a 1.4.0 en F1-15 lo habría hecho fallar |
 | 2026-10-24 | F1-01 | ✅ Compliance fail-closed. Tests primero (`tests/unit/test_compliance_fail_closed.py`): 6 fallaban por el bug, incluido uno que probó que `MLflowExecutor.run` **entrenaba con datos que no pasaron compliance**. Fix: `ComplianceEngine.apply` lanza `ComplianceError` ante error del motor, import fallido o estándar no soportado; `run_pipeline_preprocessing` ya no captura y devuelve el df original; `MLflowExecutor.run` llama al preprocesamiento fuera del `try` amplio; el hook de dataprep (`_apply_compliance`) también rechaza estándares no soportados (antes `COMPLIANCE_SKIPPED` + df crudo). Lineage sigue best-effort. 376 tests (local y venv tipo CI), cobertura 48.38 → **50.81 %**; `noqa` en `godml/`: 95 → 92. CHANGELOG: sección Security | `ComplianceError` vive en `godml/compliance_service/errors.py` (hereda de `RuntimeError` por compatibilidad con el hook de dataprep) y no en `monitoring_service/logger.py`, porque importar ese módulo ejecuta `get_logger()` con `RotatingFileHandler` (efecto colateral, F1-12). Cambio de comportamiento: YAML con `compliance: gdpr` ahora falla → mencionar en notas de 1.3.1 (F1-15) |
 | 2026-10-24 | F0-15, cierre F0 | ✅ Safety retirado (D10): paso `pyupio/safety-action` + 15 ignores + justificación eliminados de `safety_scan.yml`; ya no se instalan `safety` ni `pip-tools`, ni se sobrescribe `requirements.lock` con `pip freeze`; quitada la fila del resumen y el aviso de "riesgo residual MLflow aceptado". SECURITY.md: pip-audit como única auditoría, sin advisories ignorados. README: fila de CVE corregida (decía "Weekly", no hay schedule). **F0 cerrada**: F0-01…F0-15 ✅ | El archivo conserva el nombre `safety_scan.yml`: renombrarlo rompe la identidad Cosign (`--certificate-identity-regexp`) que documenta el README y el badge. El secreto `SAFETY_API_KEY` puede borrarse del repo en GitHub |
 | 2026-10-24 | F0-13 | ✅ `moto[all]` eliminado: **ningún test usa moto** (ni boto3/sagemaker directo). `dev` = pytest, pytest-cov, pytest-mock, ruff, mypy, types-PyYAML, pre-commit; nuevos `test-serve` (`godml[api]` + httpx para `TestClient`) y `test-observe` (`godml[observability]`). CI (`test`, `lint`, release) instala `.[dev,test-serve,test-observe]`. Job `licenses`: `.[api,aws,advisor,data,observability]` (sin tensorflow) + gate `--fail-on` de copyleft fuerte (nombres exactos GPL/AGPL classifier + SPDX; partial-match descartado porque `GPL-3.0` ⊂ `LGPL-3.0`). Verificado en venvs limpios: `.[dev]` ya no trae boto3/moto/httpx/prometheus (122 paquetes vs 159 antes); `.[dev,test-*]`: 367 pasan, **0 skips**, cobertura 48.43 %; gate pasa con la lista real y falla (exit 1) con una licencia presente | fastapi y uvicorn siguen llegando **desde el core**: `mlflow` → `mlflow-skinny` 3.x los exige (también en `pip install godml` pelado) → F8-01 (mlflow al extra `train`). Hallazgo: en entorno limpio mypy fallaba por stubs de PyYAML faltantes (local pasaba por `types-PyYAML` instalado aparte), lo que habría roto el job `lint` de F0-04 → `types-PyYAML` agregado a `dev`. El gate no detecta expresiones compuestas (`MIT OR GPL-3.0-only`) |

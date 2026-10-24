@@ -17,6 +17,15 @@ from godml.dataprep_service.recipe_executor import _apply_compliance
 from godml.compliance_service.errors import ComplianceError
 
 
+def assert_unsupported_message(message: str, standard: str) -> None:
+    """The error must tell users their data was never protected and how to fix it."""
+    assert f"'{standard}'" in message
+    assert "never protected" in message
+    assert "pci-dss" in message
+    assert "remove" in message
+    assert "CHANGELOG" in message and "1.4.0" in message
+
+
 @pytest.fixture
 def broken_pci(monkeypatch):
     def boom(self, df):
@@ -43,8 +52,9 @@ class TestComplianceEngine:
             ComplianceEngine.apply(pii_dataframe, "pci-dss", "mask_sensitive")
 
     def test_unsupported_standard_raises(self, pii_dataframe):
-        with pytest.raises(ComplianceError, match="gdpr"):
+        with pytest.raises(ComplianceError) as excinfo:
             ComplianceEngine.apply(pii_dataframe, "gdpr", "mask_sensitive")
+        assert_unsupported_message(str(excinfo.value), "gdpr")
 
     def test_import_failure_raises(self, pii_dataframe, monkeypatch):
         monkeypatch.setitem(sys.modules, "godml.compliance_service.pci_dss", None)
@@ -77,8 +87,9 @@ class TestPipelinePreprocessing:
 
 class TestDataprepHook:
     def test_unsupported_standard_raises(self, pii_dataframe):
-        with pytest.raises(ComplianceError, match="gdpr"):
+        with pytest.raises(ComplianceError) as excinfo:
             _apply_compliance(pii_dataframe, {"compliance": "gdpr"})
+        assert_unsupported_message(str(excinfo.value), "gdpr")
 
 
 class TestMLflowExecutor:

@@ -5,7 +5,7 @@
 from typing import Optional
 import pandas as pd
 import logging
-from godml.compliance_service.errors import ComplianceError
+from godml.compliance_service.errors import ComplianceError, unsupported_standard
 from godml.dataprep_service.lineage.openlineage_emitter import emit
 
 logger = logging.getLogger(__name__)
@@ -53,10 +53,7 @@ class ComplianceEngine:
         # Fail-closed (F1-01): compliance was requested, so any failure aborts
         # instead of returning the unprocessed DataFrame.
         if compliance_type != "pci-dss":
-            raise ComplianceError(
-                f"Compliance standard '{compliance_type}' is not supported "
-                "(supported: pci-dss); refusing to continue with unprocessed data."
-            )
+            raise unsupported_standard(compliance_type)
 
         try:
             from godml.compliance_service.pci_dss import PciDssCompliance
