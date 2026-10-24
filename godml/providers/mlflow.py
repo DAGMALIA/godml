@@ -27,6 +27,13 @@ from godml.monitoring_service.observability import build_baseline, save_baseline
 logger = get_logger()
 
 
+def _is_text(series: pd.Series) -> bool:
+    """object or string dtype: pandas 3 infers text columns as `str`, not object."""
+    if isinstance(series.dtype, pd.CategoricalDtype):
+        return False
+    return pd.api.types.is_object_dtype(series) or pd.api.types.is_string_dtype(series)
+
+
 def _dataset_metadata(source_path: str, df: pd.DataFrame) -> dict:
     """Hash of the source file and schema of the training data; no rows (F1-02)."""
     return {
@@ -61,13 +68,17 @@ class MLflowExecutor(BaseExecutor):
     def preprocess_for_xgboost(self, df, target_col="target"):
         if target_col not in df.columns:
             raise ValueError("El dataset debe contener una columna llamada 'target'.")
-        if df[target_col].dtype == object:
+        if _is_text(df[target_col]):
             df[target_col] = df[target_col].map({"Yes": 1, "No": 0})
 
         y = df[target_col]
         X = df.drop(columns=[target_col])
 
-        cat_cols = X.select_dtypes(include=["object", "category"]).columns.tolist()
+        cat_cols = [
+            c
+            for c in X.columns
+            if _is_text(X[c]) or isinstance(X[c].dtype, pd.CategoricalDtype)
+        ]
         if cat_cols:
             X = pd.get_dummies(X, columns=cat_cols, drop_first=True)
         return X, y
@@ -153,7 +164,7 @@ class MLflowExecutor(BaseExecutor):
             for col in df_out.columns:
                 if col == target_col:
                     continue
-                if df_out[col].dtype == "O":  # object → category.codes
+                if _is_text(df_out[col]):  # object/str → category.codes
                     try:
                         df_out[col] = df_out[col].astype("category").cat.codes
                     except Exception:  # noqa: BLE001
@@ -199,7 +210,7 @@ class MLflowExecutor(BaseExecutor):
             non_numeric = [
                 c
                 for c in df.drop(columns=[target]).columns
-                if df[c].dtype == "O" or str(df[c].dtype).startswith("category")
+                if _is_text(df[c]) or str(df[c].dtype).startswith("category")
             ]
             if non_numeric:
                 logger.warning(

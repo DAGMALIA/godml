@@ -39,6 +39,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   deploy without `deploy.batch_output` stop the run with `ValidationError`.
   The MLflow executor used to swallow that error (`except Exception: pass`).
 
+### Fixed
+
+- pandas 3 support in the MLflow executor: text columns are now inferred as
+  `str` (not `object`), so the post-compliance sanitizer left them unencoded
+  and XGBoost rejected the training data. Text detection now covers both.
+
 ### Changed
 
 - License text: the `LICENSE` file now contains the MIT license. GoDML has

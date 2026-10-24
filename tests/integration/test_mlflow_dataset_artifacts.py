@@ -12,7 +12,7 @@ import pandas as pd
 import pytest
 
 from godml.config_service.schema import PipelineDefinition
-from godml.providers.mlflow import MLflowExecutor
+from godml.providers.mlflow import MLflowExecutor, _is_text
 from godml.utils.hash import calculate_file_hash
 
 N_ROWS = 40
@@ -118,3 +118,20 @@ def test_compliant_dataset_only_when_requested(workspace):
     assert len(logged) == N_ROWS
     assert RAW_CARD not in set(logged["card_number"])
     assert_no_raw_pii(root)
+
+
+@pytest.mark.parametrize(
+    "series, expected",
+    [
+        (pd.Series(["a", "b"], dtype=object), True),
+        # pandas 3 infers text as `str`; pandas 2 calls it "string"
+        (pd.Series(["a", "b"], dtype="string"), True),
+        (pd.Series(["a", "b"], dtype="category"), False),
+        (pd.Series([1, 2]), False),
+        (pd.Series([1.5, 2.5]), False),
+    ],
+)
+def test_text_columns_are_detected_for_encoding(series, expected):
+    """The post-compliance sanitizer only encoded object columns, so under
+    pandas 3 (CI) XGBoost received `str` columns and the run failed."""
+    assert _is_text(series) is expected
