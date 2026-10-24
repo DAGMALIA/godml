@@ -182,6 +182,8 @@ Requisito: el paquete debe ser `noarch: python` (puro Python). **Implica retirar
 | D5 | Rama `1.x` solo con fixes de seguridad durante **6 meses** tras 2.0.0 | ✅ decidido 2026-10-24 |
 | D6 | Fuente única de versión: `importlib.metadata.version("godml")` | ✅ decidido 2026-10-24 |
 | D7 | Build conda con **rattler-build** (`recipe.yaml` v1) | ✅ decidido 2026-10-24 |
+| D8 | Resuelta por el usuario (texto de la versión nueva del plan no recibido en sesión; reemplazar esta fila al pegarlo) | ✅ 2026-10-24 |
+| D9 | F0-04: el formateo masivo (`ruff format`) va en un **commit aislado primero**, registrado en `.git-blame-ignore-revs` | ✅ 2026-10-24 |
 
 ---
 
@@ -203,6 +205,8 @@ Formato: **ID** · estado · descripción → *criterio de aceptación*
 - **F0-10** ✅ Cobertura real: eliminar la lista `omit` de `[tool.coverage.run]` (salvo tests y código generado); `fail_under` se fija a la cobertura real actual (~41 %) y sube por fase → *el reporte de CI coincide con la cobertura sin exclusiones*
 - **F0-11** ✅ Quitar `-p no:warnings` de `addopts`; usar `filterwarnings` explícitos y tratar como error los `DeprecationWarning` emitidos por `godml` → *los warnings de terceros siguen visibles; los propios fallan el test*
 - **F0-12** ⬜ `LICENSE_REPORT.md` generado automáticamente (pip-licenses) en CI en lugar de mantenerse a mano
+- **F0-13** ⬜ *(descripción pendiente: definida en una versión del plan que no llegó a la sesión)*
+- **F0-14** ✅ `.mailmap` que unifica las identidades del mantenedor en `Arturo Gutiérrez Rubio Rojas <agtzrubio@dagmalia.com>`, sin reescribir historial → *`git shortlog -sne` muestra una sola identidad humana*
 
 ### F1 — Hotfixes críticos 1.x (1.3.1)
 
@@ -335,6 +339,7 @@ Claude Code agrega una entrada por sesión (la más reciente arriba).
 
 | Fecha | Tareas | Resultado | Notas / bloqueos |
 |---|---|---|---|
+| 2026-10-24 | F0-14 | ✅ `.mailmap`: 6 identidades (incl. `arubior@aeromexico.com` y 2 noreply de GitHub) → una; `git shortlog -sne`: 123 commits del mantenedor + 22 de dependabot. Historial sin reescribir | La versión nueva del plan (D8, D9, F0-13) no llegó en el mensaje; D8/D9 registradas con lo dicho en chat, F0-13 queda como marcador. `.mailmap` aplica a git (log, shortlog, blame), no a la UI de GitHub |
 | 2026-10-24 | F0-11 | ✅ Quitado `-p no:warnings`; `filterwarnings` convierte en error `DeprecationWarning`/`PendingDeprecationWarning` atribuidos a `godml(\..*)?`. Test `tests/unit/test_warning_policy.py` (los propios fallan, los de terceros siguen como warning; falla sin la config). El filtro destapó 2 usos reales de APIs obsoletas en código godml: `DataFrame.drop(inplace=True)` en `pci_dss.py` y `providers/mlflow.py` (pandas 3.1 `Pandas4Warning`, rompía 4 tests en CI) → corregidos con reasignación (mismo resultado, ya operaban sobre copia); FastAPI `on_event` en `deploy_service/server.py` → `ignore` puntual hasta F5-03. 367 tests pasan local (pandas 2.3) y en venv tipo CI (pandas 3.1, sklearn 1.9.1) | Por `stacklevel`, el filtro por módulo atrapa el uso de APIs obsoletas desde godml, pero **no** las deprecaciones que godml emita hacia código de usuario (se atribuyen al llamador). Para los shims de F2-01: usar una categoría propia (`GoDMLDeprecationWarning`) y filtrarla por categoría |
 | 2026-10-24 | F0-10 | ✅ `omit` reducido a tests, `__pycache__` y `godml/templates/*` (scaffold que se copia a proyectos de usuario); también se quitó `except ImportError` de `exclude_lines` (ocultaba ramas de extras faltantes). Cobertura real **48.37 %** (1985/4104); `fail_under` 54 → **48**. Verificado en venv limpio con solo `.[dev]` (como CI): 48.4 %, mismo resultado | El plan estimaba ~41 %: esa cifra era de la rama vieja 1.2.4. Nota: `moto[all]` trae fastapi y boto3 de forma transitiva al extra `dev`; prometheus no, así que sus tests se saltan en CI |
 | 2026-10-24 | F0-03 | ✅ `godml.egg-info/` (6 archivos) sacado del índice; `.gitignore` ya tenía `*.egg-info/` (línea 8). No hay otros artefactos de build versionados; CI no lo referencia. Tras `pip install -e .`, `git status` queda limpio | — |
