@@ -2,6 +2,7 @@
 Scikit-learn training script — runs inside a SageMaker SKLearn container.
 Supports model_type: random_forest | logistic_regression | lightgbm
 """
+
 import argparse
 import glob
 import os
@@ -17,8 +18,14 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--n_estimators", type=int, default=100)
     p.add_argument("--max_depth", type=int, default=None)
     p.add_argument("--random_state", type=int, default=42)
-    p.add_argument("--model-dir", type=str, default=os.environ.get("SM_MODEL_DIR", "/opt/ml/model"))
-    p.add_argument("--train", type=str, default=os.environ.get("SM_CHANNEL_TRAIN", "/opt/ml/input/data/train"))
+    p.add_argument(
+        "--model-dir", type=str, default=os.environ.get("SM_MODEL_DIR", "/opt/ml/model")
+    )
+    p.add_argument(
+        "--train",
+        type=str,
+        default=os.environ.get("SM_CHANNEL_TRAIN", "/opt/ml/input/data/train"),
+    )
     return p.parse_args()
 
 
@@ -26,6 +33,7 @@ def _build_model(args: argparse.Namespace):
     t = args.model_type.lower()
     if t == "random_forest":
         from sklearn.ensemble import RandomForestClassifier
+
         return RandomForestClassifier(
             n_estimators=args.n_estimators,
             max_depth=args.max_depth,
@@ -33,9 +41,11 @@ def _build_model(args: argparse.Namespace):
         )
     if t == "logistic_regression":
         from sklearn.linear_model import LogisticRegression
+
         return LogisticRegression(max_iter=1000, random_state=args.random_state)
     if t == "lightgbm":
         import lightgbm as lgb
+
         return lgb.LGBMClassifier(
             n_estimators=args.n_estimators,
             max_depth=args.max_depth or -1,

@@ -4,6 +4,7 @@ Builds individual SageMaker Pipeline steps from a PipelineDefinition.
 Each function returns one step (or a tuple when auxiliary data is also needed).
 The pipeline_builder assembles them into the final Pipeline object.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -16,6 +17,7 @@ _XGBOOST_FW = "1.7-1"
 
 def _sklearn_image(region: str) -> str:
     from sagemaker import image_uris
+
     return image_uris.retrieve("sklearn", region, version=_SKLEARN_FW)
 
 
@@ -43,7 +45,8 @@ def build_preprocessing_step(
             "GODML_PIPELINE_NAME": pipeline.name,
             "GODML_TARGET_COL": getattr(pipeline.dataset, "target", None) or "target",
             "GODML_COMPLIANCE": getattr(pipeline.governance, "compliance", None) or "",
-            "GODML_POLICY": getattr(pipeline.governance, "policy", None) or "mask_sensitive",
+            "GODML_POLICY": getattr(pipeline.governance, "policy", None)
+            or "mask_sensitive",
         },
     )
 
@@ -92,6 +95,7 @@ def build_training_step(
 
     if model_type == "xgboost":
         from sagemaker.xgboost import XGBoost
+
         estimator = XGBoost(
             entry_point="train_xgboost.py",
             source_dir=str(SCRIPTS_DIR),
@@ -105,6 +109,7 @@ def build_training_step(
         )
     else:
         from sagemaker.sklearn import SKLearn
+
         estimator = SKLearn(
             entry_point="train_sklearn.py",
             source_dir=str(SCRIPTS_DIR),
@@ -209,7 +214,9 @@ def build_register_step(
     if not pipeline.registry:
         return None
 
-    approval = "Approved" if pipeline.registry.approval == "auto" else "PendingManualApproval"
+    approval = (
+        "Approved" if pipeline.registry.approval == "auto" else "PendingManualApproval"
+    )
 
     register = RegisterModel(
         name="RegisterModel",

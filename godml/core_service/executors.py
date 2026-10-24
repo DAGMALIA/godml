@@ -12,6 +12,7 @@ _providers_map = {
     "sagemaker": SageMakerExecutor,
 }
 
+
 def get_executor(provider_name: str):
     try:
         if not provider_name:
@@ -23,10 +24,14 @@ def get_executor(provider_name: str):
             try:
                 return _providers_map[provider]()
             except Exception as e:
-                raise ConfigurationError(f"Error inicializando executor {provider}: {e}")
+                raise ConfigurationError(
+                    f"Error inicializando executor {provider}: {e}"
+                )
         else:
             available = ", ".join(_providers_map.keys())
-            raise ConfigurationError(f"Provider '{provider_name}' no soportado. Disponibles: {available}")
+            raise ConfigurationError(
+                f"Provider '{provider_name}' no soportado. Disponibles: {available}"
+            )
 
     except ConfigurationError:
         raise

@@ -9,6 +9,7 @@ from godml.dataprep_service.lineage.openlineage_emitter import emit
 
 logger = logging.getLogger(__name__)
 
+
 class ComplianceEngine:
     """
     Motor centralizado de cumplimiento normativo
@@ -21,7 +22,7 @@ class ComplianceEngine:
     def apply(
         df: pd.DataFrame,
         compliance_type: Optional[str] = None,
-        policy: Optional[str] = None
+        policy: Optional[str] = None,
     ) -> pd.DataFrame:
         """
         Aplica el estándar de cumplimiento sobre el DataFrame.
@@ -36,7 +37,9 @@ class ComplianceEngine:
             Política de tratamiento de PII (mask_sensitive, hash_sensitive, drop_sensitive).
         """
         if df is None or df.empty:
-            logger.warning("⚠️ [ComplianceEngine] DataFrame vacío. Se omite cumplimiento.")
+            logger.warning(
+                "⚠️ [ComplianceEngine] DataFrame vacío. Se omite cumplimiento."
+            )
             return df
 
         if not compliance_type:
@@ -48,7 +51,9 @@ class ComplianceEngine:
 
         # 🔒 Compatibilidad con PCI-DSS
         if compliance_type != "pci-dss":
-            logger.warning(f"⚠️ [ComplianceEngine] Estándar '{compliance_type}' aún no soportado.")
+            logger.warning(
+                f"⚠️ [ComplianceEngine] Estándar '{compliance_type}' aún no soportado."
+            )
             return df
 
         try:
@@ -57,17 +62,25 @@ class ComplianceEngine:
             logger.error(f"❌ [ComplianceEngine] Error al importar PCI-DSS: {e}")
             return df
 
-        logger.info(f"🔒 [ComplianceEngine] Aplicando {compliance_type.upper()} con política '{policy}'...")
+        logger.info(
+            f"🔒 [ComplianceEngine] Aplicando {compliance_type.upper()} con política '{policy}'..."
+        )
         try:
             emit("COMPLIANCE_APPLY", {"standard": compliance_type, "policy": policy})
         except Exception as e:
-            logger.warning(f"⚠️ [ComplianceEngine] No se pudo emitir evento OpenLineage: {e}")
+            logger.warning(
+                f"⚠️ [ComplianceEngine] No se pudo emitir evento OpenLineage: {e}"
+            )
 
         try:
             engine = PciDssCompliance(policy=policy)
             df_out = engine.apply(df.copy())
-            logger.info(f"✅ [ComplianceEngine] Cumplimiento aplicado correctamente. Columnas finales: {list(df_out.columns)}")
+            logger.info(
+                f"✅ [ComplianceEngine] Cumplimiento aplicado correctamente. Columnas finales: {list(df_out.columns)}"
+            )
             return df_out
         except Exception as e:
-            logger.error(f"❌ [ComplianceEngine] Error durante la aplicación del cumplimiento: {e}")
+            logger.error(
+                f"❌ [ComplianceEngine] Error durante la aplicación del cumplimiento: {e}"
+            )
             return df

@@ -1,7 +1,13 @@
 import pytest
 import numpy as np
-from godml.monitoring_service.metrics import evaluate_binary_classification, evaluate_regression
-from godml.monitoring_service.metric_diagnostics import analyze_metric_issue, explain_issue_and_action
+from godml.monitoring_service.metrics import (
+    evaluate_binary_classification,
+    evaluate_regression,
+)
+from godml.monitoring_service.metric_diagnostics import (
+    analyze_metric_issue,
+    explain_issue_and_action,
+)
 
 
 class TestEvaluateBinaryClassification:
@@ -47,25 +53,29 @@ class TestEvaluateBinaryClassification:
 class TestEvaluateMulticlass:
     def test_returns_accuracy_and_f1_macro(self):
         y_true = np.array([0, 1, 2, 0, 1, 2])
-        y_proba = np.array([
-            [0.8, 0.1, 0.1],
-            [0.1, 0.8, 0.1],
-            [0.1, 0.1, 0.8],
-            [0.7, 0.2, 0.1],
-            [0.2, 0.6, 0.2],
-            [0.1, 0.2, 0.7],
-        ])
+        y_proba = np.array(
+            [
+                [0.8, 0.1, 0.1],
+                [0.1, 0.8, 0.1],
+                [0.1, 0.1, 0.8],
+                [0.7, 0.2, 0.1],
+                [0.2, 0.6, 0.2],
+                [0.1, 0.2, 0.7],
+            ]
+        )
         metrics = evaluate_binary_classification(y_true, y_proba)
         assert "accuracy" in metrics
         assert "f1_macro" in metrics
 
     def test_perfect_multiclass(self):
         y_true = np.array([0, 1, 2])
-        y_proba = np.array([
-            [1.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0],
-            [0.0, 0.0, 1.0],
-        ])
+        y_proba = np.array(
+            [
+                [1.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0],
+                [0.0, 0.0, 1.0],
+            ]
+        )
         metrics = evaluate_binary_classification(y_true, y_proba)
         assert metrics["accuracy"] == pytest.approx(1.0)
         assert metrics["f1_macro"] == pytest.approx(1.0)
@@ -116,16 +126,12 @@ class TestAnalyzeMetricIssue:
 
     def test_nan_values(self):
         reason, code = analyze_metric_issue(
-            np.array([0, 1]),
-            np.array([float("nan"), 0.5])
+            np.array([0, 1]), np.array([float("nan"), 0.5])
         )
         assert code == "NAN_VALUES"
 
     def test_shape_1d(self):
-        reason, code = analyze_metric_issue(
-            np.array([0, 1, 2]),
-            np.array([0, 1, 2])
-        )
+        reason, code = analyze_metric_issue(np.array([0, 1, 2]), np.array([0, 1, 2]))
         assert code == "SHAPE_1D"
 
     def test_missing_classes(self):
@@ -153,8 +159,16 @@ class TestExplainIssueAndAction:
         assert "Acción" in result
 
     def test_all_known_codes(self):
-        codes = ["NO_OUTPUT", "NAN_VALUES", "SHAPE_1D", "MISSING_CLASSES",
-                 "EXTRA_CLASSES", "SHAPE_INVALID", "GENERIC", "INTERNAL"]
+        codes = [
+            "NO_OUTPUT",
+            "NAN_VALUES",
+            "SHAPE_1D",
+            "MISSING_CLASSES",
+            "EXTRA_CLASSES",
+            "SHAPE_INVALID",
+            "GENERIC",
+            "INTERNAL",
+        ]
         for code in codes:
             result = explain_issue_and_action("reason", code)
             assert isinstance(result, str)

@@ -20,8 +20,10 @@ from godml.monitoring_service.observability import (
 
 app = FastAPI()
 
+
 class InputData(BaseModel):
     data: dict
+
 
 def find_model_file() -> Path:
     """
@@ -37,10 +39,12 @@ def find_model_file() -> Path:
         # Buscar solo en el ambiente especificado
         search_paths = [
             current_dir / "models" / environment,  # Ambiente específico
-            current_dir / "models"                 # Fallback general
+            current_dir / "models",  # Fallback general
         ]
 
-        godml_logger.info(f"🔍 Buscando modelo para ambiente '{environment}' desde: {current_dir}")
+        godml_logger.info(
+            f"🔍 Buscando modelo para ambiente '{environment}' desde: {current_dir}"
+        )
 
         for search_path in search_paths:
             if search_path.exists():
@@ -69,6 +73,7 @@ def find_model_file() -> Path:
         godml_logger.error(f"❌ Error buscando modelo: {e}")
         raise
 
+
 def validate_model_path(model_path: Path) -> None:
     """Valida que el path del modelo sea seguro"""
     try:
@@ -87,6 +92,7 @@ def validate_model_path(model_path: Path) -> None:
 
     except Exception as e:
         raise SecurityError(f"Error validando path del modelo: {e}")
+
 
 @app.on_event("startup")
 def load_model():
@@ -109,11 +115,13 @@ def load_model():
 
         # Observabilidad: el baseline de drift lo escribe `godml run` junto al .pkl
         environment = os.getenv("GODML_ENV", "dev")
-        baseline_path = find_baseline([
-            model_path.parent,
-            Path.cwd() / "models" / environment,
-            Path.cwd() / "models",
-        ])
+        baseline_path = find_baseline(
+            [
+                model_path.parent,
+                Path.cwd() / "models" / environment,
+                Path.cwd() / "models",
+            ]
+        )
         if baseline_path is None:
             godml_logger.info(
                 f"ℹ️ Sin {BASELINE_FILENAME}: métricas de servicio activas, drift desactivado"
@@ -128,6 +136,7 @@ def load_model():
         godml_logger.error(f"❌ Error en startup del servidor: {e}")
         raise RuntimeError(str(e))
 
+
 def get_observer(request: Request) -> ModelObserver:
     """Devuelve el observer del proceso, creando uno vacío si el startup no corrió."""
     observer = getattr(request.app.state, "observer", None)
@@ -136,13 +145,14 @@ def get_observer(request: Request) -> ModelObserver:
         request.app.state.observer = observer
     return observer
 
+
 @app.post("/predict")
 def predict(input_data: InputData, request: Request):
     start = time.time()
     observer = get_observer(request)
     try:
         # Validar que el modelo esté cargado
-        if not hasattr(request.app.state, 'model') or request.app.state.model is None:
+        if not hasattr(request.app.state, "model") or request.app.state.model is None:
             raise HTTPException(status_code=500, detail="Modelo no cargado")
 
         model = request.app.state.model
@@ -163,7 +173,7 @@ def predict(input_data: InputData, request: Request):
             if "data" in params or isinstance(model, xgb.Booster):
                 godml_logger.info("🔎 Detectado modelo XGBoost nativo (usa DMatrix)")
 
-                if hasattr(model, 'feature_names') and model.feature_names:
+                if hasattr(model, "feature_names") and model.feature_names:
                     expected_features = model.feature_names
                     df = df[expected_features]
 
@@ -174,10 +184,14 @@ def predict(input_data: InputData, request: Request):
                 prediction = model.predict(df)
 
             # Convertir predicción a formato serializable
-            if hasattr(prediction, 'tolist'):
+            if hasattr(prediction, "tolist"):
                 prediction_result = prediction.tolist()
             else:
-                prediction_result = list(prediction) if hasattr(prediction, '__iter__') else [prediction]
+                prediction_result = (
+                    list(prediction)
+                    if hasattr(prediction, "__iter__")
+                    else [prediction]
+                )
 
             observer.record_prediction(
                 latency=time.time() - start,
@@ -189,7 +203,9 @@ def predict(input_data: InputData, request: Request):
 
         except Exception as e:
             godml_logger.error(f"❌ Error durante predicción: {str(e)}")
-            raise HTTPException(status_code=400, detail=f"Error en predicción: {str(e)}")
+            raise HTTPException(
+                status_code=400, detail=f"Error en predicción: {str(e)}"
+            )
 
     except HTTPException as e:
         # Un 4xx es error de cliente y un 5xx es del modelo: separarlos evita que
@@ -202,24 +218,27 @@ def predict(input_data: InputData, request: Request):
         godml_logger.error(f"❌ Error inesperado en predict: {str(e)}")
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
+
 @app.get("/health")
 def health_check():
     """Endpoint de salud del servicio"""
     try:
-        model_loaded = hasattr(app.state, 'model') and app.state.model is not None
+        model_loaded = hasattr(app.state, "model") and app.state.model is not None
         return {
             "status": "healthy" if model_loaded else "unhealthy",
             "model_loaded": model_loaded,
-            "working_directory": str(Path.cwd())
+            "working_directory": str(Path.cwd()),
         }
     except Exception as e:
         return {"status": "error", "error": str(e)}
+
 
 @app.get("/metrics")
 def metrics():
     """Endpoint de scrape para Prometheus."""
     payload, content_type = render_metrics()
     return Response(content=payload, media_type=content_type)
+
 
 @app.get("/drift")
 def drift(request: Request):

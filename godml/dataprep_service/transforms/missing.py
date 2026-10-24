@@ -1,6 +1,7 @@
 import pandas as pd
 from .base import BaseTransform
 
+
 class FillNA(BaseTransform):
     name = "fillna"
 
@@ -24,7 +25,6 @@ class FillNA(BaseTransform):
         return df.fillna(value=value)
 
 
-
 class DropNA(BaseTransform):
     name = "dropna"
 
@@ -35,4 +35,3 @@ class DropNA(BaseTransform):
         if isinstance(columns, str):
             columns = [columns]
         return df.dropna(subset=columns)
-

@@ -38,10 +38,14 @@ class AdvisorOrchestrator:
             hyperparams = {}
             if derive_target:
                 if {"precio", "cantidad"}.issubset(df.columns):
-                    df["target"] = (df["precio"].fillna(0) * df["cantidad"].fillna(0) > 1000).astype(int)
+                    df["target"] = (
+                        df["precio"].fillna(0) * df["cantidad"].fillna(0) > 1000
+                    ).astype(int)
                     print("⚡ Target derivado automáticamente: 'venta_grande'")
                     metrics = self.metric_judge.analyze(df, "target")
-                    models = self.model_selector.suggest(metrics["task_type"], *df.shape)
+                    models = self.model_selector.suggest(
+                        metrics["task_type"], *df.shape
+                    )
                     hyperparams = self.hyperparam_advisor.suggest(models[0])
 
         # 3) LLM / RAG para receta

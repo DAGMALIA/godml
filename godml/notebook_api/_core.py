@@ -1,4 +1,5 @@
 """Internal helpers shared across notebook_api submodules."""
+
 from __future__ import annotations
 
 import importlib
@@ -24,7 +25,12 @@ def _import_symbol(path: str) -> Any:
 def _fit_any(m, X, y, hyperparams: Dict[str, Any] | None = None):
     """Trains using whatever convention the wrapper exposes."""
     hyperparams = hyperparams or {}
-    candidates = [m, getattr(m, "estimator", None), getattr(m, "clf", None), getattr(m, "model", None)]
+    candidates = [
+        m,
+        getattr(m, "estimator", None),
+        getattr(m, "clf", None),
+        getattr(m, "model", None),
+    ]
     for cand in candidates:
         if cand is None:
             continue
@@ -37,7 +43,14 @@ def _fit_any(m, X, y, hyperparams: Dict[str, Any] | None = None):
                 pass
         train = getattr(cand, "train", None)
         if callable(train):
-            for args in [(X, y), (X, y, {}), (X, y, None), (X, y, X, y), (X, y, X, y, {}), (X, y, X, y, hyperparams)]:
+            for args in [
+                (X, y),
+                (X, y, {}),
+                (X, y, None),
+                (X, y, X, y),
+                (X, y, X, y, {}),
+                (X, y, X, y, hyperparams),
+            ]:
                 try:
                     train(*args)
                     return
@@ -54,11 +67,14 @@ def _fit_any(m, X, y, hyperparams: Dict[str, Any] | None = None):
                     continue
     except Exception:
         pass
-    raise AttributeError("El modelo no expone 'fit', 'train' ni sub-atributos compatibles")
+    raise AttributeError(
+        "El modelo no expone 'fit', 'train' ni sub-atributos compatibles"
+    )
 
 
 def _predict_any(m, X):
     """Prediction tolerant to wrapper conventions."""
+
     def _try_one(obj):
         if obj is None:
             return None
@@ -67,14 +83,23 @@ def _predict_any(m, X):
                 proba = obj.predict_proba(X)
                 if isinstance(proba, (list, tuple)):
                     proba = proba[1]
-                return proba[:, 1] if hasattr(proba, "ndim") and proba.ndim == 2 and proba.shape[1] > 1 else proba
+                return (
+                    proba[:, 1]
+                    if hasattr(proba, "ndim") and proba.ndim == 2 and proba.shape[1] > 1
+                    else proba
+                )
             except Exception:
                 pass
         if hasattr(obj, "predict"):
             return obj.predict(X)
         return None
 
-    for cand in [m, getattr(m, "model", None), getattr(m, "estimator", None), getattr(m, "clf", None)]:
+    for cand in [
+        m,
+        getattr(m, "model", None),
+        getattr(m, "estimator", None),
+        getattr(m, "clf", None),
+    ]:
         out = _try_one(cand)
         if out is not None:
             return out
@@ -91,7 +116,9 @@ def _predict_any(m, X):
 def _get_model(model_type: str, **hyperparams):
     key = (model_type or "").lower()
     if key not in _DEF_REGISTRY:
-        raise ValueError(f"Modelo no soportado: {model_type}. Disponibles: {sorted(set(_DEF_REGISTRY))}")
+        raise ValueError(
+            f"Modelo no soportado: {model_type}. Disponibles: {sorted(set(_DEF_REGISTRY))}"
+        )
     cls = _import_symbol(_DEF_REGISTRY[key])
     try:
         return cls(**(hyperparams or {}))

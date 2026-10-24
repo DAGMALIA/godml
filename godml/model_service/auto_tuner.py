@@ -30,7 +30,9 @@ def auto_tune_hyperparameters(model_type: str, params: dict, X_train, y_train):
     is_classification = n_classes <= 20 and np.all(np.isfinite(y_values))
     is_multiclass = is_classification and n_classes > 2
 
-    logger.info(f"🔍 Detección automática: n_classes={n_classes}, classification={is_classification}, multiclase={is_multiclass}")
+    logger.info(
+        f"🔍 Detección automática: n_classes={n_classes}, classification={is_classification}, multiclase={is_multiclass}"
+    )
 
     # === ⚙️ Ajustes automáticos por tipo de modelo ===
     if model_type == "xgboost":
@@ -39,7 +41,9 @@ def auto_tune_hyperparameters(model_type: str, params: dict, X_train, y_train):
             params.setdefault("objective", "multi:softprob")
             params.setdefault("num_class", int(n_classes))
             params.setdefault("eval_metric", "mlogloss")
-            logger.info(f"🧠 Auto-tuning XGBoost: multiclase detectada ({n_classes} clases)")
+            logger.info(
+                f"🧠 Auto-tuning XGBoost: multiclase detectada ({n_classes} clases)"
+            )
         elif is_classification:
             params.setdefault("objective", "binary:logistic")
             params.setdefault("eval_metric", "auc")
@@ -75,7 +79,9 @@ def auto_tune_hyperparameters(model_type: str, params: dict, X_train, y_train):
         params.setdefault("sequence_length", min(len(X_train), 30))
         params.setdefault("epochs", 10)
         params.setdefault("batch_size", 16)
-        logger.info(f"🧠 Auto-tuning LSTMForecast: seq_len={params['sequence_length']}, epochs={params['epochs']}")
+        logger.info(
+            f"🧠 Auto-tuning LSTMForecast: seq_len={params['sequence_length']}, epochs={params['epochs']}"
+        )
 
     else:
         logger.info(f"ℹ️ Auto-tuning no definido para modelo: {model_type}")

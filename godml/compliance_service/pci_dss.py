@@ -13,6 +13,7 @@ from .compliance_utils import (
     is_pii_column,
 )
 
+
 class PciDssCompliance(BaseCompliance):
     """
     PCI-DSS Compliance:
@@ -52,7 +53,9 @@ class PciDssCompliance(BaseCompliance):
         detected_content = self.detector.detect_all(df)  # dict: col -> pii_type
 
         # 2) Detección por nombre (heurística)
-        detected_name = {col: "name_heuristic" for col in df.columns if is_pii_column(col)}
+        detected_name = {
+            col: "name_heuristic" for col in df.columns if is_pii_column(col)
+        }
 
         # Unimos resultados: preferimos el tipo del detector de contenido
         detected = dict(detected_name, **detected_content)

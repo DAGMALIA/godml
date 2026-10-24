@@ -19,8 +19,10 @@ class TestXgboostModel:
         model = XgboostModel()
         ds = binary_dataset
         trained, preds, metrics = model.train(
-            ds["X_train"], ds["y_train"],
-            ds["X_test"], ds["y_test"],
+            ds["X_train"],
+            ds["y_train"],
+            ds["X_test"],
+            ds["y_test"],
             params={"n_estimators": 10, "max_depth": 2},
         )
         assert trained is not None
@@ -32,8 +34,10 @@ class TestXgboostModel:
         model = XgboostModel()
         ds = binary_dataset
         _, preds, _ = model.train(
-            ds["X_train"], ds["y_train"],
-            ds["X_test"], ds["y_test"],
+            ds["X_train"],
+            ds["y_train"],
+            ds["X_test"],
+            ds["y_test"],
             params={"n_estimators": 10},
         )
         assert all(0.0 <= p <= 1.0 for p in preds)
@@ -42,8 +46,10 @@ class TestXgboostModel:
         model = XgboostModel()
         ds = binary_dataset
         _, _, metrics = model.train(
-            ds["X_train"], ds["y_train"],
-            ds["X_test"], ds["y_test"],
+            ds["X_train"],
+            ds["y_train"],
+            ds["X_test"],
+            ds["y_test"],
             params={"n_estimators": 10},
         )
         assert "auc" in metrics or "accuracy" in metrics
@@ -52,8 +58,10 @@ class TestXgboostModel:
         model = XgboostModel()
         ds = binary_dataset
         model.train(
-            ds["X_train"], ds["y_train"],
-            ds["X_test"], ds["y_test"],
+            ds["X_train"],
+            ds["y_train"],
+            ds["X_test"],
+            ds["y_test"],
             params={"n_estimators": 10},
         )
         preds = model.predict(ds["X_test"])
@@ -115,8 +123,10 @@ class TestRandomForestModel:
         model = RandomForestModel()
         ds = binary_dataset
         trained, preds, metrics = model.train(
-            ds["X_train"], ds["y_train"],
-            ds["X_test"], ds["y_test"],
+            ds["X_train"],
+            ds["y_train"],
+            ds["X_test"],
+            ds["y_test"],
             params={"n_estimators": 10},
         )
         assert trained is not None
@@ -127,8 +137,10 @@ class TestRandomForestModel:
         model = RandomForestModel()
         ds = binary_dataset
         _, preds, _ = model.train(
-            ds["X_train"], ds["y_train"],
-            ds["X_test"], ds["y_test"],
+            ds["X_train"],
+            ds["y_train"],
+            ds["X_test"],
+            ds["y_test"],
             params={"n_estimators": 10},
         )
         assert all(0.0 <= p <= 1.0 for p in preds)
@@ -137,8 +149,10 @@ class TestRandomForestModel:
         model = RandomForestModel()
         ds = binary_dataset
         model.train(
-            ds["X_train"], ds["y_train"],
-            ds["X_test"], ds["y_test"],
+            ds["X_train"],
+            ds["y_train"],
+            ds["X_test"],
+            ds["y_test"],
             params={"n_estimators": 10},
         )
         preds = model.predict(ds["X_test"])
@@ -154,8 +168,10 @@ class TestRandomForestModel:
         model = RandomForestModel()
         ds = binary_dataset
         trained, preds, metrics = model.train(
-            ds["X_train"], ds["y_train"],
-            ds["X_test"], ds["y_test"],
+            ds["X_train"],
+            ds["y_train"],
+            ds["X_test"],
+            ds["y_test"],
             params={"n_estimators": 5, "totally_invalid_param": "garbage"},
         )
         assert trained is not None
@@ -165,8 +181,10 @@ class TestRandomForestModel:
         ds = binary_dataset
         # Pass empty params; DEFAULTS should fill in random_state etc.
         trained, preds, _ = model.train(
-            ds["X_train"], ds["y_train"],
-            ds["X_test"], ds["y_test"],
+            ds["X_train"],
+            ds["y_train"],
+            ds["X_test"],
+            ds["y_test"],
             params={},
         )
         assert trained is not None

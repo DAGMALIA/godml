@@ -71,10 +71,12 @@ class TestPiiDetectorDetectAll:
         assert result == {}
 
     def test_no_pii_df_returns_empty_dict(self):
-        df = pd.DataFrame({
-            "name": ["Alice", "Bob", "Carol"],
-            "value": [10, 20, 30],
-        })
+        df = pd.DataFrame(
+            {
+                "name": ["Alice", "Bob", "Carol"],
+                "value": [10, 20, 30],
+            }
+        )
         result = self.detector.detect_all(df)
         assert result == {}
 

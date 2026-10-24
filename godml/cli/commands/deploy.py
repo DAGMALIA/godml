@@ -12,7 +12,12 @@ from godml.monitoring_service.logger import get_logger, SecurityError
 from godml.utils.path_utils import sanitize_for_log, validate_safe_path
 from godml.utils.scaffold import scaffold_deploy_service
 from godml.utils.yaml_utils import generate_dockerfile_txt
-from ..validators import load_yaml_config, validate_docker_available, validate_docker_tag, validate_environment_vars
+from ..validators import (
+    load_yaml_config,
+    validate_docker_available,
+    validate_docker_tag,
+    validate_environment_vars,
+)
 
 logger = get_logger()
 
@@ -29,10 +34,14 @@ def find_model_for_deploy(environment: str) -> Path:
             for pattern in ["*.pkl", "*model*", "*.joblib", "*.pickle"]:
                 for model_file in search_path.glob(pattern):
                     if model_file.is_file():
-                        logger.info(f"Modelo encontrado: {sanitize_for_log(str(model_file))}")
+                        logger.info(
+                            f"Modelo encontrado: {sanitize_for_log(str(model_file))}"
+                        )
                         return model_file
 
-    raise FileNotFoundError(f"No se encontró modelo para ambiente '{sanitize_for_log(environment)}'")
+    raise FileNotFoundError(
+        f"No se encontró modelo para ambiente '{sanitize_for_log(environment)}'"
+    )
 
 
 def deploy_command(project_name: str, environment: str) -> None:
@@ -49,7 +58,9 @@ def deploy_command(project_name: str, environment: str) -> None:
 
         if environment not in envs:
             available = ", ".join(envs.keys())
-            logger.error(f"Ambiente no encontrado: '{sanitize_for_log(environment)}'. Disponibles: {available}")
+            logger.error(
+                f"Ambiente no encontrado: '{sanitize_for_log(environment)}'. Disponibles: {available}"
+            )
             raise typer.Exit(1)
 
         config = envs[environment]
@@ -58,7 +69,9 @@ def deploy_command(project_name: str, environment: str) -> None:
         host = config.get("host", "0.0.0.0")
 
         safe_tag = validate_docker_tag(tag)
-        safe_environment, safe_host, safe_port = validate_environment_vars(environment, host, port)
+        safe_environment, safe_host, safe_port = validate_environment_vars(
+            environment, host, port
+        )
 
         validate_safe_path("deploy_service")
         scaffold_deploy_service(Path.cwd())
@@ -73,7 +86,9 @@ def deploy_command(project_name: str, environment: str) -> None:
             build_timeout = int(os.environ.get("GODML_DOCKER_BUILD_TIMEOUT", "600"))
             run_timeout = int(os.environ.get("GODML_DOCKER_RUN_TIMEOUT", "3600"))
 
-            logger.info(f"Construyendo imagen Docker para {sanitize_for_log(environment)}...")
+            logger.info(
+                f"Construyendo imagen Docker para {sanitize_for_log(environment)}..."
+            )
             try:
                 subprocess.run(
                     [docker_path, "build", "-t", safe_tag, "."],
@@ -86,14 +101,24 @@ def deploy_command(project_name: str, environment: str) -> None:
 
             logger.info(f"Ejecutando contenedor {sanitize_for_log(safe_tag)}...")
             try:
-                subprocess.run([
-                    docker_path, "run", "--rm",
-                    "-e", f"GODML_ENV={safe_environment}",
-                    "-e", f"HOST={safe_host}",
-                    "-e", f"PORT={safe_port}",
-                    "-p", f"{safe_port}:{safe_port}",
-                    safe_tag,
-                ], check=True, timeout=run_timeout)
+                subprocess.run(
+                    [
+                        docker_path,
+                        "run",
+                        "--rm",
+                        "-e",
+                        f"GODML_ENV={safe_environment}",
+                        "-e",
+                        f"HOST={safe_host}",
+                        "-e",
+                        f"PORT={safe_port}",
+                        "-p",
+                        f"{safe_port}:{safe_port}",
+                        safe_tag,
+                    ],
+                    check=True,
+                    timeout=run_timeout,
+                )
             except subprocess.TimeoutExpired:
                 logger.error(f"Docker run supero el timeout de {run_timeout}s")
                 raise typer.Exit(1)

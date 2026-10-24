@@ -15,16 +15,13 @@ class LogisticRegressionModel(BaseClassificationModel):
         y_train: np.ndarray,
         X_test: pd.DataFrame,
         y_test: np.ndarray,
-        params: Dict
+        params: Dict,
     ) -> Tuple[Any, np.ndarray, Dict[str, float]]:
         self.model = LogisticRegression(**params)
         self.model.fit(X_train, y_train)
         y_pred = self.model.predict(X_test)
-        metrics = {
-            "accuracy": (y_pred == y_test).mean()
-        }
+        metrics = {"accuracy": (y_pred == y_test).mean()}
         return self.model, y_pred, metrics
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         return self.model.predict(X)
-

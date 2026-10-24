@@ -8,4 +8,5 @@ def apply_compliance(df: pd.DataFrame, standard: str = "pci-dss") -> pd.DataFram
     if std != "pci-dss":
         return df
     from godml.compliance_service.pci_dss import PciDssCompliance
+
     return PciDssCompliance().apply(df.copy())

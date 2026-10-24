@@ -1,9 +1,13 @@
 # model_registry.py
 from godml.model_service.model_registry.random_forest_model import RandomForestModel
 from godml.model_service.model_registry.xgboost_model import XgboostModel
-from godml.model_service.model_registry.logistic_regression_model import LogisticRegressionModel
+from godml.model_service.model_registry.logistic_regression_model import (
+    LogisticRegressionModel,
+)
+
 try:
     from godml.model_service.model_registry.lstm_forecast_model import LstmForecastModel
+
     _lstm_available = True
 except ImportError:
     LstmForecastModel = None

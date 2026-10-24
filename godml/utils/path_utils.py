@@ -7,6 +7,7 @@ from typing import Optional
 
 class SecurityError(Exception):
     """Excepción para errores de seguridad"""
+
     pass
 
 
@@ -45,7 +46,7 @@ def sanitize_for_log(text: str) -> str:
     """Sanitiza texto para logging seguro removiendo caracteres peligrosos"""
     if not isinstance(text, str):
         text = str(text)
-    sanitized = re.sub(r'[\r\n\t\x00-\x1f\x7f-\x9f]', '', text)
+    sanitized = re.sub(r"[\r\n\t\x00-\x1f\x7f-\x9f]", "", text)
     return sanitized[:500] + "..." if len(sanitized) > 500 else sanitized
 
 

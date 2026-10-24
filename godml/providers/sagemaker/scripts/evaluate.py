@@ -10,6 +10,7 @@ SageMaker mounts:
 Output:
   /opt/ml/processing/evaluation/evaluation.json
 """
+
 import glob
 import json
 import os
@@ -33,6 +34,7 @@ os.makedirs(OUT_DIR, exist_ok=True)
 
 target_col = os.environ.get("GODML_TARGET_COL", "target")
 
+
 # Extract model archive — filter members to prevent path traversal (B202)
 def _safe_members(tar: tarfile.TarFile):
     for member in tar.getmembers():
@@ -41,11 +43,14 @@ def _safe_members(tar: tarfile.TarFile):
             raise ValueError(f"Unsafe path in tarball: {member.name}")
         yield member
 
+
 for archive in glob.glob(f"{MODEL_DIR}/*.tar.gz"):
     with tarfile.open(archive, "r:gz") as tar:
         tar.extractall(MODEL_DIR, members=_safe_members(tar))  # noqa: S202
 
-model_files = glob.glob(f"{MODEL_DIR}/**/*.joblib", recursive=True) + glob.glob(f"{MODEL_DIR}/*.joblib")
+model_files = glob.glob(f"{MODEL_DIR}/**/*.joblib", recursive=True) + glob.glob(
+    f"{MODEL_DIR}/*.joblib"
+)
 if not model_files:
     raise FileNotFoundError(f"No .joblib model found under {MODEL_DIR}")
 model = joblib.load(model_files[0])
@@ -75,7 +80,9 @@ try:
         "recall": float(recall_score(y_test, preds, zero_division=0)),
     }
 except Exception as exc:
-    print(f"Warning: binary classification metrics failed ({exc}), falling back to accuracy only")
+    print(
+        f"Warning: binary classification metrics failed ({exc}), falling back to accuracy only"
+    )
     preds = model.predict(X_test)
     metrics = {"accuracy": float(accuracy_score(y_test, preds))}
 

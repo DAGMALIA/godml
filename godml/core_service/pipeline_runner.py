@@ -9,18 +9,25 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def run_pipeline_preprocessing(pipeline: PipelineDefinition, df: pd.DataFrame) -> pd.DataFrame:
+
+def run_pipeline_preprocessing(
+    pipeline: PipelineDefinition, df: pd.DataFrame
+) -> pd.DataFrame:
     """
     Procesamiento previo al entrenamiento, incluyendo cumplimiento normativo si se especifica.
     Si se aplica una norma de cumplimiento, guarda el dataset compliant en la ruta indicada por YAML.
     """
-    if not hasattr(pipeline, "governance") or not getattr(pipeline.governance, "compliance", None):
+    if not hasattr(pipeline, "governance") or not getattr(
+        pipeline.governance, "compliance", None
+    ):
         logger.info("ℹ️ [ComplianceEngine] No se definió cumplimiento en governance.")
         return df
 
     compliance_type = pipeline.governance.compliance
     policy = getattr(pipeline.governance, "policy", "mask_sensitive")
-    logger.info(f"🔒 Aplicando cumplimiento normativo: {compliance_type} (policy={policy})")
+    logger.info(
+        f"🔒 Aplicando cumplimiento normativo: {compliance_type} (policy={policy})"
+    )
 
     try:
         # ✅ 1. Aplicar cumplimiento in-memory

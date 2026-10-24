@@ -8,22 +8,23 @@ from godml.monitoring_service.logger import SecurityError, ModelLoadError, godml
 
 # Registry estático base
 CORE_MODEL_REGISTRY = {
-    'random_forest': 'godml.model_service.model_registry.random_forest_model',
-    'xgboost': 'godml.model_service.model_registry.xgboost_model',
-    'lstm_forecast': 'godml.model_service.model_registry.lstm_forecast_model',
-    'linear_regression': 'godml.model_service.model_registry.linear_regression_model',
-    'logistic_regression': 'godml.model_service.model_registry.logistic_regression_model'
+    "random_forest": "godml.model_service.model_registry.random_forest_model",
+    "xgboost": "godml.model_service.model_registry.xgboost_model",
+    "lstm_forecast": "godml.model_service.model_registry.lstm_forecast_model",
+    "linear_regression": "godml.model_service.model_registry.linear_regression_model",
+    "logistic_regression": "godml.model_service.model_registry.logistic_regression_model",
 }
 
 # Registry dinámico para modelos ad-hoc
 _adhoc_model_registry = {}
+
 
 def register_adhoc_model(model_type: str, model_class: Type[BaseModel]) -> None:
     """Registra un modelo ad-hoc de forma segura."""
     if not model_type or not isinstance(model_type, str):
         raise SecurityError("model_type debe ser una cadena no vacía")
 
-    if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', model_type):
+    if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", model_type):
         raise SecurityError(f"Tipo de modelo inválido: {model_type}")
 
     if not issubclass(model_class, BaseModel):
@@ -32,8 +33,13 @@ def register_adhoc_model(model_type: str, model_class: Type[BaseModel]) -> None:
     _adhoc_model_registry[model_type] = model_class
     godml_logger.info(f"✅ Modelo ad-hoc '{model_type}' registrado")
 
-def load_custom_model_class(project_path: str, model_type: str, source: str = "core",
-                        adhoc_model_class: Optional[Type[BaseModel]] = None) -> BaseModel:
+
+def load_custom_model_class(
+    project_path: str,
+    model_type: str,
+    source: str = "core",
+    adhoc_model_class: Optional[Type[BaseModel]] = None,
+) -> BaseModel:
     """
     Carga un modelo de forma segura.
 
@@ -48,10 +54,10 @@ def load_custom_model_class(project_path: str, model_type: str, source: str = "c
         if not model_type or not isinstance(model_type, str):
             raise SecurityError("model_type debe ser una cadena no vacía")
 
-        if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', model_type):
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", model_type):
             raise SecurityError(f"Tipo de modelo inválido: {model_type}")
 
-        if source not in ['core', 'adhoc', 'local']:
+        if source not in ["core", "adhoc", "local"]:
             raise SecurityError("source debe ser 'core', 'adhoc' o 'local'")
 
         if source == "adhoc":
@@ -76,12 +82,17 @@ def load_custom_model_class(project_path: str, model_type: str, source: str = "c
             # Carga desde registry core - seguro
             if model_type not in CORE_MODEL_REGISTRY:
                 available = ", ".join(CORE_MODEL_REGISTRY.keys())
-                raise SecurityError(f"Modelo core no disponible: {model_type}. Disponibles: {available}")
+                raise SecurityError(
+                    f"Modelo core no disponible: {model_type}. Disponibles: {available}"
+                )
 
             try:
                 module_path = CORE_MODEL_REGISTRY[model_type]
                 module = importlib.import_module(module_path)
-                class_name = ''.join([part.capitalize() for part in model_type.split('_')]) + "Model"
+                class_name = (
+                    "".join([part.capitalize() for part in model_type.split("_")])
+                    + "Model"
+                )
 
                 if not hasattr(module, class_name):
                     raise ModelLoadError(f"Clase {class_name} no encontrada")
@@ -102,7 +113,7 @@ def load_custom_model_class(project_path: str, model_type: str, source: str = "c
                 raise SecurityError("project_path requerido para source='local'")
 
             # Solo nombres específicos permitidos para local
-            allowed_local = {'custom_model', 'user_model', 'project_model'}
+            allowed_local = {"custom_model", "user_model", "project_model"}
             if model_type not in allowed_local:
                 allowed = ", ".join(allowed_local)
                 raise SecurityError(f"Para local solo se permiten: {allowed}")
@@ -118,7 +129,7 @@ def load_custom_model_class(project_path: str, model_type: str, source: str = "c
                 if not str(resolved_file).startswith(str(resolved_base)):
                     raise SecurityError("Path traversal detectado")
 
-                if not resolved_file.suffix == '.py':
+                if not resolved_file.suffix == ".py":
                     raise SecurityError("Solo archivos .py permitidos")
 
                 if not resolved_file.is_file():
@@ -147,14 +158,18 @@ def load_custom_model_class(project_path: str, model_type: str, source: str = "c
                     model_class = None
                     for attr_name in dir(module):
                         attr = getattr(module, attr_name)
-                        if (isinstance(attr, type) and
-                            issubclass(attr, BaseModel) and
-                            attr != BaseModel):
+                        if (
+                            isinstance(attr, type)
+                            and issubclass(attr, BaseModel)
+                            and attr != BaseModel
+                        ):
                             model_class = attr
                             break
 
                     if model_class is None:
-                        raise ModelLoadError("No se encontró clase que herede de BaseModel")
+                        raise ModelLoadError(
+                            "No se encontró clase que herede de BaseModel"
+                        )
 
                     model_instance = model_class()
 

@@ -44,8 +44,14 @@ def dataprep_run_inline(
         recipe = recipe.model_dump()
     elif hasattr(recipe, "dict"):
         recipe = recipe.dict()  # pydantic v1 fallback
-    payload = {"dataprep": recipe} if isinstance(recipe, dict) and "inputs" in recipe else recipe
-    with tempfile.NamedTemporaryFile("w", suffix=".yml", delete=False, encoding="utf-8") as f:
+    payload = (
+        {"dataprep": recipe}
+        if isinstance(recipe, dict) and "inputs" in recipe
+        else recipe
+    )
+    with tempfile.NamedTemporaryFile(
+        "w", suffix=".yml", delete=False, encoding="utf-8"
+    ) as f:
         yaml.safe_dump(payload, f, allow_unicode=True, sort_keys=False)
         tmp = Path(f.name)
     return _run_recipe(tmp, mode="run", governance=governance)

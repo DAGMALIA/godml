@@ -13,19 +13,25 @@ from logging.handlers import RotatingFileHandler
 # ============================================================================
 class GodMLError(Exception):
     """Base exception para GodML"""
+
     pass
+
 
 class SecurityError(GodMLError):
     pass
 
+
 class ModelLoadError(GodMLError):
     pass
+
 
 class ConfigurationError(GodMLError):
     pass
 
+
 class PipelineError(GodMLError):
     pass
+
 
 class PredictionError(GodMLError):
     pass
@@ -52,14 +58,14 @@ def setup_clean_logging():
 _USE_COLOR = sys.stdout.isatty()
 
 _LEVEL_PREFIX = {
-    "INFO":    ("\033[38;5;99m", "·"),   # indigo ·
-    "WARNING": ("\033[93m",      "⚠"),   # yellow ⚠
-    "ERROR":   ("\033[91m",      "✗"),   # red ✗
-    "DEBUG":   ("\033[90m",      "›"),   # gray ›
+    "INFO": ("\033[38;5;99m", "·"),  # indigo ·
+    "WARNING": ("\033[93m", "⚠"),  # yellow ⚠
+    "ERROR": ("\033[91m", "✗"),  # red ✗
+    "DEBUG": ("\033[90m", "›"),  # gray ›
 }
 _RESET = "\033[0m"
-_DIM   = "\033[2m"
-_BOLD  = "\033[1m"
+_DIM = "\033[2m"
+_BOLD = "\033[1m"
 
 
 class CleanFormatter(logging.Formatter):
@@ -80,7 +86,7 @@ class CleanFormatter(logging.Formatter):
             return f"\n  {color}{symbol}{_RESET} {time}  {msg}"
 
         first = lines[0]
-        rest  = "\n".join(f"    {_DIM}{ln}{_RESET}" for ln in lines[1:])
+        rest = "\n".join(f"    {_DIM}{ln}{_RESET}" for ln in lines[1:])
         return f"\n  {color}{symbol}{_RESET} {time}  {first}\n{rest}"
 
 
@@ -107,10 +113,12 @@ def get_logger(name: str = "GODML", log_to_file: bool = True) -> logging.Logger:
         file_handler = RotatingFileHandler(
             log_path, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
         )
-        file_handler.setFormatter(logging.Formatter(
-            "[%(levelname)s] %(asctime)s  %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        ))
+        file_handler.setFormatter(
+            logging.Formatter(
+                "[%(levelname)s] %(asctime)s  %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
+            )
+        )
         logger.addHandler(file_handler)
 
     logger.propagate = False
@@ -125,6 +133,7 @@ def print_pipeline_start(name: str, dataset: str, output: str) -> None:
         from rich.console import Console
         from rich.panel import Panel
         from rich.text import Text
+
         c = Console()
         body = Text()
         body.append("  pipeline  ", style="bold white on #4f46e5")
@@ -140,10 +149,13 @@ def print_metrics_table(metrics: dict, thresholds: dict | None = None) -> None:
     try:
         from rich.console import Console
         from rich.table import Table
+
         c = Console()
-        t = Table(show_header=True, header_style="bold #4f46e5", box=None, padding=(0, 2))
+        t = Table(
+            show_header=True, header_style="bold #4f46e5", box=None, padding=(0, 2)
+        )
         t.add_column("metric", style="dim")
-        t.add_column("value",  justify="right")
+        t.add_column("value", justify="right")
         t.add_column("threshold", justify="right", style="dim")
         t.add_column("", justify="center")
 
@@ -166,33 +178,54 @@ def print_metrics_table(metrics: dict, thresholds: dict | None = None) -> None:
             print(f"  {k}: {v:.4f}")
 
 
-def print_pipeline_result(success: bool, name: str, metrics: dict, output: str | None) -> None:
+def print_pipeline_result(
+    success: bool, name: str, metrics: dict, output: str | None
+) -> None:
     try:
         from rich.console import Console
         from rich.panel import Panel
         from rich.text import Text
+
         c = Console()
         if success:
             body = Text()
             body.append("  ✓ Pipeline completado\n\n", style="bold green")
             if "auc" in metrics or "accuracy" in metrics:
                 body.append(f"  AUC       {metrics.get('auc', 0):.4f}\n", style="bold")
-                body.append(f"  Accuracy  {metrics.get('accuracy', 0):.4f}\n", style="bold")
+                body.append(
+                    f"  Accuracy  {metrics.get('accuracy', 0):.4f}\n", style="bold"
+                )
             else:
                 # Pipeline de regresión (p.ej. lstm_forecast, linear_regression):
                 # no hay auc/accuracy, muestra las métricas que sí se calcularon.
                 for key in ("r2", "mse", "mae"):
                     if key in metrics:
-                        body.append(f"  {key.upper():<9} {metrics[key]:.4f}\n", style="bold")
+                        body.append(
+                            f"  {key.upper():<9} {metrics[key]:.4f}\n", style="bold"
+                        )
             if output:
                 body.append(f"\n  Output → {output}", style="dim")
-            c.print(Panel(body, border_style="green", title=f"[bold green]{name}[/bold green]", padding=(0, 1)))
+            c.print(
+                Panel(
+                    body,
+                    border_style="green",
+                    title=f"[bold green]{name}[/bold green]",
+                    padding=(0, 1),
+                )
+            )
         else:
             body = Text()
             body.append("  ✗ Métricas insuficientes\n\n", style="bold red")
             body.append("  Ajusta los thresholds en godml.yml\n", style="dim")
             body.append("  o mejora el dataset con dataset.dataprep", style="dim")
-            c.print(Panel(body, border_style="red", title=f"[bold red]{name}[/bold red]", padding=(0, 1)))
+            c.print(
+                Panel(
+                    body,
+                    border_style="red",
+                    title=f"[bold red]{name}[/bold red]",
+                    padding=(0, 1),
+                )
+            )
     except Exception:
         status = "✓ OK" if success else "✗ FAILED"
         print(f"\n  {status}  {name}\n")

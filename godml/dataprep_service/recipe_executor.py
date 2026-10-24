@@ -49,37 +49,45 @@ CONNECTORS = {
 }
 
 from .validators.expectations import (  # noqa: E402
-    expect_non_null, expect_unique, expect_range, expect_regex
+    expect_non_null,
+    expect_unique,
+    expect_range,
+    expect_regex,
 )
 
 VALIDATIONS = {
     "expect_non_null": lambda df, args: expect_non_null(df, args),
-    "expect_unique":   lambda df, args: expect_unique(df, args),
-    "expect_range":    lambda df, args: expect_range(df, **args),
-    "expect_regex":    lambda df, args: expect_regex(df, **args),
+    "expect_unique": lambda df, args: expect_unique(df, args),
+    "expect_range": lambda df, args: expect_range(df, **args),
+    "expect_regex": lambda df, args: expect_regex(df, **args),
 }
 
 # ---------------------------
 # Utilidades internas
 # ---------------------------
 
+
 def _read_yaml(path: str | Path) -> Dict[str, Any]:
     with open(path, "r", encoding="utf-8") as f:
         return safe_load(f)
 
+
 def validate_recipe(file: str | Path) -> Recipe:
     data = _read_yaml(file)
     return Recipe(**data.get("dataprep", data))  # permite raíz o key 'dataprep'
+
 
 def _read_input(inp) -> pd.DataFrame:
     conn = CONNECTORS[inp.connector]
     emit("READ", {"dataset": inp.uri, "connector": inp.connector})
     return conn.read(inp.uri, inp.options)
 
+
 def _write_output(df: pd.DataFrame, out) -> None:
     conn = CONNECTORS[out.connector]
     emit("WRITE", {"dataset": out.uri, "connector": out.connector})
     return conn.write(df, out.uri, out.options)
+
 
 def _run_validations(df: pd.DataFrame, validations):
     for v in validations:
@@ -88,10 +96,13 @@ def _run_validations(df: pd.DataFrame, validations):
             raise ValueError(f"Validación no soportada: {v.type}")
         fn(df, v.args if isinstance(v.args, dict) else v.args)
 
+
 # ---------------------------
 # Compliance Hook (PCI-DSS)
 # ---------------------------
-def _apply_compliance(df: pd.DataFrame, governance: Optional[Dict[str, Any]]) -> pd.DataFrame:
+def _apply_compliance(
+    df: pd.DataFrame, governance: Optional[Dict[str, Any]]
+) -> pd.DataFrame:
     """
     Aplica compliance si governance.compliance está configurado.
     Soporta 'pci-dss' y lee la política del YAML (mask_sensitive, drop_sensitive, hash_sensitive).
@@ -104,7 +115,9 @@ def _apply_compliance(df: pd.DataFrame, governance: Optional[Dict[str, Any]]) ->
         return df
 
     if standard != "pci-dss":
-        emit("COMPLIANCE_SKIPPED", {"reason": f"standard '{standard}' no soportado aún"})
+        emit(
+            "COMPLIANCE_SKIPPED", {"reason": f"standard '{standard}' no soportado aún"}
+        )
         return df
 
     try:
@@ -126,7 +139,10 @@ def _apply_compliance(df: pd.DataFrame, governance: Optional[Dict[str, Any]]) ->
 # Preview & Run
 # ---------------------------
 
-def preview_recipe(file: str | Path, limit: int = 20, governance: Optional[Dict[str, Any]] = None):
+
+def preview_recipe(
+    file: str | Path, limit: int = 20, governance: Optional[Dict[str, Any]] = None
+):
     """
     Vista previa: aplica transforms y, si corresponde, compliance (pci-dss) antes de mostrar.
     """
@@ -146,7 +162,13 @@ def preview_recipe(file: str | Path, limit: int = 20, governance: Optional[Dict[
     print(df.head(limit))
     return df.head(limit)
 
-def run_recipe(file: str | Path, mode: str = "run", env: str = "dev", governance: Optional[Dict[str, Any]] = None):
+
+def run_recipe(
+    file: str | Path,
+    mode: str = "run",
+    env: str = "dev",
+    governance: Optional[Dict[str, Any]] = None,
+):
     """
     Ejecuta la receta completa:
     1) READ

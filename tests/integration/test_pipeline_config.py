@@ -118,6 +118,7 @@ class TestCompliancePipelineIntegration:
 class TestModelIntegration:
     def test_config_model_type_maps_to_notebook_api(self, temp_yaml, binary_dataset):
         from godml.notebook_api import train_model
+
         config = load_config(temp_yaml)
         ds = binary_dataset
         result = train_model(

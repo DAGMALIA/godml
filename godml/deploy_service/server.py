@@ -5,8 +5,7 @@ try:
     from fastapi.middleware.cors import CORSMiddleware
 except ImportError as _e:
     raise ImportError(
-        "El deploy service requiere fastapi. "
-        "Instala con: pip install godml[api]"
+        "El deploy service requiere fastapi. Instala con: pip install godml[api]"
     ) from _e
 
 try:
@@ -54,11 +53,13 @@ if IS_DEV:
         allow_headers=["*"],
     )
 
+
 # ==========================================================
 # 📦 MODEL UTILITIES
 # ==========================================================
 class InputData(BaseModel):
     data: dict
+
 
 def find_model_file() -> Path:
     """Busca el archivo del modelo para el entorno actual"""
@@ -72,6 +73,7 @@ def find_model_file() -> Path:
                 return model_file
     raise FileNotFoundError(f"No se encontró modelo para {ENVIRONMENT}")
 
+
 def validate_model_path(model_path: Path) -> None:
     resolved = model_path.resolve()
     base = Path.cwd().resolve()
@@ -79,6 +81,7 @@ def validate_model_path(model_path: Path) -> None:
         raise SecurityError("Ruta del modelo fuera del proyecto")
     if not resolved.exists() or not resolved.is_file():
         raise FileNotFoundError(f"Archivo de modelo inválido: {resolved}")
+
 
 # ==========================================================
 # ⚡ CARGA DE MODELO
@@ -113,6 +116,7 @@ def load_model():
     )
     app.state.observer.set_model_loaded(app.state.model is not None)
 
+
 # ==========================================================
 # 🧠 ENDPOINT DE INFERENCIA
 # ==========================================================
@@ -141,7 +145,9 @@ def predict(input_data: InputData, request: Request):
         if expected_features:
             missing = [f for f in expected_features if f not in df.columns]
             if missing:
-                raise HTTPException(status_code=400, detail=f"Faltan columnas: {missing}")
+                raise HTTPException(
+                    status_code=400, detail=f"Faltan columnas: {missing}"
+                )
 
         sig = inspect.signature(model.predict)
         if "data" in sig.parameters or isinstance(model, xgb.Booster):
@@ -150,7 +156,11 @@ def predict(input_data: InputData, request: Request):
         else:
             prediction = model.predict(df)
 
-        result = prediction.tolist() if hasattr(prediction, "tolist") else [float(prediction)]
+        result = (
+            prediction.tolist()
+            if hasattr(prediction, "tolist")
+            else [float(prediction)]
+        )
         latency = round(time.time() - start, 4)
         observer.record_prediction(
             latency=time.time() - start,
@@ -172,6 +182,7 @@ def predict(input_data: InputData, request: Request):
         godml_logger.error(f"❌ Error en predict: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 # ==========================================================
 # ❤️ HEALTH, METADATA & VERSION
 # ==========================================================
@@ -184,11 +195,13 @@ def health_check():
         "model_loaded": model_loaded,
     }
 
+
 @app.get("/metadata")
 def metadata():
     model = getattr(app.state, "model", None)
     features = getattr(model, "feature_names", [])
     return {"status": "ok", "environment": ENVIRONMENT, "features": features}
+
 
 @app.get("/version")
 def version():
@@ -202,6 +215,7 @@ def version():
         "environment": ENVIRONMENT,
     }
 
+
 # ==========================================================
 # 📊 OBSERVABILIDAD: PROMETHEUS & DRIFT
 # ==========================================================
@@ -211,10 +225,12 @@ def metrics():
     payload, content_type = render_metrics()
     return Response(content=payload, media_type=content_type)
 
+
 @app.get("/drift")
 def drift(request: Request):
     """Estado del drift en JSON, para inspección sin levantar Grafana."""
     return get_observer(request).snapshot()
+
 
 # ==========================================================
 # 🧩 MANEJO GLOBAL DE ERRORES Y MÉTRICAS
@@ -229,6 +245,7 @@ def _metric_path(request: Request) -> str:
     """
     route = request.scope.get("route")
     return getattr(route, "path", None) or "unmatched"
+
 
 @app.middleware("http")
 async def timing_and_logging(request: Request, call_next):
@@ -249,13 +266,17 @@ async def timing_and_logging(request: Request, call_next):
     path = _metric_path(request)
     # El propio scrape no se contabiliza: inflaría el RPS con tráfico interno.
     if path != "/metrics":
-        get_observer(request).record_http(request.method, path, status, time.time() - start)
+        get_observer(request).record_http(
+            request.method, path, status, time.time() - start
+        )
     return response
+
 
 # ==========================================================
 # 🧰 ENDPOINT SOLO DEV: /debug/config
 # ==========================================================
 if IS_DEV:
+
     @app.get("/debug/config")
     def debug_config():
         """Dev-only endpoint para validar entorno"""

@@ -7,7 +7,12 @@ import yaml
 from godml.config_service.schema import PipelineDefinition
 from godml.config_service.resolver import resolve_env_variables
 from godml.utils.path_utils import normalize_path
-from godml.monitoring_service.logger import SecurityError, ConfigurationError, godml_logger
+from godml.monitoring_service.logger import (
+    SecurityError,
+    ConfigurationError,
+    godml_logger,
+)
+
 
 def _validate_yaml_path(yaml_path: str) -> Path:
     """Valida y normaliza el path del YAML"""
@@ -17,11 +22,12 @@ def _validate_yaml_path(yaml_path: str) -> Path:
             raise FileNotFoundError(f"Archivo YAML no encontrado: {yaml_path}")
         if not path.is_file():
             raise ValueError(f"Path no es un archivo: {yaml_path}")
-        if path.suffix.lower() not in ['.yml', '.yaml']:
+        if path.suffix.lower() not in [".yml", ".yaml"]:
             raise ValueError(f"Archivo debe ser .yml o .yaml: {yaml_path}")
         return path
     except Exception as e:
         raise SecurityError(f"Error validando path YAML: {e}")
+
 
 def load_pipeline(yaml_path: str) -> PipelineDefinition:
     try:

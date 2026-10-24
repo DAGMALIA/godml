@@ -6,16 +6,35 @@ from pydantic import BaseModel, field_validator
 
 VALID_OPS = [
     # I/O
-    "csv_read", "csv_write", "parquet_write",
+    "csv_read",
+    "csv_write",
+    "parquet_write",
     # Transforms
-    "drop_columns", "rename", "select_columns", "drop_duplicates",
-    "label_encode", "one_hot", "dropna", "fillna",
-    "outlier_flag", "standard_scale", "minmax_scale",
-    "lower", "strip", "regex_replace", "cast_types", "lag",
-    "select", "safe_cast", "extract_date_parts",
+    "drop_columns",
+    "rename",
+    "select_columns",
+    "drop_duplicates",
+    "label_encode",
+    "one_hot",
+    "dropna",
+    "fillna",
+    "outlier_flag",
+    "standard_scale",
+    "minmax_scale",
+    "lower",
+    "strip",
+    "regex_replace",
+    "cast_types",
+    "lag",
+    "select",
+    "safe_cast",
+    "extract_date_parts",
     # Validators
-    "expect_non_null", "expect_unique", "expect_range",
-    "expect_regex", "check_types",
+    "expect_non_null",
+    "expect_unique",
+    "expect_range",
+    "expect_regex",
+    "check_types",
 ]
 
 

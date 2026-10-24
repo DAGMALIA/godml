@@ -82,10 +82,12 @@ class RAGAdvisor:
 
     def suggest_recipe(self, dataset_summary: str) -> dict:
         examples = self.retrieve_examples(dataset_summary, top_k=2)
-        examples_text = "\n\n".join([
-            f"Ejemplo:\nDataset: {e['summary']}\nReceta:\n{json.dumps(e['recipe'], indent=2)}"
-            for e in examples
-        ])
+        examples_text = "\n\n".join(
+            [
+                f"Ejemplo:\nDataset: {e['summary']}\nReceta:\n{json.dumps(e['recipe'], indent=2)}"
+                for e in examples
+            ]
+        )
 
         examples_section = ("Ejemplos:\n" + examples_text) if examples_text else ""
         prompt = f"""

@@ -27,7 +27,10 @@ class DatasetConfig(BaseModel):
     compliant_output: Optional[str] = None
     hash: Optional[str] = "auto"
     target: Optional[str] = None
-    dataprep: Optional[Union[DataprepRecipe, List[DataprepRecipe], Dict[str, Any]]] = None
+    dataprep: Optional[Union[DataprepRecipe, List[DataprepRecipe], Dict[str, Any]]] = (
+        None
+    )
+
 
 class Hyperparameters(BaseModel):
     max_depth: Optional[int] = None
@@ -43,25 +46,32 @@ class Hyperparameters(BaseModel):
     epochs: Optional[int] = None
     batch_size: Optional[int] = None
 
+
 class ModelConfig(BaseModel):
     type: str
     source: Optional[str] = "core"
     hyperparameters: Hyperparameters
 
+
 class Metric(BaseModel):
     name: str
     threshold: float
 
+
 class Governance(BaseModel):
     owner: str
     compliance: Optional[str] = None
-    policy: Optional[str] = Field(default="mask_sensitive")  # drop_sensitive | mask_sensitive | hash_sensitive
+    policy: Optional[str] = Field(
+        default="mask_sensitive"
+    )  # drop_sensitive | mask_sensitive | hash_sensitive
     tags: Optional[List[Dict[str, str]]] = Field(default_factory=list)
+
 
 class DeployConfig(BaseModel):
     realtime: bool = False
     batch_output: Optional[str] = None
     model_output: Optional[str] = None  # 🆕 se agrega para guardar el modelo localmente
+
 
 class PipelineDefinition(BaseModel):
     name: str
@@ -71,21 +81,25 @@ class PipelineDefinition(BaseModel):
     dataset: DatasetConfig
     model: ModelConfig
     metrics: List[Metric]
-    governance: Governance = Field(default_factory=lambda: Governance(owner="", tags=[]))
+    governance: Governance = Field(
+        default_factory=lambda: Governance(owner="", tags=[])
+    )
     deploy: DeployConfig
     aws: Optional[AwsConfig] = None
     compute: Optional[ComputeConfig] = None
     registry: Optional[RegistryConfig] = None
+
 
 # 🧩 Resultado estandarizado de un pipeline GODML
 class ModelResult(BaseModel):
     """
     Resultado del pipeline GODML, con trazabilidad y seguridad.
     """
+
     model: Any
     predictions: Optional[Any] = None
     metrics: Optional[Dict[str, float]] = None
     output_path: Optional[str] = None
-    model_path: Optional[str] = None   # 🆕 ruta al modelo guardado (.pkl)
+    model_path: Optional[str] = None  # 🆕 ruta al modelo guardado (.pkl)
 
     model_config = ConfigDict(arbitrary_types_allowed=True)

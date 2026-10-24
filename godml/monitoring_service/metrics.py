@@ -1,7 +1,10 @@
 # godml/monitoring_service/metrics.py
 # Copyright (c) 2025 Arturo Gutierrez Rubio Rojas
 # SPDX-License-Identifier: MIT
-from godml.monitoring_service.metric_diagnostics import analyze_metric_issue, explain_issue_and_action
+from godml.monitoring_service.metric_diagnostics import (
+    analyze_metric_issue,
+    explain_issue_and_action,
+)
 from sklearn.metrics import (
     accuracy_score,
     precision_score,
@@ -11,12 +14,13 @@ from sklearn.metrics import (
     mean_squared_error,
     mean_absolute_error,
     r2_score,
-    log_loss
+    log_loss,
 )
 import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 def evaluate_binary_classification(y_true, y_proba, threshold=0.5):
     """
@@ -45,7 +49,9 @@ def evaluate_binary_classification(y_true, y_proba, threshold=0.5):
 
             # Métricas basadas en etiquetas
             metrics["accuracy"] = accuracy_score(y_true, y_pred_labels)
-            metrics["f1_macro"] = f1_score(y_true, y_pred_labels, average="macro", zero_division=0)
+            metrics["f1_macro"] = f1_score(
+                y_true, y_pred_labels, average="macro", zero_division=0
+            )
 
             # Asegurar que las clases estén completas
             unique_labels = np.unique(y_true)
@@ -62,14 +68,17 @@ def evaluate_binary_classification(y_true, y_proba, threshold=0.5):
 
                 metrics["log_loss"] = log_loss(y_true, y_proba, labels=unique_labels)
                 metrics["roc_auc_ovr"] = roc_auc_score(
-                    y_true, y_proba, multi_class="ovr", average="macro", labels=unique_labels
+                    y_true,
+                    y_proba,
+                    multi_class="ovr",
+                    average="macro",
+                    labels=unique_labels,
                 )
             except Exception:
                 reason, code = analyze_metric_issue(y_true, y_proba)
                 logger.warning(f"⚠️ AUC no calculada ({code}): {reason}")
                 logger.info(explain_issue_and_action(reason, code))
                 metrics["auc"] = np.nan
-
 
             return metrics
 
@@ -97,7 +106,7 @@ def evaluate_regression(y_true, y_pred, metric_names=None):
     available_metrics = {
         "mse": mean_squared_error,
         "mae": mean_absolute_error,
-        "r2": r2_score
+        "r2": r2_score,
     }
 
     if not metric_names:

@@ -1,4 +1,5 @@
 """Tests for advisor_service components (no gpt4all needed)."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -9,6 +10,7 @@ import pytest
 class TestDataQualityJudge:
     def setup_method(self):
         from godml.advisor_service.data_quality_judge import DataQualityJudge
+
         self.judge = DataQualityJudge()
 
     def test_check_no_nulls(self):
@@ -37,6 +39,7 @@ class TestDataQualityJudge:
 class TestMetricJudge:
     def setup_method(self):
         from godml.advisor_service.metric_judge import MetricJudge
+
         self.judge = MetricJudge()
 
     def test_regression_task(self):
@@ -80,6 +83,7 @@ class TestMetricJudge:
 class TestModelSelector:
     def setup_method(self):
         from godml.advisor_service.model_selector import ModelSelector
+
         self.selector = ModelSelector()
 
     def test_regression(self):
@@ -98,6 +102,7 @@ class TestModelSelector:
 class TestHyperparamAdvisor:
     def setup_method(self):
         from godml.advisor_service.hyperparam_advisor import HyperparamAdvisor
+
         self.advisor = HyperparamAdvisor()
 
     def test_random_forest_params(self):

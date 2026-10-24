@@ -1,4 +1,5 @@
 """SageMaker executor — runs a godml pipeline as a SageMaker Pipeline."""
+
 from __future__ import annotations
 
 from godml.core_service.engine import BaseExecutor
@@ -51,6 +52,7 @@ class SageMakerExecutor(BaseExecutor):
                 errors.append("aws.s3_bucket is required.")
         else:
             import os
+
             if not os.environ.get("GODML_SAGEMAKER_ROLE"):
                 errors.append(
                     "No IAM role configured. Add 'aws.role_arn' to your godml.yml "

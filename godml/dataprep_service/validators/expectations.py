@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def expect_non_null(df: pd.DataFrame, columns):
     """
     Verifica que las columnas no contengan valores nulos.

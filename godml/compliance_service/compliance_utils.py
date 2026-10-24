@@ -8,17 +8,23 @@ def hash_sha256(value) -> str:
 
 
 def hash_truncated(value, length: int = 12) -> str:
-    return hash_sha256(value)[:max(1, int(length))]
+    return hash_sha256(value)[: max(1, int(length))]
 
 
-def mask_string(value: str, num_prefix: int = 2, num_suffix: int = 0, mask_char: str = "*") -> str:
+def mask_string(
+    value: str, num_prefix: int = 2, num_suffix: int = 0, mask_char: str = "*"
+) -> str:
     if value is None:
         return ""
     s = str(value)
     if len(s) <= (num_prefix + num_suffix):
         return mask_char * len(s)
     middle_len = len(s) - num_prefix - num_suffix
-    return s[:num_prefix] + (mask_char * middle_len) + (s[-num_suffix:] if num_suffix > 0 else "")
+    return (
+        s[:num_prefix]
+        + (mask_char * middle_len)
+        + (s[-num_suffix:] if num_suffix > 0 else "")
+    )
 
 
 def mask_email(email: str) -> str:
@@ -51,6 +57,17 @@ def mask_date(date_str) -> str:
 def is_pii_column(col_name: str) -> bool:
     if not col_name:
         return False
-    pii_keywords = ["name", "email", "address", "ssn", "card", "cvv", "zip", "postal", "dob", "birth"]
+    pii_keywords = [
+        "name",
+        "email",
+        "address",
+        "ssn",
+        "card",
+        "cvv",
+        "zip",
+        "postal",
+        "dob",
+        "birth",
+    ]
     lower = col_name.lower()
     return any(k in lower for k in pii_keywords)

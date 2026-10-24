@@ -55,10 +55,17 @@ class GodmlNotebook:
             self.last_trained_model = None
         return "Entrenamiento completado"
 
-    def save_model(self, model=None, model_name: str | None = None, environment: str = "experiments"):
+    def save_model(
+        self,
+        model=None,
+        model_name: str | None = None,
+        environment: str = "experiments",
+    ):
         model_to_save = model or self.last_trained_model
         if model_to_save is None:
-            raise ValueError("No hay modelo para guardar. Entrena un modelo primero o proporciona uno.")
+            raise ValueError(
+                "No hay modelo para guardar. Entrena un modelo primero o proporciona uno."
+            )
         return save_model_to_structure(model_to_save, model_name, environment)
 
     def load_model(self, model_name: str, environment: str = "production"):

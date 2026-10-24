@@ -4,6 +4,7 @@ import re
 
 env_var_pattern = re.compile(r"\$\{(\w+)(?::([^\}]*))?\}")
 
+
 def resolve_env_variables(config_dict):
     def resolve_value(value):
         if isinstance(value, str):

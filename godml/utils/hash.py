@@ -1,5 +1,6 @@
 import hashlib
 
+
 def calculate_file_hash(file_path: str) -> str:
     """
     Calcula el hash SHA256 de un archivo para trazabilidad.

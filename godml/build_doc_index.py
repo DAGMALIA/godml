@@ -6,6 +6,7 @@ from pathlib import Path
 
 DOC_INDEX = []
 
+
 def extract_examples(doc: str):
     if not doc:
         return []
@@ -18,6 +19,7 @@ def extract_examples(doc: str):
         examples.append(match.strip())
     return examples
 
+
 def parse_file(path):
     with open(path, "r", encoding="utf-8") as f:
         src = f.read()
@@ -25,13 +27,16 @@ def parse_file(path):
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef):
             doc = ast.get_docstring(node) or "No docstring disponible."
-            DOC_INDEX.append({
-                "name": node.name,
-                "path": path,
-                "signature": f"{node.name}(...)",
-                "doc": doc.split("\n")[0],
-                "examples": extract_examples(doc)
-            })
+            DOC_INDEX.append(
+                {
+                    "name": node.name,
+                    "path": path,
+                    "signature": f"{node.name}(...)",
+                    "doc": doc.split("\n")[0],
+                    "examples": extract_examples(doc),
+                }
+            )
+
 
 def build_index(out_file=None):
     base_dir = os.path.dirname(__file__)
@@ -51,6 +56,7 @@ def build_index(out_file=None):
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(DOC_INDEX, f, indent=2, ensure_ascii=False)
     print(f"Indice generado con {len(DOC_INDEX)} funciones en {out_path}")
+
 
 if __name__ == "__main__":
     build_index()

@@ -1,4 +1,5 @@
 """Assembles a SageMaker Pipeline from a PipelineDefinition."""
+
 from __future__ import annotations
 
 from godml.config_service.schema import PipelineDefinition

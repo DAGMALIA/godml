@@ -13,6 +13,7 @@ Env vars injected by SageMakerExecutor (via ScriptProcessor.env):
   GODML_COMPLIANCE   — compliance type, e.g. "pci-dss" (optional)
   GODML_POLICY       — compliance policy, e.g. "mask_sensitive" (optional)
 """
+
 import glob
 import os
 
@@ -49,6 +50,7 @@ print(f"Shape: {df.shape}, columns: {list(df.columns)}")
 if compliance:
     try:
         from godml.compliance_service.compliance_registry import ComplianceRegistry
+
         engine = ComplianceRegistry.get(compliance)
         df = engine.apply(df, policy=policy)
         print(f"Compliance '{compliance}' applied with policy '{policy}'")
@@ -75,7 +77,9 @@ try:
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 except ValueError:
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
 
 train_df = X_train.assign(**{target_col: y_train.values})
 test_df = X_test.assign(**{target_col: y_test.values})

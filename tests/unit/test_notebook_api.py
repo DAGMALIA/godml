@@ -21,7 +21,9 @@ class TestTrainModel:
     def test_xgboost_returns_model_wrapper(self, binary_dataset):
         ds = binary_dataset
         result = train_model(
-            "xgboost", ds["X_train"], pd.Series(ds["y_train"]),
+            "xgboost",
+            ds["X_train"],
+            pd.Series(ds["y_train"]),
             hyperparams={"n_estimators": 10, "max_depth": 2},
         )
         assert hasattr(result, "model")
@@ -30,7 +32,9 @@ class TestTrainModel:
     def test_random_forest_returns_model_wrapper(self, binary_dataset):
         ds = binary_dataset
         result = train_model(
-            "random_forest", ds["X_train"], pd.Series(ds["y_train"]),
+            "random_forest",
+            ds["X_train"],
+            pd.Series(ds["y_train"]),
             hyperparams={"n_estimators": 10},
         )
         assert hasattr(result, "model")
@@ -38,12 +42,22 @@ class TestTrainModel:
 
     def test_rf_alias_works(self, binary_dataset):
         ds = binary_dataset
-        result = train_model("rf", ds["X_train"], pd.Series(ds["y_train"]), hyperparams={"n_estimators": 5})
+        result = train_model(
+            "rf",
+            ds["X_train"],
+            pd.Series(ds["y_train"]),
+            hyperparams={"n_estimators": 5},
+        )
         assert result.model is not None
 
     def test_xgb_alias_works(self, binary_dataset):
         ds = binary_dataset
-        result = train_model("xgb", ds["X_train"], pd.Series(ds["y_train"]), hyperparams={"n_estimators": 5})
+        result = train_model(
+            "xgb",
+            ds["X_train"],
+            pd.Series(ds["y_train"]),
+            hyperparams={"n_estimators": 5},
+        )
         assert result.model is not None
 
     def test_unsupported_model_raises(self, binary_dataset):
@@ -60,20 +74,35 @@ class TestTrainModel:
 class TestPredict:
     def test_predict_returns_array_with_correct_length(self, binary_dataset):
         ds = binary_dataset
-        result = train_model("random_forest", ds["X_train"], pd.Series(ds["y_train"]), hyperparams={"n_estimators": 5})
+        result = train_model(
+            "random_forest",
+            ds["X_train"],
+            pd.Series(ds["y_train"]),
+            hyperparams={"n_estimators": 5},
+        )
         preds = predict(result, ds["X_test"])
         assert preds is not None
         assert len(preds) == len(ds["X_test"])
 
     def test_predict_values_in_probability_range(self, binary_dataset):
         ds = binary_dataset
-        result = train_model("xgboost", ds["X_train"], pd.Series(ds["y_train"]), hyperparams={"n_estimators": 5})
+        result = train_model(
+            "xgboost",
+            ds["X_train"],
+            pd.Series(ds["y_train"]),
+            hyperparams={"n_estimators": 5},
+        )
         preds = predict(result, ds["X_test"])
         assert all(0.0 <= p <= 1.0 for p in preds)
 
     def test_predict_accepts_raw_model(self, binary_dataset):
         ds = binary_dataset
-        result = train_model("random_forest", ds["X_train"], pd.Series(ds["y_train"]), hyperparams={"n_estimators": 5})
+        result = train_model(
+            "random_forest",
+            ds["X_train"],
+            pd.Series(ds["y_train"]),
+            hyperparams={"n_estimators": 5},
+        )
         preds = predict(result.model, ds["X_test"])
         assert preds is not None
 
@@ -115,8 +144,18 @@ class TestCompareModels:
 
     def test_compares_two_models(self, binary_dataset):
         ds = binary_dataset
-        r1 = train_model("xgboost", ds["X_train"], pd.Series(ds["y_train"]), hyperparams={"n_estimators": 5})
-        r2 = train_model("random_forest", ds["X_train"], pd.Series(ds["y_train"]), hyperparams={"n_estimators": 5})
+        r1 = train_model(
+            "xgboost",
+            ds["X_train"],
+            pd.Series(ds["y_train"]),
+            hyperparams={"n_estimators": 5},
+        )
+        r2 = train_model(
+            "random_forest",
+            ds["X_train"],
+            pd.Series(ds["y_train"]),
+            hyperparams={"n_estimators": 5},
+        )
         df = compare_models([r1, r2])
         assert isinstance(df, pd.DataFrame)
         assert "model" in df.columns
@@ -124,8 +163,18 @@ class TestCompareModels:
 
     def test_sorts_by_metric(self, binary_dataset):
         ds = binary_dataset
-        r1 = train_model("xgboost", ds["X_train"], pd.Series(ds["y_train"]), hyperparams={"n_estimators": 5})
-        r2 = train_model("random_forest", ds["X_train"], pd.Series(ds["y_train"]), hyperparams={"n_estimators": 5})
+        r1 = train_model(
+            "xgboost",
+            ds["X_train"],
+            pd.Series(ds["y_train"]),
+            hyperparams={"n_estimators": 5},
+        )
+        r2 = train_model(
+            "random_forest",
+            ds["X_train"],
+            pd.Series(ds["y_train"]),
+            hyperparams={"n_estimators": 5},
+        )
         df = compare_models([r1, r2], by="model")
         assert isinstance(df, pd.DataFrame)
 

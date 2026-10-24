@@ -8,7 +8,11 @@ import typer
 from godml.monitoring_service.logger import get_logger, SecurityError
 from godml.utils.path_utils import sanitize_for_log, validate_safe_path
 from godml.utils.scaffold import scaffold_deploy_service
-from godml.utils.yaml_utils import generate_default_yaml, generate_dockerfile_txt, generate_readme_md
+from godml.utils.yaml_utils import (
+    generate_default_yaml,
+    generate_dockerfile_txt,
+    generate_readme_md,
+)
 
 logger = get_logger()
 
@@ -48,7 +52,9 @@ def init_command(project_name: str) -> None:
 
         logger.info(f"Proyecto '{sanitize_for_log(project_name)}' creado exitosamente.")
         logger.info(f"Ubicacion: {sanitize_for_log(str(project_path.absolute()))}")
-        logger.info(f"Proximos pasos: cd {sanitize_for_log(project_name)} && godml run -f godml.yml")
+        logger.info(
+            f"Proximos pasos: cd {sanitize_for_log(project_name)} && godml run -f godml.yml"
+        )
 
     except PermissionError as e:
         logger.error(f"Error de permisos: {sanitize_for_log(str(e))}")

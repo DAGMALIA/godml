@@ -19,7 +19,7 @@ class LinearRegressionModel(BaseRegressionModel):
         y_train: np.ndarray,
         X_test: pd.DataFrame,
         y_test: np.ndarray,
-        params: Dict
+        params: Dict,
     ) -> Tuple[Any, np.ndarray, Dict[str, float]]:
         self.model.set_params(**params)
         self.model.fit(X_train, y_train)

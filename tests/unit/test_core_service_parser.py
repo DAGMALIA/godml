@@ -57,14 +57,18 @@ class TestEnvVarResolution:
     def test_env_var_uses_default_when_missing(self, tmp_path, minimal_pipeline_config):
         os.environ.pop("GODML_TEST_MISSING_XYZ", None)
         config_dict = dict(minimal_pipeline_config)
-        config_dict["governance"] = {"owner": "${GODML_TEST_MISSING_XYZ:fallback@company.com}"}
+        config_dict["governance"] = {
+            "owner": "${GODML_TEST_MISSING_XYZ:fallback@company.com}"
+        }
         f = tmp_path / "godml.yml"
         f.write_text(yaml.dump(config_dict))
 
         config = load_pipeline(str(f))
         assert config.governance.owner == "fallback@company.com"
 
-    def test_env_var_empty_default_resolves(self, tmp_path, monkeypatch, minimal_pipeline_config):
+    def test_env_var_empty_default_resolves(
+        self, tmp_path, monkeypatch, minimal_pipeline_config
+    ):
         # Regression test: ${VAR:} (empty default) used to fail to match at all,
         # leaving the literal "${VAR:}" string even when the env var was set.
         monkeypatch.setenv("GODML_TEST_KMS", "real-kms-key")
@@ -103,7 +107,9 @@ class TestRemoteUriPreserved:
         config = load_pipeline(str(f))
         assert config.deploy.batch_output == "s3://my-bucket/output/preds.csv"
 
-    def test_local_dataset_uri_still_normalized(self, tmp_path, minimal_pipeline_config):
+    def test_local_dataset_uri_still_normalized(
+        self, tmp_path, minimal_pipeline_config
+    ):
         config_dict = dict(minimal_pipeline_config)
         config_dict["dataset"]["uri"] = "./data/train.csv"
         f = tmp_path / "godml.yml"

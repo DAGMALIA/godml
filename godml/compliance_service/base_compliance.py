@@ -4,6 +4,7 @@
 from abc import ABC, abstractmethod
 import pandas as pd
 
+
 class BaseCompliance(ABC):
     """
     Interfaz base para implementar normativas de cumplimiento como PCI-DSS, HIPAA, GDPR, etc.
@@ -21,4 +22,3 @@ class BaseCompliance(ABC):
         Devuelve una descripción textual de la normativa.
         """
         return self.__class__.__name__
-

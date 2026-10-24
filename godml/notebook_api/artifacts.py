@@ -18,6 +18,7 @@ def load_artifact(path: str | Path) -> Any:
 def emit_lineage(event_type: str, payload: Dict[str, Any]) -> None:
     try:
         from godml.dataprep_service.lineage.openlineage_emitter import emit
+
         emit(event_type, payload)
     except Exception:
         pass
@@ -34,9 +35,16 @@ def summarize_df(df: pd.DataFrame) -> Dict[str, Any]:
 
 def plot_roc_pr_curves(y_true, y_prob) -> None:
     try:
-        from sklearn.metrics import roc_curve, auc, precision_recall_curve, average_precision_score
+        from sklearn.metrics import (
+            roc_curve,
+            auc,
+            precision_recall_curve,
+            average_precision_score,
+        )
     except Exception as e:
-        raise ImportError("Se requiere scikit-learn para graficar curvas ROC/PR.") from e
+        raise ImportError(
+            "Se requiere scikit-learn para graficar curvas ROC/PR."
+        ) from e
 
     import matplotlib.pyplot as plt
 

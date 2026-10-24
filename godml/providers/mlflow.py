@@ -8,11 +8,19 @@ from sklearn.model_selection import train_test_split
 from godml.core_service.engine import BaseExecutor
 from godml.config_service.schema import PipelineDefinition, ModelResult
 from godml.model_service.model_loader import load_custom_model_class
-from godml.monitoring_service.logger import get_logger, print_pipeline_start, print_metrics_table, print_pipeline_result
+from godml.monitoring_service.logger import (
+    get_logger,
+    print_pipeline_start,
+    print_metrics_table,
+    print_pipeline_result,
+)
 from godml.utils.path_utils import normalize_path
 from godml.utils.predict_safely import predict_safely
 from godml.utils.log_model_generic import log_model_generic
-from godml.monitoring_service.metrics import evaluate_binary_classification, evaluate_regression
+from godml.monitoring_service.metrics import (
+    evaluate_binary_classification,
+    evaluate_regression,
+)
 from godml.monitoring_service.observability import build_baseline, save_baseline
 
 logger = get_logger()
@@ -21,6 +29,7 @@ logger = get_logger()
 class MLflowExecutor(BaseExecutor):
     def __init__(self, tracking_uri: str = None):
         import mlflow  # lazy — only load when executor is actually used
+
         tracking_uri = tracking_uri or os.environ.get("MLFLOW_TRACKING_URI")
         if tracking_uri:
             if tracking_uri.startswith("file:/"):
@@ -32,7 +41,9 @@ class MLflowExecutor(BaseExecutor):
             # MLflow 3.x requires a database backend; default to local SQLite
             mlflow.set_tracking_uri("sqlite:///mlflow.db")
 
-        mlflow.set_experiment(os.environ.get("MLFLOW_EXPERIMENT_NAME", "godml-experiment"))
+        mlflow.set_experiment(
+            os.environ.get("MLFLOW_EXPERIMENT_NAME", "godml-experiment")
+        )
 
     def preprocess_for_xgboost(self, df, target_col="target"):
         if target_col not in df.columns:
@@ -43,7 +54,7 @@ class MLflowExecutor(BaseExecutor):
         y = df[target_col]
         X = df.drop(columns=[target_col])
 
-        cat_cols = X.select_dtypes(include=['object', 'category']).columns.tolist()
+        cat_cols = X.select_dtypes(include=["object", "category"]).columns.tolist()
         if cat_cols:
             X = pd.get_dummies(X, columns=cat_cols, drop_first=True)
         return X, y
@@ -56,10 +67,14 @@ class MLflowExecutor(BaseExecutor):
         ds = pipeline.dataset
         dataset_path = ds.uri
         dataset_path_abs = os.path.abspath(dataset_path)
-        batch_out = getattr(getattr(pipeline, "deploy", None), "batch_output", None) or ""
+        batch_out = (
+            getattr(getattr(pipeline, "deploy", None), "batch_output", None) or ""
+        )
 
         print_pipeline_start(pipeline.name, dataset_path_abs, batch_out)
-        logger.info(f"dataset → {dataset_path_abs}  target={getattr(ds, 'target', None)}")
+        logger.info(
+            f"dataset → {dataset_path_abs}  target={getattr(ds, 'target', None)}"
+        )
 
         if str(dataset_path).startswith("s3://"):
             raise ValueError("MLflowExecutor solo soporta datasets locales (CSV).")
@@ -112,7 +127,9 @@ class MLflowExecutor(BaseExecutor):
         # ⚖️ Cumplimiento normativo (PCI-DSS, etc.) + saneo de dtypes
         # ────────────────────────────────╮
 
-        def _sanitize_dtypes_after_compliance(df_in: pd.DataFrame, target_col: str) -> pd.DataFrame:
+        def _sanitize_dtypes_after_compliance(
+            df_in: pd.DataFrame, target_col: str
+        ) -> pd.DataFrame:
             """
             Convierte cualquier columna no numérica en algo aceptable por XGBoost:
             - Si la col es el target, no se toca.
@@ -137,7 +154,9 @@ class MLflowExecutor(BaseExecutor):
             from godml.utils.path_utils import normalize_path, validate_safe_path
 
             # Ejecuta preprocesamiento centralizado (aplica ComplianceEngine y guarda compliant_output si viene)
-            logger.info("🧩 Ejecutando preprocesamiento del pipeline (compliance, guardado opcional)...")
+            logger.info(
+                "🧩 Ejecutando preprocesamiento del pipeline (compliance, guardado opcional)..."
+            )
             df = run_pipeline_preprocessing(pipeline, df)
 
             # Si el runner guardó a dataset.compliant_output, úsalo como dataset.uri para el resto del flujo
@@ -148,9 +167,13 @@ class MLflowExecutor(BaseExecutor):
                     validate_safe_path(normalized, base_dir=os.getcwd())
                     if os.path.exists(normalized):
                         pipeline.dataset.uri = compliant_output
-                        logger.info(f"✅ Dataset compliant asignado para entrenamiento: {normalized}")
+                        logger.info(
+                            f"✅ Dataset compliant asignado para entrenamiento: {normalized}"
+                        )
                     else:
-                        logger.warning(f"⚠️ 'dataset.compliant_output' definido pero no existe en disco: {normalized}")
+                        logger.warning(
+                            f"⚠️ 'dataset.compliant_output' definido pero no existe en disco: {normalized}"
+                        )
                 except Exception as e:
                     logger.warning(f"⚠️ Validación de ruta compliant_output falló: {e}")
 
@@ -158,14 +181,18 @@ class MLflowExecutor(BaseExecutor):
             df = _sanitize_dtypes_after_compliance(df, target)
 
             # Log informativo de tipos
-            non_numeric = [c for c in df.drop(columns=[target]).columns
-                           if df[c].dtype == "O" or str(df[c].dtype).startswith("category")]
+            non_numeric = [
+                c
+                for c in df.drop(columns=[target]).columns
+                if df[c].dtype == "O" or str(df[c].dtype).startswith("category")
+            ]
             if non_numeric:
-                logger.warning(f"⚠️ Aún hay columnas no numéricas tras saneo: {non_numeric} (se intentó codificar).")
+                logger.warning(
+                    f"⚠️ Aún hay columnas no numéricas tras saneo: {non_numeric} (se intentó codificar)."
+                )
 
         except Exception as e:
             logger.warning(f"⚠️ Error en preprocesamiento/compliance centralizado: {e}")
-
 
         # ╭───────────────────────────────
         # 3️⃣ Split (estratificado si aplica)
@@ -194,7 +221,6 @@ class MLflowExecutor(BaseExecutor):
         # 🧠 Ajuste automático basado en tipo de modelo y dataset
         params = auto_tune_hyperparameters(model_type, params, X_train, y_train)
 
-
         project_path = os.getcwd()
 
         # Solo cargar el modelo una vez
@@ -214,8 +240,9 @@ class MLflowExecutor(BaseExecutor):
         max_attempts = 3
         try:
             for attempt in range(max_attempts):
-                with mlflow.start_run(run_name=f"{pipeline.name}_attempt_{attempt+1}"):
-
+                with mlflow.start_run(
+                    run_name=f"{pipeline.name}_attempt_{attempt + 1}"
+                ):
                     # ──────────────────────────────────────
                     # Etiquetas y artefactos
                     # ──────────────────────────────────────
@@ -238,7 +265,9 @@ class MLflowExecutor(BaseExecutor):
                     # ╭───────────────────────────────
                     # 5️⃣ Entrenamiento
                     # ────────────────────────────────╮
-                    train_result = model_instance.train(X_train, y_train, X_test, y_test, params)
+                    train_result = model_instance.train(
+                        X_train, y_train, X_test, y_test, params
+                    )
 
                     if isinstance(train_result, tuple):
                         if len(train_result) == 3:
@@ -247,9 +276,13 @@ class MLflowExecutor(BaseExecutor):
                             model, preds = train_result
                             metrics_dict = {}
                         else:
-                            raise ValueError("❌ El método 'train' retornó una tupla con longitud inesperada.")
+                            raise ValueError(
+                                "❌ El método 'train' retornó una tupla con longitud inesperada."
+                            )
                     else:
-                        raise ValueError("❌ El método 'train' debe retornar al menos (modelo, predicciones).")
+                        raise ValueError(
+                            "❌ El método 'train' debe retornar al menos (modelo, predicciones)."
+                        )
 
                     # Completa métricas que el modelo no haya calculado por sí mismo
                     # (p.ej. LogisticRegressionModel solo devuelve 'accuracy'), sin pisar
@@ -268,12 +301,16 @@ class MLflowExecutor(BaseExecutor):
                     input_example = X_train.iloc[:5]
                     try:
                         output_example = predict_safely(model, input_example)
-                        signature = mlflow.models.signature.infer_signature(input_example, output_example)
+                        signature = mlflow.models.signature.infer_signature(
+                            input_example, output_example
+                        )
                     except Exception as e:
                         # Modelos con preprocesamiento propio (p.ej. lstm_forecast reescala y
                         # ventanea antes de predecir) no aceptan el DataFrame crudo tal cual.
                         # No es fatal: se registra el modelo sin signature/input_example.
-                        logger.warning(f"⚠️ No se pudo inferir signature/input_example para MLflow: {e}")
+                        logger.warning(
+                            f"⚠️ No se pudo inferir signature/input_example para MLflow: {e}"
+                        )
                         input_example = None
                         signature = None
 
@@ -283,9 +320,13 @@ class MLflowExecutor(BaseExecutor):
                     thresholds = {m.name: m.threshold for m in pipeline.metrics}
                     print_metrics_table(metrics_dict, thresholds)
                     if task_type == "regression":
-                        logger.info(f"R2 {metrics_dict.get('r2', 0):.4f}  MAE {metrics_dict.get('mae', 0):.4f}")
+                        logger.info(
+                            f"R2 {metrics_dict.get('r2', 0):.4f}  MAE {metrics_dict.get('mae', 0):.4f}"
+                        )
                     else:
-                        logger.info(f"AUC {metrics_dict.get('auc', 0):.4f}  accuracy {metrics_dict.get('accuracy', 0):.4f}")
+                        logger.info(
+                            f"AUC {metrics_dict.get('auc', 0):.4f}  accuracy {metrics_dict.get('accuracy', 0):.4f}"
+                        )
 
                     # ╭───────────────────────────────
                     # 6️⃣ Validación por thresholds
@@ -294,10 +335,14 @@ class MLflowExecutor(BaseExecutor):
                     for metric in pipeline.metrics:
                         value = metrics_dict.get(metric.name)
                         if value is None:
-                            logger.warning(f"⚠️ Métrica '{metric.name}' no fue calculada.")
+                            logger.warning(
+                                f"⚠️ Métrica '{metric.name}' no fue calculada."
+                            )
                             continue
                         if value < metric.threshold:
-                            logger.error(f"🚫 {metric.name.upper()} ({value:.4f}) < {metric.threshold}")
+                            logger.error(
+                                f"🚫 {metric.name.upper()} ({value:.4f}) < {metric.threshold}"
+                            )
                             all_metrics_passed = False
 
                     # ╭───────────────────────────────
@@ -312,7 +357,9 @@ class MLflowExecutor(BaseExecutor):
                             input_example=input_example,
                             signature=signature,
                         )
-                        logger.info(f"✅ Modelo registrado exitosamente: {pipeline.name}-{model_type}")
+                        logger.info(
+                            f"✅ Modelo registrado exitosamente: {pipeline.name}-{model_type}"
+                        )
 
                         # ╭───────────────────────────────
                         # 🌊 Baseline de drift para observabilidad en runtime
@@ -329,44 +376,72 @@ class MLflowExecutor(BaseExecutor):
                             )
                             with tempfile.TemporaryDirectory() as tmpdir:
                                 baseline_file = save_baseline(drift_baseline, tmpdir)
-                                mlflow.log_artifact(str(baseline_file), artifact_path="observability")
+                                mlflow.log_artifact(
+                                    str(baseline_file), artifact_path="observability"
+                                )
                             logger.info(
                                 f"🌊 Baseline de drift generado sobre {len(drift_baseline['features'])} features"
                             )
                         except Exception as e:
                             # El drift es complementario: si falla, el pipeline no debe caerse.
-                            logger.warning(f"⚠️ No se pudo generar el baseline de drift: {e}")
+                            logger.warning(
+                                f"⚠️ No se pudo generar el baseline de drift: {e}"
+                            )
 
-                        if getattr(pipeline, "deploy", None) and pipeline.deploy.batch_output:
+                        if (
+                            getattr(pipeline, "deploy", None)
+                            and pipeline.deploy.batch_output
+                        ):
                             output_path = os.path.abspath(pipeline.deploy.batch_output)
                             os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                            pd.DataFrame({"prediction": preds}).to_csv(output_path, index=False)
+                            pd.DataFrame({"prediction": preds}).to_csv(
+                                output_path, index=False
+                            )
                             logger.info(f"📦 Predicciones guardadas en: {output_path}")
 
                             # 🆕 Guardar modelo local .pkl si el YAML lo define
-                            if getattr(pipeline, "deploy", None) and getattr(pipeline.deploy, "model_output", None):
-                                from godml.utils.path_utils import normalize_path, validate_safe_path
+                            if getattr(pipeline, "deploy", None) and getattr(
+                                pipeline.deploy, "model_output", None
+                            ):
+                                from godml.utils.path_utils import (
+                                    normalize_path,
+                                    validate_safe_path,
+                                )
                                 import joblib
 
                                 try:
-                                    model_output_path = normalize_path(pipeline.deploy.model_output)
+                                    model_output_path = normalize_path(
+                                        pipeline.deploy.model_output
+                                    )
                                     validate_safe_path(model_output_path)
-                                    os.makedirs(os.path.dirname(model_output_path), exist_ok=True)
+                                    os.makedirs(
+                                        os.path.dirname(model_output_path),
+                                        exist_ok=True,
+                                    )
                                     joblib.dump(model, model_output_path)
 
-                                    logger.info(f"💾 Modelo guardado en formato .pkl: {model_output_path}")
+                                    logger.info(
+                                        f"💾 Modelo guardado en formato .pkl: {model_output_path}"
+                                    )
 
                                     # El baseline viaja junto al .pkl: así el server
                                     # lo encuentra sin configuración adicional.
                                     if drift_baseline is not None:
                                         baseline_path = save_baseline(
-                                            drift_baseline, os.path.dirname(model_output_path)
+                                            drift_baseline,
+                                            os.path.dirname(model_output_path),
                                         )
-                                        logger.info(f"🌊 Baseline de drift guardado en: {baseline_path}")
+                                        logger.info(
+                                            f"🌊 Baseline de drift guardado en: {baseline_path}"
+                                        )
                                 except Exception as e:
-                                    logger.error(f"❌ No se pudo guardar el modelo .pkl: {e}")
+                                    logger.error(
+                                        f"❌ No se pudo guardar el modelo .pkl: {e}"
+                                    )
 
-                        print_pipeline_result(True, pipeline.name, metrics_dict, output_path)
+                        print_pipeline_result(
+                            True, pipeline.name, metrics_dict, output_path
+                        )
 
                         return ModelResult(
                             model=model,
@@ -378,7 +453,9 @@ class MLflowExecutor(BaseExecutor):
 
                     else:
                         print_pipeline_result(False, pipeline.name, metrics_dict, None)
-                        raise RuntimeError("Las métricas no alcanzaron los umbrales esperados.")
+                        raise RuntimeError(
+                            "Las métricas no alcanzaron los umbrales esperados."
+                        )
 
         except Exception as e:
             logger.error(str(e))
@@ -393,6 +470,7 @@ class MLflowExecutor(BaseExecutor):
 
         try:
             from godml.core_service.validators import validate_pipeline
+
             ext_warns = validate_pipeline(pipeline)
             for w in ext_warns:
                 warnings_.append(str(w))
@@ -412,11 +490,16 @@ class MLflowExecutor(BaseExecutor):
                 else:
                     try:
                         from pathlib import Path
+
                         p = Path(str(uri))
                         if not p.exists():
-                            errors.append(f"dataset.uri: archivo no encontrado -> {uri}")
+                            errors.append(
+                                f"dataset.uri: archivo no encontrado -> {uri}"
+                            )
                     except Exception as e:
-                        warnings_.append(f"No se pudo validar dataset.uri ('{uri}'): {e}")
+                        warnings_.append(
+                            f"No se pudo validar dataset.uri ('{uri}'): {e}"
+                        )
             if not target:
                 warnings_.append(
                     "dataset.target no definido. Se aplicará heurística: 'survived'/'Survived'."
@@ -433,15 +516,20 @@ class MLflowExecutor(BaseExecutor):
             else:
                 try:
                     import logging
+
                     # 🔇 Silenciamos logs temporalmente
                     previous_level = logger.level
                     logger.setLevel(logging.ERROR)
                     project_path = os.getcwd()
-                    _ = load_custom_model_class(project_path, model_type.lower(), source)
+                    _ = load_custom_model_class(
+                        project_path, model_type.lower(), source
+                    )
                     logger.setLevel(previous_level)
                 except Exception as e:
                     logger.setLevel(previous_level)
-                    errors.append(f"model: no se pudo cargar '{model_type}' desde source='{source}': {e}")
+                    errors.append(
+                        f"model: no se pudo cargar '{model_type}' desde source='{source}': {e}"
+                    )
 
         for w in warnings_:
             logger.warning(f"⚠️ {w}")

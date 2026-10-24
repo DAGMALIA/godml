@@ -3,6 +3,7 @@ import pandas as pd
 from collections import Counter
 import json
 
+
 class MetricJudge:
     def analyze(self, df: pd.DataFrame, target: str, pretty: bool = False):
         y = df[target]
@@ -17,13 +18,19 @@ class MetricJudge:
             task_type = "multiclass_classification"
 
         balance = Counter(y)
-        imbalance = max(balance.values()) / min(balance.values()) > 1.5 if len(balance) > 1 else False
+        imbalance = (
+            max(balance.values()) / min(balance.values()) > 1.5
+            if len(balance) > 1
+            else False
+        )
 
         # Reglas de métricas
         if task_type == "regression":
             metrics = ["rmse", "mae", "r2"]
         elif task_type == "binary_classification":
-            metrics = ["f1", "auc", "accuracy"] if not imbalance else ["f1", "recall", "auc"]
+            metrics = (
+                ["f1", "auc", "accuracy"] if not imbalance else ["f1", "recall", "auc"]
+            )
         else:
             metrics = ["accuracy", "macro_f1"]
 
@@ -33,11 +40,7 @@ class MetricJudge:
             "outputs": [{"name": "clean", "connector": "dataframe", "uri": None}],
         }
 
-        result = {
-            "task_type": task_type,
-            "metrics": metrics,
-            "recipe": recipe
-        }
+        result = {"task_type": task_type, "metrics": metrics, "recipe": recipe}
 
         if pretty:
             print("\n=== Metric Judge ===")
@@ -47,4 +50,3 @@ class MetricJudge:
             print(json.dumps(recipe, indent=2, ensure_ascii=False))
 
         return result
-

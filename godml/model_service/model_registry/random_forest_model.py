@@ -18,17 +18,27 @@ class RandomForestModel(BaseClassificationModel):
     """
 
     ALLOWED_PARAMS = {
-        'n_estimators', 'criterion', 'max_depth', 'min_samples_split', 'min_samples_leaf',
-        'min_weight_fraction_leaf', 'max_features', 'max_leaf_nodes', 'min_impurity_decrease',
-        'bootstrap', 'oob_score', 'n_jobs', 'random_state', 'verbose', 'warm_start',
-        'class_weight', 'ccp_alpha', 'max_samples'
+        "n_estimators",
+        "criterion",
+        "max_depth",
+        "min_samples_split",
+        "min_samples_leaf",
+        "min_weight_fraction_leaf",
+        "max_features",
+        "max_leaf_nodes",
+        "min_impurity_decrease",
+        "bootstrap",
+        "oob_score",
+        "n_jobs",
+        "random_state",
+        "verbose",
+        "warm_start",
+        "class_weight",
+        "ccp_alpha",
+        "max_samples",
     }
 
-    DEFAULTS = {
-        'random_state': 42,
-        'min_samples_leaf': 1,
-        'max_features': 'sqrt'
-    }
+    DEFAULTS = {"random_state": 42, "min_samples_leaf": 1, "max_features": "sqrt"}
 
     def __init__(self):
         self.model: RandomForestClassifier = None
@@ -39,7 +49,7 @@ class RandomForestModel(BaseClassificationModel):
         y_train: np.ndarray,
         X_test: pd.DataFrame,
         y_test: np.ndarray,
-        params: Dict
+        params: Dict,
     ) -> Tuple[ClassifierMixin, np.ndarray, Dict[str, float]]:
         """
         Entrena un RandomForestClassifier y devuelve el modelo, predicciones y métricas.

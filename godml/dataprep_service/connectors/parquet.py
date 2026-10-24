@@ -2,6 +2,7 @@ import importlib
 import pandas as pd
 from .base import BaseConnector
 
+
 class ParquetConnector(BaseConnector):
     def _ensure_pyarrow(self):
         if importlib.util.find_spec("pyarrow") is None:
