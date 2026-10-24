@@ -174,24 +174,13 @@ addopts = "-v --tb=short -p no:warnings"
 
 [tool.coverage.run]
 source = ["godml"]
+# Real coverage: only tests and generated code are excluded. Do not add
+# modules here to hide them; raise fail_under per phase instead (F0-10).
 omit = [
   "*/tests/*",
-  "*/examples/*",
   "*/__pycache__/*",
-  "*/templates/*",
-  # CLI requires subprocess integration tests
-  "godml/cli/*",
-  "godml/godml_cli.py",
-  # Deploy service requires Docker + FastAPI server
-  "godml/deploy_service/*",
-  # External cloud providers — require live AWS/SageMaker credentials
-  "godml/providers/sagemaker/*",
-  "godml/providers/sagemaker/scripts/*",
-  "godml/dataprep_service/connectors/s3.py",
-  # LSTM requires TensorFlow installation + GPU/CPU warmup
-  "godml/model_service/model_registry/lstm_forecast_model.py",
-  # build_doc_index is a one-shot setup script
-  "godml/build_doc_index.py",
+  # Scaffold copied verbatim into user projects by `godml init`/`godml deploy`
+  "godml/templates/*",
 ]
 
 [tool.coverage.report]
@@ -199,7 +188,6 @@ exclude_lines = [
   "pragma: no cover",
   "if __name__ == .__main__.:",
   "raise NotImplementedError",
-  "except ImportError",
 ]
 show_missing = true
-fail_under = 54
+fail_under = 48  # real coverage at F0-10 (48.4 %); raise per phase
