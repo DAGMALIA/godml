@@ -170,7 +170,15 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --tb=short -p no:warnings"
+addopts = "-v --tb=short"
+# Third-party warnings stay visible in the summary. Deprecations raised from
+# godml's own modules fail the test (F0-11).
+filterwarnings = [
+  'error::DeprecationWarning:godml(\..*)?',
+  'error::PendingDeprecationWarning:godml(\..*)?',
+  # Known: FastAPI on_event in the 1.x server; replaced by lifespan in F5-03.
+  'ignore:\s*on_event is deprecated:DeprecationWarning:godml\.deploy_service\.server',
+]
 
 [tool.coverage.run]
 source = ["godml"]

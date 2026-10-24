@@ -127,7 +127,7 @@ class MLflowExecutor(BaseExecutor):
                     try:
                         df_out[col] = df_out[col].astype("category").cat.codes
                     except Exception:
-                        df_out.drop(columns=[col], inplace=True)
+                        df_out = df_out.drop(columns=[col])
                 elif str(df_out[col].dtype).startswith("category"):
                     df_out[col] = df_out[col].cat.codes
             return df_out

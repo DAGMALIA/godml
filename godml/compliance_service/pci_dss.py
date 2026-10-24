@@ -84,7 +84,7 @@ class PciDssCompliance(BaseCompliance):
 
         # Ejecuta drops al final para evitar conflictos
         if columns_to_drop:
-            df.drop(columns=columns_to_drop, inplace=True, errors="ignore")
+            df = df.drop(columns=columns_to_drop, errors="ignore")
             print(f"🧹 [PCI-DSS] Columnas eliminadas por política: {columns_to_drop}")
 
         return df
