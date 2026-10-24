@@ -47,7 +47,7 @@ Reports are attached as pipeline artifacts under the job:
 
 ## 🧾 Known Vulnerabilities & Accepted Risks
 
-As of **v1.0.0**, GODML uses `mlflow==3.4.0`, which has 8 reported vulnerabilities without available fixes.
+The pinned lockfile (`requirements.lock`) uses `mlflow==3.4.0`, which has 8 reported vulnerabilities without available fixes.
 
 **Justification and mitigation:**
 - Vulnerabilities have **no known exploit path** within GODML’s runtime context.

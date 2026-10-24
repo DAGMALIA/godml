@@ -2,6 +2,7 @@
 
 import os
 import logging
+from godml import __version__
 from godml.config_service.loader import load_config
 from godml.core_service.executors import get_executor
 from godml.monitoring_service.logger import godml_logger, PipelineError, ConfigurationError
@@ -16,7 +17,7 @@ def display_pipeline_summary(info, metrics):
     """Salida final del pipeline GODML sin Rich, usando el logger limpio."""
     godml_logger.info("\n╭─────────────────────────── GODML ────────────────────────────╮")
     godml_logger.info("│ 🤖 GODML PIPELINE EXECUTION                                  │")
-    godml_logger.info("│ Governed, Observable & Declarative Machine Learning (v1.0.2) │")
+    godml_logger.info(f"│ Governed, Observable & Declarative Machine Learning (v{__version__}) │")
     godml_logger.info("╰─────────────────────── Dagmalia Labs ────────────────────────╯")
 
     godml_logger.info("\n📄 YAML Configuration")
@@ -63,7 +64,7 @@ def run_pipeline(config_path="godml.yml"):
     try:
         godml_logger.info("\n╭─────────────────────────── GODML ────────────────────────────╮")
         godml_logger.info("│ 🚀 STARTING PIPELINE EXECUTION                              │")
-        godml_logger.info("│ Governed, Observable & Declarative Machine Learning (v1.0.2) │")
+        godml_logger.info(f"│ Governed, Observable & Declarative Machine Learning (v{__version__}) │")
         godml_logger.info("╰─────────────────────── Dagmalia Labs ────────────────────────╯")
 
         godml_logger.info(f"\n📄 Usando archivo de configuración: {config_path}")

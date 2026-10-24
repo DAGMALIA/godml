@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 import os
 import warnings
+from importlib.metadata import PackageNotFoundError, version as _pkg_version
 
 # 🔇 Suprime logs de TensorFlow antes de importarlo
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -11,7 +12,10 @@ warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-__version__ = "1.3.0"
+try:
+    __version__ = _pkg_version("godml")
+except PackageNotFoundError:  # source tree without an install
+    __version__ = "0.0.0+unknown"
 
 __all__ = [
     "GodmlNotebook",

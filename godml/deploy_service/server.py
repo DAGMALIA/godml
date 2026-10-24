@@ -41,7 +41,7 @@ IS_DEV = ENVIRONMENT in ("dev", "qa")
 # ==========================================================
 app = FastAPI(
     title=f"GODML Model API ({ENVIRONMENT})",
-    version="1.1.0",
+    version=__version__,
     description="Microservicio de inferencia robusto para GODML",
 )
 
@@ -198,7 +198,7 @@ def version():
         # casi todos. Se conserva la variable como override para builds que
         # quieran marcar algo distinto, pero el fallback ahora es la versión real.
         "godml_version": os.getenv("GODML_VERSION") or __version__,
-        "service_version": "1.1.0",
+        "service_version": __version__,
         "environment": ENVIRONMENT,
     }
 

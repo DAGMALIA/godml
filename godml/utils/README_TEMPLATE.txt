@@ -300,4 +300,4 @@ http://127.0.0.1:8000/docs
 © 2025 **godmlcore** — Arquitectura GODML
 Creado por [Arturo Gutiérrez Rubio R.](mailto:agtzrubio@dagmalia.com)
 
-                      Generado con ❤️ por **GODML Framework v1.0.0**
+                      Generado con ❤️ por **GODML Framework v{godml_version}**

@@ -229,7 +229,7 @@ cosign verify-blob \
 slsa-verifier verify-artifact dist/godml-*.whl \
   --provenance-path provenance.intoto.jsonl \
   --source-uri github.com/DAGMALIA/godml \
-  --source-tag v1.1.0
+  --source-tag v<version>   # tag of the release you downloaded
 ```
 
 ### CI security controls

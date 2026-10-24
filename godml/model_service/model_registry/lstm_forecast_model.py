@@ -14,7 +14,6 @@ from godml.model_service.base_model_interface import BaseRegressionModel
 
 class LstmForecastModel(BaseRegressionModel):
     """
-    GODML | v1.0.2-R4
     🎯 Versión gobernada: prioriza configuración YAML, con fallback inteligente solo ante errores.
     """
 

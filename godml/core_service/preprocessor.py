@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class ComplianceEngine:
     """
-    Motor centralizado de cumplimiento normativo (v1.0.2+)
+    Motor centralizado de cumplimiento normativo
     - Aplica PCI-DSS u otras normas definidas.
     - Respeta la política ('mask_sensitive', 'hash_sensitive', 'drop_sensitive').
     - Emite eventos OpenLineage para trazabilidad.

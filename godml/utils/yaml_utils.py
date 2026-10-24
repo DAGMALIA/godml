@@ -32,7 +32,9 @@ def generate_readme_md(project_name: str) -> str:
     try:
         template_path = files("godml.utils").joinpath("README_TEMPLATE.txt")
         template = template_path.read_text(encoding="utf-8")
-        return template.format(project_name=project_name)
+        from godml import __version__
+
+        return template.format(project_name=project_name, godml_version=__version__)
     except Exception as e:
         raise RuntimeError(f"Error generando README para {project_name}: {e}")
 
