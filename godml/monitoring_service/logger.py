@@ -41,6 +41,7 @@ class PredictionError(GodMLError):
 # CONFIGURACIÓN DE LOGGING
 # ============================================================================
 def setup_clean_logging():
+    """Quiet third-party output. Process-wide: call only from the CLI."""
     warnings.filterwarnings("ignore", category=UserWarning)
     warnings.filterwarnings("ignore", category=FutureWarning)
     warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -93,25 +94,49 @@ class CleanFormatter(logging.Formatter):
 # ============================================================================
 # LOGGER PRINCIPAL
 # ============================================================================
-def get_logger(name: str = "GODML", log_to_file: bool = True) -> logging.Logger:
-    setup_clean_logging()
+def get_logger(name: str = "GODML", log_to_file: bool = False) -> logging.Logger:
+    """Library logger: only a NullHandler, no output config (F1-12).
 
+    Applications decide where logs go (`logging.basicConfig(...)`); the godml
+    CLI does it with `configure_cli_logging()`. `log_to_file` is kept for
+    backwards compatibility and ignored.
+    """
     logger = logging.getLogger(name)
-    if logger.handlers:
-        return logger
+    if not any(isinstance(h, logging.NullHandler) for h in logger.handlers):
+        logger.addHandler(logging.NullHandler())
+    return logger
 
+
+def configure_cli_logging(
+    log_dir: str | os.PathLike | None = None, log_to_file: bool = True
+) -> logging.Logger:
+    """Console (and file) output for the godml CLI. Idempotent.
+
+    Writes to `<log_dir>/godml.log`, `./logs/godml.log` by default.
+    """
+    setup_clean_logging()
+    logger = get_logger()
     logger.setLevel(logging.INFO)
+    logger.propagate = False
+
+    for handler in [h for h in logger.handlers if getattr(h, "_godml_cli", False)]:
+        logger.removeHandler(handler)
+        handler.close()
 
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(CleanFormatter())
-    logger.addHandler(console_handler)
+    handlers: list[logging.Handler] = [console_handler]
 
     if log_to_file:
-        log_dir = os.path.join(os.getcwd(), "logs")
-        os.makedirs(log_dir, exist_ok=True)
-        log_path = os.path.join(log_dir, "godml.log")
+        target_dir = (
+            os.fspath(log_dir) if log_dir else os.path.join(os.getcwd(), "logs")
+        )
+        os.makedirs(target_dir, exist_ok=True)
         file_handler = RotatingFileHandler(
-            log_path, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
+            os.path.join(target_dir, "godml.log"),
+            maxBytes=10 * 1024 * 1024,
+            backupCount=5,
+            encoding="utf-8",
         )
         file_handler.setFormatter(
             logging.Formatter(
@@ -119,9 +144,11 @@ def get_logger(name: str = "GODML", log_to_file: bool = True) -> logging.Logger:
                 datefmt="%Y-%m-%d %H:%M:%S",
             )
         )
-        logger.addHandler(file_handler)
+        handlers.append(file_handler)
 
-    logger.propagate = False
+    for handler in handlers:
+        handler._godml_cli = True  # type: ignore[attr-defined]
+        logger.addHandler(handler)
     return logger
 
 

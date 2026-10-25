@@ -1,16 +1,8 @@
 # Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
 # SPDX-License-Identifier: MIT
-import os
-import warnings
+# Importing godml has no side effects (F1-12): no env vars, warning filters
+# or logging setup. The CLI configures its own output (godml_cli.main).
 from importlib.metadata import PackageNotFoundError, version as _pkg_version
-
-# 🔇 Suprime logs de TensorFlow antes de importarlo
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-
-warnings.filterwarnings("ignore", category=UserWarning)
-warnings.filterwarnings("ignore", category=FutureWarning)
-warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 try:
     __version__ = _pkg_version("godml")

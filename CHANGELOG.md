@@ -28,6 +28,11 @@ the run. Review these before upgrading (details in the sections below):
   SageMaker without the `compliance` key.
 - **MLflow runs from 1.x may contain the raw dataset** under the `dataset/`
   artifact path. Review and delete those artifacts if they hold personal data.
+- **Library logging is silent by default.** Outside the CLI (notebooks,
+  scripts), godml no longer prints its own log lines or writes
+  `logs/godml.log`. To see them, configure logging in your application, e.g.
+  `logging.basicConfig(level=logging.INFO)`. The `godml` CLI output is
+  unchanged.
 
 ### Security
 
@@ -92,6 +97,13 @@ the run. Review these before upgrading (details in the sections below):
   absolute POSIX paths absolute and decodes `%20`-style escapes (before,
   `file:///home/u/mlruns` became the cwd-relative `home/u/mlruns`), and logs
   the conversion.
+- Importing godml no longer changes the host process: no global warning
+  filters, no TensorFlow env vars (`TF_CPP_MIN_LOG_LEVEL`,
+  `TF_ENABLE_ONEDNN_OPTS`), no root or third-party logger configuration, no
+  `logs/` directory, and TensorFlow/LightGBM are no longer imported just to
+  detect model types. Library loggers only have a `NullHandler`; the CLI
+  configures output (`configure_cli_logging`) and sets the TensorFlow env
+  vars as defaults.
 
 ### Changed
 
