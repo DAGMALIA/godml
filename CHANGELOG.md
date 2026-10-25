@@ -39,6 +39,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   deploy without `deploy.batch_output` stop the run with `ValidationError`.
   The MLflow executor used to swallow that error (`except Exception: pass`).
 
+- SageMaker: compliance never ran. The preprocessing script called a
+  non-existent API, ignored the policy and turned any failure into a warning;
+  and the stock sklearn processing image does not include godml, so the
+  compliance step was always skipped and training received unprocessed data.
+  `provider: sagemaker` with `governance.compliance` is now rejected at
+  validation, before any AWS job is created, and the script itself aborts if
+  compliance cannot be applied.
+
+  **Action required if you use SageMaker with compliance:** apply compliance
+  before uploading the data to S3 (for example with `godml dataprep`) and
+  remove `governance.compliance` from that pipeline, or use
+  `provider: mlflow`. Review data already used in SageMaker training jobs.
+
 ### Fixed
 
 - pandas 3 support in the MLflow executor: text columns are now inferred as

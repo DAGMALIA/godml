@@ -50,3 +50,16 @@ def test_batch_without_output_blocks(valid_config):
     valid_config["deploy"] = {"realtime": False, "batch_output": None}
     with pytest.raises(ValidationError, match="batch_output"):
         validate(valid_config)
+
+
+def test_sagemaker_rejects_compliance_before_launching(minimal_pipeline_config):
+    """F1-04: the stock SageMaker image has no godml, so compliance cannot run
+    inside the job; reject it before any (billed) AWS job is created."""
+    from godml.providers.sagemaker.executor import SageMakerExecutor
+
+    config = dict(minimal_pipeline_config)
+    config["provider"] = "sagemaker"
+    config["dataset"] = {"uri": "s3://bucket/data.csv", "hash": "auto", "target": "y"}
+    config["governance"] = {"owner": "test@company.com", "compliance": "pci-dss"}
+    with pytest.raises(ValueError, match="governance.compliance"):
+        SageMakerExecutor().validate(PipelineDefinition(**config))

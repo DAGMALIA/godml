@@ -37,6 +37,20 @@ class SageMakerExecutor(BaseExecutor):
     """
 
     def validate(self, pipeline: PipelineDefinition) -> None:
+        # Fail-closed (F1-04), checked before anything AWS-related: the stock
+        # sklearn processing image does not ship godml, so compliance cannot
+        # run inside the job. Earlier versions skipped it silently and trained
+        # on unprocessed data.
+        compliance = getattr(pipeline.governance, "compliance", None)
+        if compliance:
+            raise ValueError(
+                f"governance.compliance ('{compliance}') is not supported with "
+                "provider: sagemaker yet: the processing image does not include "
+                "godml, so compliance cannot be applied inside the job. Apply it "
+                "before uploading the data to S3 (godml dataprep), or use "
+                "provider: mlflow."
+            )
+
         _require_aws()
         errors: list[str] = []
 
