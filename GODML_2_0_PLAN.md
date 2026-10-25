@@ -219,19 +219,21 @@ Cada fix lleva primero un test que reproduce el bug.
 - **F1-02** ✅ No subir el dataset crudo a MLflow; registrar solo hash y esquema (o el dataset ya cumplido si se pide explícitamente) → *test: el artefacto de MLflow no contiene columnas PII*
 - **F1-03** ✅ Quitar `except Exception: pass` en `MLflowExecutor.validate`; los `ValidationError` críticos se propagan
 - **F1-04** ✅ SageMaker `preprocess.py`: corregir `ComplianceRegistry.get` → `get_compliance` y la firma de `apply`; fallar si compliance no puede aplicarse
-- **F1-05** ⬜ Verificar `dataset.hash` en `godml run` cuando está fijado; error si no coincide
+- **F1-05** 🟨 Verificar `dataset.hash` en `godml run` cuando está fijado; error si no coincide. Con `provider: sagemaker` y hash fijado, emitir un warning explícito de que el hash no se verifica para datos en S3; documentarlo en "Upgrading from 1.3.x"
 - **F1-06** ⬜ Hash de PII con HMAC-SHA256 y llave desde `GODML_PII_KEY` (error en prod si falta)
 - **F1-07** ⬜ Detector de PII: heurística por nombre a nivel token (no substring), excluir la columna target, endurecer patrones de contenido (cvv, zip, coordenadas) → *tests con columnas `zip_code`, `hotel_id`, `plate`, `year`, `fare`*
 - **F1-08** ⬜ Deploy: mapeo de puertos `{port}:8000` o CMD que lea `$PORT`; `serve` sin `reload` fuera de dev
 - **F1-09** ⬜ `resolver.py`: recursión en listas de dicts e interpolación parcial (`"prefix-${X}"`)
 - **F1-10** ⬜ Umbrales con dirección: métricas tipo pérdida (`mse`, `rmse`, `mae`, `log_loss`) se evalúan con `<=`
 - **F1-11** ⬜ Server: reordenar features por `feature_names_in_` / `feature_names`; devolver `predict_proba` cuando exista
-- **F1-12** ⬜ `import godml` sin efectos colaterales: quitar filtros globales de warnings, creación de `logs/` al importar y `logging.basicConfig`
+- **F1-12** ⬜ `import godml` sin efectos colaterales: quitar filtros globales de warnings, creación de `logs/` al importar y `logging.basicConfig`; no modificar `os.environ` al importar godml (variables de TensorFlow); `get_logger()` sin handlers propios (`NullHandler`): solo la CLI configura la salida
 - **F1-13** ⬜ Corregir `_is_safe_absolute_path` y `validate_model_path` con `Path.is_relative_to`
 - **F1-14** ⬜ README honesto: quitar GDPR/HIPAA/SOX, corregir ejemplos de notebook/advisor/tune, agregar `target` al quick start y a `godml init`; corregir `godml/utils/README_TEMPLATE.txt` (no imponer badge MIT a proyectos de usuarios, Python 3.11+); corregir nombres de assets en la sección de verificación del README (`multiple.intoto.jsonl`, `sbom.cyclonedx.json`)
 - **F1-15** ⬜ Publicar 1.4.0 con CHANGELOG; las notas de 1.4.0 abren con "Upgrading from 1.3.x": compliance no soportado aborta, validaciones de gobernanza ahora bloquean, y cómo revisar/borrar datasets crudos en runs de MLflow 1.x; documentar también que SageMaker nunca aplicó compliance, que ahora se rechaza al validar, y el workaround: aplicar compliance localmente, subir los datos ya procesados a S3 y ejecutar SageMaker sin la clave `compliance`, hasta la imagen oficial de 2.0
 - **F1-16** ✅ Helper único `is_text_like(dtype)` para detectar columnas de texto (object y str de pandas 3); usarlo en providers/mlflow.py, sagemaker preprocess.py y advisor_orchestrator.py
 - **F1-17** ✅ MLflowExecutor: al convertir MLFLOW_TRACKING_URI file: → sqlite:, crear el directorio padre y registrar la conversión en log
+- **F1-18** ⬜ `sagemaker/scripts/evaluate.py`: mover la lógica de nivel módulo a `main()` bajo `if __name__ == '__main__':` (regla de tests herméticos); corregir el filtro anti path-traversal del tarball con `Path.resolve()` + `is_relative_to` (hoy `startswith` deja pasar rutas hermanas como `model2/`)
+- **F1-19** ⬜ (después de F1-12) Fixture de sesión que falle la suite si algún test crea archivos fuera de `tmp_path`
 
 ### F2 — Arquitectura 2.0 (2.0.0a1)
 
@@ -250,7 +252,7 @@ Cada fix lleva primero un test que reproduce el bug.
 
 - **F3-01** ⬜ Motor de políticas con gates `pre-train`, `post-train`, `pre-deploy`; resultado estructurado (pass/fail/waived + razón)
 - **F3-02** ⬜ Política PCI-DSS migrada al motor; arquitectura lista para nuevas políticas (sin anunciar GDPR/HIPAA hasta implementarlas)
-- **F3-03** ⬜ Verificación de datos: sha256, esquema esperado y conteo mínimo de filas
+- **F3-03** ⬜ Verificación de datos: sha256, esquema esperado y conteo mínimo de filas; verificar el hash de datos en S3 (checksum SHA-256 de S3 o descarga). En 2.0 un hash declarado que no puede verificarse es error
 - **F3-04** ⬜ Reglas por entorno: en `prod`, hash fijo, owner y aprobación obligatorios
 - **F3-05** ⬜ `godml validate <dir>` sobre repo central completo, con salida para CI (JUnit/SARIF)
 - **F3-06** ⬜ Reporte de gobernanza por run (JSON + Markdown) adjunto al bundle
