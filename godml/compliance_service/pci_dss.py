@@ -5,7 +5,8 @@ import pandas as pd
 from .base_compliance import BaseCompliance
 from .pii_detector import PiiDetector
 from .compliance_utils import (
-    hash_truncated,
+    hmac_truncated,
+    pii_hash_key,
     mask_string,
     mask_email,
     mask_zip_code,
@@ -21,7 +22,7 @@ class PciDssCompliance(BaseCompliance):
       - Aplica política configurable:
           * 'drop_sensitive'  -> elimina columnas PII
           * 'mask_sensitive'  -> enmascara (emails, zip, fechas) o mascara genérica
-          * 'hash_sensitive'  -> hashing irreversible (sha256 truncado por defecto)
+          * 'hash_sensitive'  -> HMAC-SHA256 truncado con la llave GODML_PII_KEY
     """
 
     def __init__(self, policy: str = "mask_sensitive", hash_len: int = 12):
@@ -41,7 +42,9 @@ class PciDssCompliance(BaseCompliance):
         return series.apply(lambda v: mask_string(str(v), num_prefix=2))
 
     def _hash_col(self, series: pd.Series) -> pd.Series:
-        return series.apply(lambda v: hash_truncated(v, self.hash_len))
+        # F1-06: keyed HMAC; a plain SHA-256 of PII can be reversed by brute force.
+        key = pii_hash_key()
+        return series.apply(lambda v: hmac_truncated(v, key, self.hash_len))
 
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
         if df is None or df.empty:

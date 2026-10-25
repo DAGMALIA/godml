@@ -28,6 +28,11 @@ the run. Review these before upgrading (details in the sections below):
   SageMaker without the `compliance` key.
 - **MLflow runs from 1.x may contain the raw dataset** under the `dataset/`
   artifact path. Review and delete those artifacts if they hold personal data.
+- **`hash_sensitive` now uses HMAC-SHA256 keyed by `GODML_PII_KEY`.** Hashed
+  values differ from 1.x: retrain models that use hashed columns as features
+  and re-hash any stored lookups. With `GODML_ENV=prod` the key is mandatory
+  (the run stops without it); elsewhere a public dev key is used with a
+  warning, which does not protect real data.
 - **Library logging is silent by default.** Outside the CLI (notebooks,
   scripts), godml no longer prints its own log lines or writes
   `logs/godml.log`. To see them, configure logging in your application, e.g.
@@ -101,6 +106,12 @@ the run. Review these before upgrading (details in the sections below):
   each call instead of once at import. Projects generated with
   `godml deploy` before 1.4.0 keep the old template: regenerate
   `deploy_service/` to get the fix.
+
+- PII hashing (`hash_sensitive` and the unknown-policy fallback) used an
+  unkeyed SHA-256 truncated to 12 hex chars, which can be reversed by brute
+  force or a dictionary for card numbers and emails. It is now an
+  HMAC-SHA256 keyed by `GODML_PII_KEY`; missing key with `GODML_ENV=prod`
+  raises `ComplianceError`.
 
 ### Fixed
 

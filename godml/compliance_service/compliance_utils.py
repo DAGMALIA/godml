@@ -1,4 +1,46 @@
 import hashlib
+import hmac
+import logging
+import os
+
+from godml.compliance_service.errors import ComplianceError
+
+logger = logging.getLogger("godml.compliance")
+
+# F1-06: public, insecure key used only outside prod when GODML_PII_KEY is
+# unset, so hashed features stay stable between training and serving in dev.
+DEV_PII_KEY = "godml-dev-insecure-pii-key"
+_PROD_ENVS = {"prod", "production"}
+_warned_dev_key = False
+
+
+def pii_hash_key() -> str:
+    """Secret for PII hashing: GODML_PII_KEY; mandatory when GODML_ENV is prod."""
+    global _warned_dev_key
+    key = os.environ.get("GODML_PII_KEY", "").strip()
+    if key:
+        return key
+    if os.environ.get("GODML_ENV", "dev").strip().lower() in _PROD_ENVS:
+        raise ComplianceError(
+            "GODML_PII_KEY is required in prod to hash PII (hash_sensitive "
+            "policy). Set it to a secret value; refusing to continue."
+        )
+    if not _warned_dev_key:
+        logger.warning(
+            "GODML_PII_KEY is not set: hashing PII with the public dev key. "
+            "These hashes are NOT protected; set GODML_PII_KEY for real data "
+            "(it is mandatory with GODML_ENV=prod)."
+        )
+        _warned_dev_key = True
+    return DEV_PII_KEY
+
+
+def hmac_truncated(value, key: str, length: int = 12) -> str:
+    """HMAC-SHA256 of `value`, truncated to `length` hex chars ('' for None)."""
+    if value is None:
+        return ""
+    digest = hmac.new(key.encode("utf-8"), str(value).encode("utf-8"), hashlib.sha256)
+    return digest.hexdigest()[: max(1, int(length))]
 
 
 def hash_sha256(value) -> str:
