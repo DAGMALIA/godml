@@ -165,8 +165,10 @@ def predict(input_data: InputData, request: Request):
             raise HTTPException(status_code=400, detail="Datos de entrada vacíos")
 
         df = pd.DataFrame([input_data.data])
-        godml_logger.info("📥 Input recibido:")
-        godml_logger.info(str(df))
+        # F1-21: never log feature values (they may be PII); shape and columns only.
+        godml_logger.info(
+            f"📥 Input recibido: {df.shape[0]}x{df.shape[1]} columnas={list(df.columns)}"
+        )
 
         # F1-11: JSON key order is arbitrary; use the training column order.
         try:

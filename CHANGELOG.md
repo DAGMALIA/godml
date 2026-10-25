@@ -137,6 +137,11 @@ the run. Review these before upgrading (details in the sections below):
   patterns need a confirming column name, expiration dates need a `/`, and
   the target column is excluded (`exclude_columns`).
 
+- The scaffold inference server (`godml deploy` template) logged every
+  request's feature values, so PII reached the service logs. It now logs only
+  the shape and column names. Projects generated before 1.4.0 keep the old
+  template: regenerate `deploy_service/`.
+
 ### Fixed
 
 - pandas 3 support in the MLflow executor: text columns are now inferred as
