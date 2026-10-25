@@ -57,6 +57,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - pandas 3 support in the MLflow executor: text columns are now inferred as
   `str` (not `object`), so the post-compliance sanitizer left them unencoded
   and XGBoost rejected the training data. Text detection now covers both.
+- `MLFLOW_TRACKING_URI=file:...`: the executor maps it to a SQLite store
+  (`<dir>/mlflow.db`, since MLflow 3 dropped the file store). It now creates
+  the directory (it failed with `OperationalError` when missing), keeps
+  absolute POSIX paths absolute and decodes `%20`-style escapes (before,
+  `file:///home/u/mlruns` became the cwd-relative `home/u/mlruns`), and logs
+  the conversion.
 
 ### Changed
 

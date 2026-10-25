@@ -3,6 +3,9 @@
 
 import os
 import tempfile
+import urllib.parse
+import urllib.request
+from pathlib import Path
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from godml.core_service.engine import BaseExecutor
@@ -28,6 +31,24 @@ from godml.monitoring_service.observability import build_baseline, save_baseline
 logger = get_logger()
 
 
+def _file_uri_to_sqlite(uri: str) -> str:
+    """MLflow 3.x dropped the file store: map file:<dir> to sqlite:///<dir>/mlflow.db.
+
+    F1-17: creates <dir> (sqlite cannot create it) and keeps absolute POSIX
+    paths absolute (the old string slicing dropped their leading "/").
+    """
+    local_dir = Path(
+        normalize_path(urllib.request.url2pathname(urllib.parse.urlparse(uri).path))
+    )
+    local_dir.mkdir(parents=True, exist_ok=True)
+    sqlite_uri = f"sqlite:///{(local_dir / 'mlflow.db').as_posix()}"
+    logger.info(
+        f"MLFLOW_TRACKING_URI {uri} is a file store, which MLflow 3 no longer "
+        f"supports; using {sqlite_uri}"
+    )
+    return sqlite_uri
+
+
 def _dataset_metadata(source_path: str, df: pd.DataFrame) -> dict:
     """Hash of the source file and schema of the training data; no rows (F1-02)."""
     return {
@@ -47,9 +68,7 @@ class MLflowExecutor(BaseExecutor):
         tracking_uri = tracking_uri or os.environ.get("MLFLOW_TRACKING_URI")
         if tracking_uri:
             if tracking_uri.startswith("file:/"):
-                # MLflow 3.x dropped file-store support; redirect to sqlite
-                local_path = tracking_uri.replace("file:/", "", 1).lstrip("/")
-                tracking_uri = f"sqlite:///{normalize_path(local_path)}/mlflow.db"
+                tracking_uri = _file_uri_to_sqlite(tracking_uri)
             mlflow.set_tracking_uri(tracking_uri)
         else:
             # MLflow 3.x requires a database backend; default to local SQLite
