@@ -8,7 +8,7 @@ from godml.config_service.schema import Governance
 from .recipe_executor import validate_recipe, preview_recipe, run_recipe
 
 app = typer.Typer(
-    help="🧩 GODML DataPrep CLI — ejecución y cumplimiento de recetas de datos"
+    help="GODML DataPrep CLI: ejecución y cumplimiento de recetas de datos"
 )
 
 # ---------------------------

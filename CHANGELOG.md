@@ -175,6 +175,10 @@ the run. Review these before upgrading (details in the sections below):
   the Booster's features, and an extra key broke the request. A missing
   feature is a 400. `/predict` also returns `probabilities` when the model
   has `predict_proba` (the `prediction` field is unchanged).
+- `godml --help` (and any CLI output) no longer crashes with
+  `UnicodeEncodeError` when the terminal or redirected output is not UTF-8
+  (Windows cp1252 consoles, CI logs): characters the stream cannot encode are
+  printed as `?`. The emoji in the `dataprep` help text was removed.
 
 ### Changed
 
