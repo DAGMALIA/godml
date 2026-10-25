@@ -192,6 +192,10 @@ the run. Review these before upgrading (details in the sections below):
   the model logger never passed `skops_trusted_types`, and the allowlist only
   covered XGBoost, so `sklearn.tree._tree.Tree` was rejected. All sklearn-API
   models now go through the same path with a reviewed allowlist.
+- `godml[aws]` allowed SageMaker Python SDK v3, which removed the
+  `sagemaker.workflow`, `sagemaker.processing` and `sagemaker.image_uris`
+  modules the SageMaker executor uses, so a fresh install had a broken
+  executor. The extra now requires `sagemaker>=2.200,<3`.
 
 ### Changed
 

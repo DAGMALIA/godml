@@ -101,7 +101,9 @@ api = [
 # AWS / SageMaker support
 aws = [
   "boto3>=1.34.0,<2",
-  "sagemaker>=2.200.0,<4",
+  # SDK v3 removed sagemaker.workflow / processing / image_uris used by the
+  # executor (F1-23); porting to v3 is F4-07.
+  "sagemaker>=2.200.0,<3",
 ]
 
 # pip install godml[deep]
