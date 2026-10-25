@@ -70,7 +70,11 @@ def generate_default_yaml(project_name: str) -> str:
             name=project_name,
             version="1.0.0",
             provider="mlflow",
-            dataset=DatasetConfig(uri="./data/your_dataset.csv", hash="auto"),
+            # F1-14: without a target the run fell back to a 'survived'/'target'
+            # heuristic; the placeholder must be edited to the real column.
+            dataset=DatasetConfig(
+                uri="./data/your_dataset.csv", hash="auto", target="target"
+            ),
             model=ModelConfig(
                 type="xgboost",
                 source="core",

@@ -4,7 +4,6 @@
   <img src="https://github.com/DAGMALIA/godml/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI">
   <img src="https://github.com/DAGMALIA/godml/actions/workflows/safety_scan.yml/badge.svg?branch=main" alt="Supply Chain">
   <img src="https://img.shields.io/badge/SLSA-Level%203-green?logo=slsa&logoColor=white" alt="SLSA L3">
-  <img src="https://img.shields.io/badge/Sigstore-Verified-blueviolet?logo=sigstore&logoColor=white" alt="Sigstore">
   <img src="https://api.securityscorecards.dev/projects/github.com/DAGMALIA/godml/badge" alt="OpenSSF Scorecard">
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT">
 </p>
@@ -12,7 +11,7 @@
 <h1 align="center">GODML</h1>
 <p align="center"><strong>Governed, Observable & Declarative Machine Learning Framework</strong></p>
 <p align="center">
-  Production-grade MLOps for teams that need traceability, compliance, and a verified supply chain — without the infrastructure overhead.
+  Declarative ML pipelines with fail-closed PCI-DSS compliance, MLflow tracking and a verified release supply chain.
 </p>
 
 ---
@@ -22,50 +21,50 @@
 ```bash
 pip install godml
 godml init my-project
+cd my-project
+# 1. Put your CSV at data/your_dataset.csv
+# 2. In godml.yml, set dataset.target to the column you want to predict
 godml run -f godml.yml
 ```
 
-That's it. No cloud account required for local training.
+No cloud account is required for local training (MLflow runs locally).
 
 ---
 
 ## What is GODML?
 
-GODML is a Python framework that wraps the full ML lifecycle — data prep, training, evaluation, monitoring, and deployment — behind a single declarative YAML config. Every run produces a signed, auditable artifact trail.
+GODML drives the ML lifecycle — data prep, compliance, training, evaluation,
+registration and serving — from one declarative YAML file.
 
 ```
-Raw data → Compliance check → Train → Evaluate → Registry → Deploy → Monitor
-               (PII/GDPR)    (XGB/RF/LR)  (cross-val)  (MLflow)  (Docker)  (drift)
+Data → PCI-DSS compliance → Train → Evaluate → MLflow registry → Serve → Monitor
+       (mask/hash/drop PII)  (XGB/RF/LR)  (thresholds)          (FastAPI) (Prometheus, PSI drift)
 ```
 
-### Why GODML over plain sklearn + MLflow?
+Governance is **fail-closed**: if compliance is requested and cannot be
+applied, a pinned dataset hash does not match, or a governance check fails,
+the run stops instead of continuing with unprocessed data.
 
 | Problem | Without GODML | With GODML |
 |---------|--------------|------------|
-| Reproducibility | Manual notebooks | Declarative YAML, locked hashes |
-| Compliance | Ad-hoc checks | Built-in PCI-DSS, GDPR, HIPAA |
-| Supply chain | No SBOM | SLSA L3 provenance + signed SBOM |
-| Audit trail | Scattered logs | Unified lineage per run |
-| Multi-model | Custom glue code | Registry + `notebook_api` |
+| Reproducibility | Manual notebooks | Declarative YAML, verified dataset hash |
+| Compliance | Ad-hoc checks | Built-in PCI-DSS (mask / HMAC hash / drop) |
+| Supply chain | No SBOM | SLSA L3 provenance + SBOM on every release |
+| Audit trail | Scattered logs | MLflow run with dataset hash and schema |
 
 ---
 
 ## Installation
 
-### Core (no optional deps)
-
 ```bash
-pip install godml
-```
-
-### With extras
-
-```bash
-pip install "godml[advisor]"   # LLM-powered recommendations (gpt4all)
-pip install "godml[deep]"      # LSTM forecasting (tensorflow + keras)
-pip install "godml[aws]"       # SageMaker deployment
-pip install "godml[api]"       # REST inference server (fastapi + uvicorn)
-pip install "godml[dev]"       # Full dev suite (tests, lint, coverage)
+pip install godml                      # core: CLI, YAML, training with MLflow
+pip install "godml[api]"               # REST inference server (fastapi + uvicorn)
+pip install "godml[observability]"     # Prometheus metrics for the server
+pip install "godml[aws]"               # SageMaker executor (boto3 + sagemaker)
+pip install "godml[data]"              # Parquet support for dataprep (pyarrow)
+pip install "godml[deep]"              # LSTM forecasting (tensorflow + keras)
+pip install "godml[advisor]"           # LLM advisor (gpt4all, local model)
+pip install "godml[all]"               # every runtime extra above
 ```
 
 ---
@@ -81,13 +80,14 @@ provider: mlflow
 
 dataset:
   uri: ./data/churn.csv
-  hash: auto
+  target: churn
+  hash: auto            # or the SHA-256 from `godml calc-hash`; verified on run
 
 model:
   type: xgboost
   hyperparameters:
     max_depth: 6
-    learning_rate: 0.1
+    eta: 0.1
     n_estimators: 300
 
 metrics:
@@ -98,16 +98,19 @@ metrics:
 
 governance:
   owner: ml-team@company.com
+  compliance: pci-dss   # optional; mask_sensitive by default
+  policy: mask_sensitive
   tags:
-    - compliance: gdpr
     - environment: production
 
 deploy:
-  realtime: true
+  realtime: false
   batch_output: ./outputs/predictions.csv
 ```
 
-Run it:
+`${VAR}` and `${VAR:default}` are resolved from the environment anywhere in
+the file. For loss metrics (`mse`, `rmse`, `mae`, `log_loss`) the threshold
+is an upper bound.
 
 ```bash
 godml run -f godml.yml
@@ -117,63 +120,96 @@ godml run -f godml.yml
 
 ## Notebook API
 
-For interactive work in Jupyter:
-
 ```python
-from godml import GodmlNotebook
+from godml.notebook_api import GodmlNotebook
 
 nb = GodmlNotebook()
-nb.load_data("./data/churn.csv", target="churn")
-nb.train_model("xgboost", {"max_depth": 6, "n_estimators": 300})
-nb.evaluate(["auc", "accuracy", "f1"])
-nb.save_model("churn_v1")
+nb.create_pipeline(
+    name="churn_xgb",
+    model_type="xgboost",
+    hyperparameters={"max_depth": 6, "n_estimators": 300},
+    dataset_path="./data/churn.csv",
+    target="churn",
+)
+nb.train()
+nb.save_model(model_name="churn_xgb", environment="experiments")
 ```
 
-### AI-powered advisor
+Quick one-liner:
 
 ```python
-from godml.notebook_api import advisor_full_report, tune_model
+from godml.notebook_api import quick_train
 
-# Get model + metric recommendations for your dataset
-report = advisor_full_report(df, target="churn")
-print(report["recommended_models"])   # ['xgboost', 'random_forest']
-print(report["data_quality"])         # quality score + issues
-
-# Auto-tune with Optuna
-result = tune_model(
-    model_type="xgboost",
-    X=X_train, y=y_train,
-    max_trials=50,
-    metric="auc",
+quick_train(
+    model_type="random_forest",
+    hyperparameters={"max_depth": 5},
+    dataset_path="./data/churn.csv",
+    target="churn",
 )
-print(f"Best AUC: {result['best_score']:.4f}")
+```
+
+### Hyperparameter search
+
+```python
+import pandas as pd
+from godml.notebook_api import tune_model
+
+df = pd.read_csv("./data/churn.csv")
+# tune_model expects numeric features: encode or drop text columns first
+X = df.drop(columns=["churn"]).select_dtypes("number")
+y = df["churn"]
+
+result = tune_model(model_type="xgboost", X=X, y=y, metric="roc_auc", max_trials=20)
+print(result["best_score"], result["best_params"])
+```
+
+Randomized search with cross-validation; pass `use_optuna=True` to use Optuna
+if it is installed (`pip install optuna`, not included in any extra).
+
+### Advisor (requires `godml[advisor]`)
+
+```python
+from godml.notebook_api import advisor_full_report
+
+advisor_full_report(df, target="churn")   # prints task type, suggested models,
+                                          # hyperparameter space and data quality
 ```
 
 ### Supported model types
 
-| Key | Algorithm |
-|-----|-----------|
-| `xgboost` / `xgb` | XGBoost |
-| `random_forest` / `rf` | scikit-learn RandomForest |
-| `logistic_regression` / `logreg` | scikit-learn LogisticRegression |
-| `lstm` | LSTM forecasting *(requires `[deep]`)* |
+| `model.type` | Algorithm |
+|--------------|-----------|
+| `xgboost` | XGBoost |
+| `random_forest` | scikit-learn RandomForest |
+| `logistic_regression` | scikit-learn LogisticRegression |
+| `linear_regression` | scikit-learn LinearRegression (regression) |
+| `lstm_forecast` | LSTM forecasting *(requires `[deep]`)* |
 
 ---
 
 ## Compliance
 
+PCI-DSS is the built-in compliance standard. It detects PII by column name
+(whole tokens such as `email`, `card_number`, `zip_code`, `lat`) and by
+content (card numbers, emails, SSN, phones, IBAN, …), and applies a policy:
+
+| `governance.policy` | Effect |
+|---------------------|--------|
+| `mask_sensitive` (default) | Masks values (e.g. `us**@example.com`) |
+| `hash_sensitive` | HMAC-SHA256 keyed by `GODML_PII_KEY` (mandatory with `GODML_ENV=prod`) |
+| `drop_sensitive` | Removes the columns |
+
+The dataset target is never treated as PII. Any other `governance.compliance`
+value stops the run: no other standard is implemented.
+
 ```python
-from godml.compliance_service import PciDssCompliance, GdprCompliance
+from godml.compliance_service.pci_dss import PciDssCompliance
 
-compliance = PciDssCompliance()
-clean_df = compliance.apply(df)          # masks PAN, CVV, account numbers
-
-gdpr = GdprCompliance()
-report = gdpr.apply(df)                  # anonymizes PII per GDPR rules
+clean_df = PciDssCompliance(policy="drop_sensitive").apply(df)
 ```
 
-Built-in compliance modules: `PCI-DSS`, `GDPR`, `HIPAA`, `SOX`.  
-Custom rules: subclass `BaseCompliance` and implement `apply(df)`.
+Custom standards: subclass `godml.compliance_service.base_compliance.BaseCompliance`
+and implement `apply(df)`.
 
 ---
 
@@ -182,21 +218,15 @@ Custom rules: subclass `BaseCompliance` and implement `apply(df)`.
 ```
 ┌──────────────────────────────────────────────────────┐
 │                    GODML Framework                   │
-├────────────────┬─────────────┬───────────────────────┤
-│  Interfaces    │  Notebook   │  CLI  │  REST API      │
-├────────────────┴─────────────┴───────────────────────┤
-│  Core Services                                       │
-│  ┌───────────┐ ┌───────────┐ ┌──────────────────────┐│
-│  │ Advisor   │ │ Config    │ │ Pipeline Engine      ││
-│  └───────────┘ └───────────┘ └──────────────────────┘│
 ├──────────────────────────────────────────────────────┤
-│  ML Services                                         │
-│  ┌───────────┐ ┌───────────┐ ┌──────────────────────┐│
-│  │ DataPrep  │ │ Model     │ │ Monitoring           ││
-│  │ +PII scan │ │ Registry  │ │ +Drift detection     ││
-│  └───────────┘ └───────────┘ └──────────────────────┘│
+│  Interfaces:  CLI  │  Notebook API  │  REST server   │
 ├──────────────────────────────────────────────────────┤
-│  Providers:  MLflow │ SageMaker │ Docker │ Local      │
+│  Config (YAML + ${VAR})  │  Pipeline engine          │
+├──────────────────────────────────────────────────────┤
+│  DataPrep │ PCI-DSS compliance │ Models │ Monitoring │
+│           │ (fail-closed)      │        │ (PSI drift)│
+├──────────────────────────────────────────────────────┤
+│  Executors:  MLflow (local)  │  SageMaker            │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -204,18 +234,31 @@ Custom rules: subclass `BaseCompliance` and implement `apply(df)`.
 
 ## Supply chain & security
 
-GODML ships with a **SLSA Level 3** supply chain — every release is built in an isolated GitHub Actions environment with unforgeable provenance.
+Every release is built in GitHub Actions with SLSA Level 3 provenance and
+published to PyPI with Trusted Publishing (OIDC). Details and current
+enforcement are in [SECURITY.md](SECURITY.md).
 
-| Artifact | Standard | Signature | Transparency |
-|----------|----------|-----------|--------------|
-| `sbom.spdx.json` | SPDX 2.3 | Cosign OIDC (keyless) | [Rekor log](https://search.sigstore.dev/?q=DAGMALIA) |
-| `sbom.cyclonedx.json` | CycloneDX 1.6 | SLSA provenance | GitHub Release assets |
-| `provenance.intoto.jsonl` | SLSA v1 / in-toto | slsa-github-generator | [Rekor log](https://search.sigstore.dev/?q=DAGMALIA) |
+| Artifact | Format | Signature | Where |
+|----------|--------|-----------|-------|
+| Wheel + sdist | `.whl`, `.tar.gz` | Covered by SLSA provenance | GitHub Release, PyPI |
+| `multiple.intoto.jsonl` | SLSA v1 / in-toto | slsa-github-generator (Sigstore) | GitHub Release |
+| `sbom.cyclonedx.json` | CycloneDX | not signed | GitHub Release |
+| `sbom.spdx.json` | SPDX | Cosign keyless (Rekor) | Workflow artifact `supplychain-artifacts` |
 
-### Verify the SBOM yourself
+### Verify SLSA provenance
 
 ```bash
-# Download from GitHub Releases
+# From the GitHub Release: the wheel and multiple.intoto.jsonl
+slsa-verifier verify-artifact godml-<version>-py3-none-any.whl \
+  --provenance-path multiple.intoto.jsonl \
+  --source-uri github.com/DAGMALIA/godml \
+  --source-tag v<version>
+```
+
+### Verify the signed SPDX SBOM
+
+```bash
+# From the `supplychain-artifacts` artifact of the release workflow run
 cosign verify-blob \
   --bundle sbom.spdx.bundle \
   --certificate-identity-regexp "https://github.com/DAGMALIA/godml/.github/workflows/safety_scan.yml" \
@@ -223,56 +266,41 @@ cosign verify-blob \
   sbom.spdx.json
 ```
 
-### Verify SLSA provenance
-
-```bash
-slsa-verifier verify-artifact dist/godml-*.whl \
-  --provenance-path provenance.intoto.jsonl \
-  --source-uri github.com/DAGMALIA/godml \
-  --source-tag v<version>   # tag of the release you downloaded
-```
-
 ### CI security controls
 
 | Control | Tool | Status |
 |---------|------|--------|
-| SAST | Bandit | ✅ Blocks on HIGH/CRITICAL |
-| Dependency CVEs | pip-audit (blocking) | ✅ Every push and PR |
-| SHA-pinned actions | Dependabot | ✅ Auto-pinned |
-| PyPI publish | OIDC Trusted Publisher | ✅ No API tokens |
-| Branch protection | GitHub Ruleset | ✅ PR + status checks |
-| Tag protection | GitHub Ruleset | ✅ `v*` immutable |
-| Score | OpenSSF Scorecard | ✅ Published weekly |
+| SAST | Bandit | Blocks on HIGH |
+| Fail-closed lint | ruff (`S110`, `BLE001`) + mypy | Blocks new violations |
+| Dependency CVEs | pip-audit | Blocks, every push and PR |
+| Licenses | pip-licenses | Blocks strong copyleft |
+| Actions | Pinned by commit SHA, updated by Dependabot | Enforced |
+| PyPI publish | OIDC Trusted Publisher | No API tokens |
+| Branch / tag protection | GitHub rulesets | `main` and release tags |
+| Score | OpenSSF Scorecard | Weekly |
 
 ---
 
 ## CLI reference
 
 ```bash
-godml init <project>         # scaffold new project
-godml run -f godml.yml       # execute pipeline from config
-godml deploy <project> <env> # deploy model to environment
-godml --version              # print version
+godml init <project>              # scaffold a project (godml.yml, data/, Dockerfile)
+godml run -f godml.yml            # run the pipeline
+godml calc-hash <file> [-u godml.yml]  # SHA-256 of a dataset, optionally pinned in the YAML
+godml serve [--environment dev]   # serve the model locally (needs [api])
+godml deploy <project> <env>      # build and run the Docker image for an environment
+godml dataprep --help             # data preparation recipes
+godml --version                   # installed version
 ```
 
 ---
 
 ## Roadmap
 
-### v1.2.0 — Q3 2026
-- [ ] Interactive drift dashboard (Streamlit)
-- [ ] A/B testing framework
-- [ ] Optuna distributed tuning
-
-### v1.3.0 — Q4 2026
-- [ ] Kubernetes operator
-- [ ] Real-time streaming inference
-- [ ] Multi-tenant model registry
-
-### v2.0.0 — 2027
-- [ ] Multi-cloud provider abstraction (Vertex AI, Azure ML)
-- [ ] Federated learning support
-- [ ] SOC2 / ISO27001 documentation kit
+GoDML 2.0 is in progress: installation per pillar (Train, Govern, Serve,
+Observe, Tools), a v2 YAML spec with a migration path from 1.x, a single
+bundle-based serving runtime and conda-forge packages. 1.x keeps working;
+breaking changes come with a migration guide.
 
 ---
 
@@ -281,11 +309,10 @@ godml --version              # print version
 ```bash
 git clone https://github.com/DAGMALIA/godml.git
 cd godml
-pip install -e ".[dev]"
+pip install -e ".[dev,test-serve,test-observe]"
+pre-commit install
 pytest tests/ --cov=godml
 ```
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for branch conventions and PR checklist.
 
 ---
 
@@ -296,7 +323,7 @@ MIT — see [LICENSE](LICENSE).
 ---
 
 <p align="center">
-  Built by <a href="https://github.com/DAGMALIA">DAGMALIA</a> · 
-  <a href="https://pypi.org/project/godml/">PyPI</a> · 
+  Built by <a href="https://github.com/DAGMALIA">DAGMALIA</a> ·
+  <a href="https://pypi.org/project/godml/">PyPI</a> ·
   <a href="mailto:agtzrubio@dagmalia.com">Support</a>
 </p>

@@ -70,7 +70,8 @@ def serve(environment: str = "dev"):
 def deploy(
     project_name: str,
     environment: str = typer.Argument(
-        ..., help="Ambiente: development, staging o production"
+        ...,
+        help="Ambiente definido en deploy_config de godml.yml (p. ej. dev, qa, prod)",
     ),
 ):
     """Despliega el modelo como microservicio para un ambiente específico."""

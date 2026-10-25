@@ -187,6 +187,18 @@ the run. Review these before upgrading (details in the sections below):
 
 ### Changed
 
+- README rewritten to document only what exists and works: removed the GDPR,
+  HIPAA and SOX claims (only PCI-DSS is implemented) and the non-existent
+  `GdprCompliance`, `GodmlNotebook.load_data/train_model/evaluate` and model
+  aliases `xgb`/`rf`/`logreg`; fixed the notebook, `tune_model` (`roc_auc`,
+  numeric features) and advisor (`[advisor]` extra, prints a report)
+  examples; listed every CLI command; corrected the release asset names
+  (`multiple.intoto.jsonl`, `sbom.cyclonedx.json`); the quick start explains
+  adding data and `dataset.target`. A test runs the README examples.
+- `godml init` writes `dataset.target` in `godml.yml` and its next steps say
+  to add the data and set the target. The generated project README no longer
+  carries an MIT badge or "Python 3.8+", and its examples use `target` and
+  the real CLI command names.
 - License text: the `LICENSE` file now contains the MIT license. GoDML has
   always been distributed under MIT (package metadata, README and source
   headers); the Apache-2.0 text that appeared in `LICENSE` was re-added by

@@ -53,7 +53,9 @@ def init_command(project_name: str) -> None:
         logger.info(f"Proyecto '{sanitize_for_log(project_name)}' creado exitosamente.")
         logger.info(f"Ubicacion: {sanitize_for_log(str(project_path.absolute()))}")
         logger.info(
-            f"Proximos pasos: cd {sanitize_for_log(project_name)} && godml run -f godml.yml"
+            f"Proximos pasos: cd {sanitize_for_log(project_name)}; copia tu CSV en "
+            "data/your_dataset.csv; ajusta dataset.target en godml.yml; "
+            "godml run -f godml.yml"
         )
 
     except PermissionError as e:
