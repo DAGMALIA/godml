@@ -50,12 +50,14 @@ class PciDssCompliance(BaseCompliance):
         # Fallback masking genérico
         return series.apply(lambda v: mask_string(str(v), num_prefix=2))
 
-    def _hash_col(self, series: pd.Series) -> pd.Series:
+    def _hash_col(self, series: pd.Series, key: str) -> pd.Series:
         # F1-06: keyed HMAC; a plain SHA-256 of PII can be reversed by brute force.
-        key = pii_hash_key()
         return series.apply(lambda v: hmac_truncated(v, key, self.hash_len))
 
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+        # F1-06: the key is required whenever compliance runs, whatever the
+        # policy, so a misconfiguration fails before any data is touched.
+        key = pii_hash_key()
         if df is None or df.empty:
             return df
 
@@ -96,10 +98,10 @@ class PciDssCompliance(BaseCompliance):
                 else:
                     df[col] = self._mask_col(df[col], pii_type)
             elif self.policy == "hash_sensitive":
-                df[col] = self._hash_col(df[col])
+                df[col] = self._hash_col(df[col], key)
             else:
                 # Política desconocida => por seguridad, hasheamos
-                df[col] = self._hash_col(df[col])
+                df[col] = self._hash_col(df[col], key)
 
         # Ejecuta drops al final para evitar conflictos
         if columns_to_drop:

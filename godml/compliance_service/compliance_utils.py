@@ -8,32 +8,48 @@ from godml.compliance_service.errors import ComplianceError
 
 logger = logging.getLogger("godml.compliance")
 
-# F1-06: public, insecure key used only outside prod when GODML_PII_KEY is
-# unset, so hashed features stay stable between training and serving in dev.
+# F1-06: public, insecure key. Only used outside prod when the user opts in
+# with GODML_ALLOW_INSECURE_PII_KEY=1; otherwise GODML_PII_KEY is required.
 DEV_PII_KEY = "godml-dev-insecure-pii-key"
 _PROD_ENVS = {"prod", "production"}
+_GENERATE_HINT = (
+    'Generate one with: python -c "import secrets; print(secrets.token_hex(32))" '
+    "and keep it secret (the same key must be used for training and serving)."
+)
 _warned_dev_key = False
 
 
 def pii_hash_key() -> str:
-    """Secret for PII hashing: GODML_PII_KEY; mandatory when GODML_ENV is prod."""
+    """Secret for PII hashing: GODML_PII_KEY, required whenever compliance runs.
+
+    Outside prod, GODML_ALLOW_INSECURE_PII_KEY=1 falls back to a public dev
+    key (hashes are then NOT protected).
+    """
     global _warned_dev_key
     key = os.environ.get("GODML_PII_KEY", "").strip()
     if key:
         return key
-    if os.environ.get("GODML_ENV", "dev").strip().lower() in _PROD_ENVS:
+    is_prod = os.environ.get("GODML_ENV", "dev").strip().lower() in _PROD_ENVS
+    opted_in = os.environ.get("GODML_ALLOW_INSECURE_PII_KEY", "").strip() == "1"
+    if opted_in and not is_prod:
+        if not _warned_dev_key:
+            logger.warning(
+                "GODML_PII_KEY is not set and GODML_ALLOW_INSECURE_PII_KEY=1: "
+                "hashing PII with the public dev key. These hashes are NOT "
+                "protected; never use this with real data."
+            )
+            _warned_dev_key = True
+        return DEV_PII_KEY
+    if opted_in:
         raise ComplianceError(
-            "GODML_PII_KEY is required in prod to hash PII (hash_sensitive "
-            "policy). Set it to a secret value; refusing to continue."
+            "GODML_ALLOW_INSECURE_PII_KEY is not allowed with GODML_ENV=prod: "
+            f"set GODML_PII_KEY. {_GENERATE_HINT}"
         )
-    if not _warned_dev_key:
-        logger.warning(
-            "GODML_PII_KEY is not set: hashing PII with the public dev key. "
-            "These hashes are NOT protected; set GODML_PII_KEY for real data "
-            "(it is mandatory with GODML_ENV=prod)."
-        )
-        _warned_dev_key = True
-    return DEV_PII_KEY
+    raise ComplianceError(
+        "GODML_PII_KEY is required when compliance is enabled. "
+        f"{_GENERATE_HINT} For throwaway local tests only, set "
+        "GODML_ALLOW_INSECURE_PII_KEY=1 (not allowed in prod)."
+    )
 
 
 def hmac_truncated(value, key: str, length: int = 12) -> str:

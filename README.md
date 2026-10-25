@@ -24,6 +24,8 @@ godml init my-project
 cd my-project
 # 1. Put your CSV at data/your_dataset.csv
 # 2. In godml.yml, set dataset.target to the column you want to predict
+# 3. The generated config enables PCI-DSS compliance, which needs a secret key:
+export GODML_PII_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
 godml run -f godml.yml
 ```
 
@@ -98,7 +100,7 @@ metrics:
 
 governance:
   owner: ml-team@company.com
-  compliance: pci-dss   # optional; mask_sensitive by default
+  compliance: pci-dss   # optional; requires GODML_PII_KEY (see Compliance)
   policy: mask_sensitive
   tags:
     - environment: production
@@ -196,8 +198,15 @@ content (card numbers, emails, SSN, phones, IBAN, …), and applies a policy:
 | `governance.policy` | Effect |
 |---------------------|--------|
 | `mask_sensitive` (default) | Masks values (e.g. `us**@example.com`) |
-| `hash_sensitive` | HMAC-SHA256 keyed by `GODML_PII_KEY` (mandatory with `GODML_ENV=prod`) |
+| `hash_sensitive` | HMAC-SHA256 keyed by `GODML_PII_KEY` |
 | `drop_sensitive` | Removes the columns |
+
+`GODML_PII_KEY` is required whenever compliance is enabled, with any policy
+and in any environment; the run stops without it. Generate it with
+`python -c "import secrets; print(secrets.token_hex(32))"`, keep it secret and
+use the same key for training and serving. For throwaway local tests only,
+`GODML_ALLOW_INSECURE_PII_KEY=1` uses a public dev key (refused with
+`GODML_ENV=prod`).
 
 The dataset target is never treated as PII. Any other `governance.compliance`
 value stops the run: no other standard is implemented.

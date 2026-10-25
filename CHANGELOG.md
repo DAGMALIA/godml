@@ -28,11 +28,13 @@ the run. Review these before upgrading (details in the sections below):
   SageMaker without the `compliance` key.
 - **MLflow runs from 1.x may contain the raw dataset** under the `dataset/`
   artifact path. Review and delete those artifacts if they hold personal data.
-- **`hash_sensitive` now uses HMAC-SHA256 keyed by `GODML_PII_KEY`.** Hashed
-  values differ from 1.x: retrain models that use hashed columns as features
-  and re-hash any stored lookups. With `GODML_ENV=prod` the key is mandatory
-  (the run stops without it); elsewhere a public dev key is used with a
-  warning, which does not protect real data.
+- **Compliance requires `GODML_PII_KEY`.** Whenever `governance.compliance`
+  is set (any policy, any environment) the run stops without it. Generate one
+  with `python -c "import secrets; print(secrets.token_hex(32))"` and use the
+  same key for training and serving. `GODML_ALLOW_INSECURE_PII_KEY=1` allows a
+  public dev key outside prod, for throwaway tests only. `hash_sensitive` is
+  now an HMAC-SHA256 keyed by it, so hashed values differ from 1.x: retrain
+  models that use hashed columns as features and re-hash stored lookups.
 - **PII detection changed.** Ordinary columns that 1.x dropped or hashed by
   mistake (`hotel_id`, `plate`, `tip`, `year`, `fare`, any 5-digit amount,
   any 4-decimal float, ...) are now kept, so models trained with
@@ -122,8 +124,9 @@ the run. Review these before upgrading (details in the sections below):
 - PII hashing (`hash_sensitive` and the unknown-policy fallback) used an
   unkeyed SHA-256 truncated to 12 hex chars, which can be reversed by brute
   force or a dictionary for card numbers and emails. It is now an
-  HMAC-SHA256 keyed by `GODML_PII_KEY`; missing key with `GODML_ENV=prod`
-  raises `ComplianceError`.
+  HMAC-SHA256 keyed by `GODML_PII_KEY`, which is required whenever
+  compliance runs (`ComplianceError` otherwise; opt-out
+  `GODML_ALLOW_INSECURE_PII_KEY=1` outside prod only).
 
 - PCI-DSS PII detection matched name hints as substrings (`tel` in
   `hotel_id`, `lat` in `plate`, `ip` in `tip`/`description`, `name` in

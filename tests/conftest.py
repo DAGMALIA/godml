@@ -10,6 +10,12 @@ from tests.hermetic import changed_files, snapshot
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
+@pytest.fixture(autouse=True)
+def pii_key(monkeypatch):
+    """Compliance requires GODML_PII_KEY (F1-06); tests about a missing key delete it."""
+    monkeypatch.setenv("GODML_PII_KEY", "test-only-pii-key-not-secret")
+
+
 @pytest.fixture(scope="session", autouse=True)
 def hermetic_tests():
     """F1-19: fail the run if any test wrote into the repo (use tmp_path)."""

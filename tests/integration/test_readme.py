@@ -55,6 +55,15 @@ def test_unimplemented_standards_are_not_advertised(word):
     assert not re.search(rf"\b{word}\b", TEMPLATE)
 
 
+def test_pii_key_is_documented():
+    """F1-06: the generated config enables compliance, which needs GODML_PII_KEY."""
+    quick_start = README.split("## Quick start", 1)[1].split("\n## ", 1)[0]
+    compliance = README.split("## Compliance", 1)[1].split("\n## ", 1)[0]
+    for section in (quick_start, compliance):
+        assert "GODML_PII_KEY" in section
+        assert "secrets.token_hex(32)" in section
+
+
 def test_template_does_not_impose_a_license_or_old_python():
     assert "License" not in TEMPLATE
     assert "3.8" not in TEMPLATE

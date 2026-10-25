@@ -55,6 +55,7 @@ def init_command(project_name: str) -> None:
         logger.info(
             f"Proximos pasos: cd {sanitize_for_log(project_name)}; copia tu CSV en "
             "data/your_dataset.csv; ajusta dataset.target en godml.yml; "
+            "exporta GODML_PII_KEY (compliance pci-dss activo); "
             "godml run -f godml.yml"
         )
 

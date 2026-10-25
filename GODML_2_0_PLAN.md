@@ -220,7 +220,7 @@ Cada fix lleva primero un test que reproduce el bug.
 - **F1-03** ✅ Quitar `except Exception: pass` en `MLflowExecutor.validate`; los `ValidationError` críticos se propagan
 - **F1-04** ✅ SageMaker `preprocess.py`: corregir `ComplianceRegistry.get` → `get_compliance` y la firma de `apply`; fallar si compliance no puede aplicarse
 - **F1-05** ✅ Verificar `dataset.hash` en `godml run` cuando está fijado; error si no coincide. Con `provider: sagemaker` y hash fijado, emitir un warning explícito de que el hash no se verifica para datos en S3; documentarlo en "Upgrading from 1.3.x"
-- **F1-06** ✅ Hash de PII con HMAC-SHA256 y llave desde `GODML_PII_KEY` (error en prod si falta)
+- **F1-06** ✅ Hash de PII con HMAC-SHA256 y llave desde `GODML_PII_KEY` (error en prod si falta). **Ajuste:** exigir `GODML_PII_KEY` siempre que compliance esté activo, en cualquier entorno; única excepción `GODML_ALLOW_INSECURE_PII_KEY=1` fuera de prod; el error indica cómo generar la llave (`secrets.token_hex(32)`); documentarlo en "Upgrading from 1.3.x"
 - **F1-07** ✅ Detector de PII: heurística por nombre a nivel token (no substring), excluir la columna target, endurecer patrones de contenido (cvv, zip, coordenadas) → *tests con columnas `zip_code`, `hotel_id`, `plate`, `year`, `fare`*
 - **F1-08** ✅ Deploy: mapeo de puertos `{port}:8000` o CMD que lea `$PORT`; `serve` sin `reload` fuera de dev
 - **F1-09** ✅ `resolver.py`: recursión en listas de dicts e interpolación parcial (`"prefix-${X}"`)
@@ -235,6 +235,8 @@ Cada fix lleva primero un test que reproduce el bug.
 - **F1-18** ✅ `sagemaker/scripts/evaluate.py`: mover la lógica de nivel módulo a `main()` bajo `if __name__ == '__main__':` (regla de tests herméticos); corregir el filtro anti path-traversal del tarball con `Path.resolve()` + `is_relative_to` (hoy `startswith` deja pasar rutas hermanas como `model2/`)
 - **F1-19** ✅ (después de F1-12) Fixture de sesión que falle la suite si algún test crea archivos fuera de `tmp_path`
 - **F1-20** ✅ CLI robusta a encoding: quitar emojis del texto de `--help` y configurar stdout/stderr con `errors="replace"` en el entrypoint de la CLI → *test: `godml --help` con `PYTHONIOENCODING=ascii` no falla*
+- **F1-21** ⬜ `deploy_template`: no registrar valores del input en logs (solo forma/columnas)
+- **F1-22** ⬜ Test de la condición de métricas de pérdida en `step_builder.py` (unitario o con SDK de SageMaker en un job de test)
 
 ### F2 — Arquitectura 2.0 (2.0.0a1)
 
@@ -252,7 +254,7 @@ Cada fix lleva primero un test que reproduce el bug.
 ### F3 — Pilar Govern (2.0.0a1)
 
 - **F3-01** ⬜ Motor de políticas con gates `pre-train`, `post-train`, `pre-deploy`; resultado estructurado (pass/fail/waived + razón)
-- **F3-02** ⬜ Política PCI-DSS migrada al motor; arquitectura lista para nuevas políticas (sin anunciar GDPR/HIPAA hasta implementarlas)
+- **F3-02** ⬜ Política PCI-DSS migrada al motor; arquitectura lista para nuevas políticas (sin anunciar GDPR/HIPAA hasta implementarlas); endurecer patrones ambiguos: Luhn para `card_number`, `phone_us` y `ssn_compact` (hoy aceptan cualquier número de 10/9 dígitos)
 - **F3-03** ⬜ Verificación de datos: sha256, esquema esperado y conteo mínimo de filas; verificar el hash de datos en S3 (checksum SHA-256 de S3 o descarga). En 2.0 un hash declarado que no puede verificarse es error
 - **F3-04** ⬜ Reglas por entorno: en `prod`, hash fijo, owner y aprobación obligatorios
 - **F3-05** ⬜ `godml validate <dir>` sobre repo central completo, con salida para CI (JUnit/SARIF)
@@ -270,12 +272,13 @@ Cada fix lleva primero un test que reproduce el bug.
 - **F4-08** ⬜ Reintentos reales (solo errores transitorios) o eliminar `max_attempts`
 - **F4-09** ⬜ LSTM movido a `train-dl`; eliminar `run_pipeline.py` muerto
 - **F4-10** ⬜ Compatibilidad con scikit-learn 1.8 (`multi_class` retirado)
+- **F4-11** ⬜ `tune_model` con columnas de texto: codificarlas (o usar el Pipeline de F4-02) en lugar de fallar en todos los fits
 
 ### F5 — Pilar Serve (2.0.0b1)
 
 - **F5-01** ⬜ Formato de bundle: `manifest.json` (hashes, versión, firma de entrada/salida), modelo, pipeline, pre/post, baseline, reporte de gobernanza
 - **F5-02** ⬜ `godml bundle build|inspect|verify`
-- **F5-03** ⬜ Runtime único (reemplaza los 3 servidores actuales); lifespan en lugar de `on_event`
+- **F5-03** ⬜ Runtime único (reemplaza los 3 servidores actuales); lifespan en lugar de `on_event`; códigos de error correctos: errores del modelo son 5xx (la plantilla devuelve 400 y Prometheus los cuenta como `client_error`)
 - **F5-04** ⬜ Variantes A/B y canary con pesos declarados y header de variante en la respuesta
 - **F5-05** ⬜ `godml deploy`: Dockerfile generado, puertos correctos, usuario non-root, healthcheck
 - **F5-06** ⬜ Gate `pre-deploy` obligatorio antes de servir en `prod`
@@ -300,7 +303,7 @@ Cada fix lleva primero un test que reproduce el bug.
 
 ### F8 — Empaquetado y distribución (2.0.0rc1)
 
-- **F8-01** ⬜ Extras por pilar en `pyproject.toml` (§2.2) con rangos de versión probados
+- **F8-01** ⬜ Extras por pilar en `pyproject.toml` (§2.2) con rangos de versión probados; quitar `pymysql` del extra `data` (ningún módulo lo usa)
 - **F8-02** ⬜ Lockfile reproducible con hashes (pip-tools `--generate-hashes` o uv)
 - **F8-03** ⬜ Receta conda multi-output `noarch: python` (§2.3), probada localmente con rattler-build
 - **F8-04** ⬜ Verificar disponibilidad en conda-forge de cada dependencia; documentar las que queden solo en PyPI
@@ -348,6 +351,8 @@ Claude Code agrega una entrada por sesión (la más reciente arriba).
 
 | Fecha | Tareas | Resultado | Notas / bloqueos |
 |---|---|---|---|
+| 2026-10-25 | F1-06 (ajuste) | ✅ Tests reescritos primero (21 fallaban con la regla anterior). `pii_hash_key()`: `GODML_PII_KEY` obligatoria siempre que compliance se aplique, con **cualquier política** y en cualquier entorno; `GODML_ALLOW_INSECURE_PII_KEY=1` (solo el valor `1`) usa la llave de dev fuera de prod con warning, y en prod es error; los mensajes incluyen `secrets.token_hex(32)`. `PciDssCompliance.apply` resuelve la llave al inicio (falla antes de tocar datos). Suite: fixture autouse con llave de test en `conftest.py`. README (quick start, configuración, compliance) y `godml init` lo documentan; test del README lo exige. CHANGELOG: "Upgrading" + Security reescritos | Interpretación literal de "siempre que compliance esté activo": `mask_sensitive`/`drop_sensitive` también exigen la llave aunque no la usen. Como `godml init` genera `compliance: pci-dss`, el quick start ahora pide exportar `GODML_PII_KEY` |
+| 2026-10-25 | Decisiones | Usuario: F1-06 exige `GODML_PII_KEY` con compliance activo en todo entorno (excepción `GODML_ALLOW_INSECURE_PII_KEY=1` fuera de prod); nuevas F1-21 y F1-22 antes del release; Luhn/phone/ssn → F3-02, `pymysql` → F8-01, `tune_model` texto → F4-11, códigos de error del server → F5-03. F1-15: PR a main con CI, luego **1.4.0rc1** como pre-release verificada; 1.4.0 final la autoriza el usuario | — |
 | 2026-10-25 | F1-14 | ✅ README reescrito tras auditar cada afirmación contra el código: fuera GDPR/HIPAA/SOX, `GdprCompliance`, `GodmlNotebook.load_data/train_model/evaluate`, alias `xgb/rf/logreg`, proveedor "Local", "every run produces a signed trail", enlace a `CONTRIBUTING.md` (no existe), roadmap con versiones ya pasadas; corregidos notebook (`create_pipeline`/`train`/`save_model(model_name=...)`), `tune_model` (`metric="roc_auc"`, sin promesa de Optuna, features numéricas), advisor (`[advisor]`, imprime y devuelve `None`), modelos (+`linear_regression`, `lstm_forecast`), compliance (políticas reales, `GODML_PII_KEY`), extras (sin MySQL: no hay conector), CLI completa (`serve`, `calc-hash`, `dataprep`), assets reales del Release. `godml init` escribe `dataset.target`; ayuda de `deploy` con los entornos reales; `README_TEMPLATE` sin badge MIT, Python 3.11+, `target` y comandos reales (`calc-hash`, `--version`; `save_model` pasaba el nombre como modelo). Nuevo `tests/integration/test_readme.py`: **ejecuta** los ejemplos Python y el YAML (run MLflow real), valida comandos CLI/extras/tipos de modelo y prohíbe GDPR/HIPAA/SOX. Ese test destapó 2 bugs: `tune_model` falla con columnas de texto (ejemplo ajustado) y **RandomForest no se podía registrar en MLflow reciente** (commit `92cec64`). 544 tests en ambos entornos, cobertura 61.16 % | El bloque del advisor no se ejecuta en el test (requiere gpt4all + modelo local); lista explícita `NOT_EXECUTED`. `pymysql` en el extra `data` no lo usa ningún módulo (F8-01). `model_registry.py` importa el LSTM (Keras) a nivel módulo (F4-09) |
 | 2026-10-25 | F1-20 | ✅ Tests primero (`tests/unit/test_cli_encoding.py`: subprocess con `PYTHONIOENCODING=ascii` y `cp1252`, `--help` y `dataprep --help`, cwd temporal; más un chequeo estático de que ningún texto de ayuda tiene emojis): fallaban los 5. Fix: `godml_cli.main()` reconfigura stdout/stderr con `errors="replace"` antes de configurar logging; se quitó el 🧩 (y la raya) del `help` de `dataprep`. Verificado a mano: `godml --help > archivo` en el venv limpio sale con 0 (antes 1 con `UnicodeEncodeError`). 531 tests en ambos entornos, cobertura 60.47 % | Quitar emojis no basta para ASCII: los textos tienen acentos, que solo se salvan con `errors="replace"`. Los logs de la librería y de la CLI siguen con emojis (se reemplazan por `?` en terminales sin UTF-8) |
 | 2026-10-25 | F1-11 | ✅ Tests primero (`tests/unit/test_serving_features.py`, `TestClient` contra **ambos** servidores, sklearn y Booster reales): con las claves JSON en otro orden, sklearn respondía 500 ("same order as in fit") y el Booster "feature_names mismatch"; una clave extra rompía la request; nunca había probabilidades. Fix: `godml/utils/serving.py` (`expected_features` vía `feature_names_in_`/`feature_names`, `align_features` reordena e ignora extras, `MissingFeaturesError`→400, `predict_with_proba`) usado por `deploy_service/server.py` y la plantilla; respuesta suma `probabilities` sin cambiar `prediction`. 526 tests en ambos entornos, cobertura 60.17 % | Hallazgos en la plantilla (F5-03): (1) registra el input completo con `godml_logger.info(str(df))` → **PII de cada request en los logs**; (2) su `except` interno convierte cualquier error del modelo en 400, que Prometheus cuenta como `client_error` |
