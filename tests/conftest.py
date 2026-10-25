@@ -1,7 +1,27 @@
+from pathlib import Path
+
 import pytest
 import numpy as np
 import pandas as pd
 import yaml
+
+from tests.hermetic import changed_files, snapshot
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+@pytest.fixture(scope="session", autouse=True)
+def hermetic_tests():
+    """F1-19: fail the run if any test wrote into the repo (use tmp_path)."""
+    before = snapshot(REPO_ROOT)
+    yield
+    changed = changed_files(REPO_ROOT, before)
+    if changed:
+        pytest.fail(
+            "Tests created or modified files outside tmp_path "
+            "(CLAUDE.md, 'Tests herméticos'):\n  " + "\n  ".join(changed),
+            pytrace=False,
+        )
 
 
 @pytest.fixture
