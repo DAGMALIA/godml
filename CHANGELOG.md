@@ -157,6 +157,13 @@ the run. Review these before upgrading (details in the sections below):
   the CLI metrics table and the SageMaker RegisterModel condition; before,
   every metric needed `>=`, so with `mse: 0.5` an error of 0.1 failed and
   2.0 passed. `log_loss` thresholds are no longer limited to [0, 1].
+- `${VAR}` interpolation in `godml.yml`: values inside lists of dicts or
+  nested lists (e.g. `governance.tags`, `metrics`) are now resolved, and a
+  variable inside a longer string keeps the rest of it
+  (`s3://${BUCKET}/data.csv` used to become just the bucket name; several
+  variables per value now work). An unset variable without default inside a
+  longer string raises `ConfigurationError`; a value that is exactly
+  `${VAR}` still becomes empty (None) as in 1.x.
 
 ### Changed
 
