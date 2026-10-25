@@ -33,6 +33,14 @@ the run. Review these before upgrading (details in the sections below):
   and re-hash any stored lookups. With `GODML_ENV=prod` the key is mandatory
   (the run stops without it); elsewhere a public dev key is used with a
   warning, which does not protect real data.
+- **PII detection changed.** Ordinary columns that 1.x dropped or hashed by
+  mistake (`hotel_id`, `plate`, `tip`, `year`, `fare`, any 5-digit amount,
+  any 4-decimal float, ...) are now kept, so models trained with
+  `drop_sensitive`/`hash_sensitive` may see new features: retrain and
+  compare. CVV, zip/postal codes and coordinates are now detected only when
+  the column name says so (`cvv`, `zip_code`, `lat`, ...): rename such
+  columns if they have generic names. The dataset target is never treated as
+  PII.
 - **Library logging is silent by default.** Outside the CLI (notebooks,
   scripts), godml no longer prints its own log lines or writes
   `logs/godml.log`. To see them, configure logging in your application, e.g.
@@ -112,6 +120,15 @@ the run. Review these before upgrading (details in the sections below):
   force or a dictionary for card numbers and emails. It is now an
   HMAC-SHA256 keyed by `GODML_PII_KEY`; missing key with `GODML_ENV=prod`
   raises `ComplianceError`.
+
+- PCI-DSS PII detection matched name hints as substrings (`tel` in
+  `hotel_id`, `lat` in `plate`, `ip` in `tip`/`description`, `name` in
+  `filename`) and treated any 3-4 digit number as a CVV, any 5-digit number
+  as a zip code and any float with 4 decimals as a coordinate, so ordinary
+  features were dropped or hashed, including the target. Name hints now
+  match whole tokens (snake_case and camelCase), those ambiguous content
+  patterns need a confirming column name, expiration dates need a `/`, and
+  the target column is excluded (`exclude_columns`).
 
 ### Fixed
 

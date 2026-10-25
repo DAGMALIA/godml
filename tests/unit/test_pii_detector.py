@@ -15,16 +15,20 @@ class TestPiiDetectorColumnType:
         assert self.detector.detect_column_type(s) == "ssn"
 
     def test_detects_zip_code(self):
+        # F1-07: needs the column name; any 5-digit number used to count as a zip.
         s = pd.Series(["12345", "90210", "10001"])
-        assert self.detector.detect_column_type(s) == "zip_code"
+        assert self.detector.detect_column_type(s, "zip_code") == "zip_code"
+        assert self.detector.detect_column_type(s) == "unknown"
 
     def test_detects_dob(self):
         s = pd.Series(["1990-07-15", "2000-01-01", "1985-12-31"])
         assert self.detector.detect_column_type(s) == "dob"
 
     def test_detects_cvv(self):
+        # F1-07: needs the column name; any 3-4 digit number used to be a CVV.
         s = pd.Series(["123", "456", "789"])
-        assert self.detector.detect_column_type(s) == "cvv"
+        assert self.detector.detect_column_type(s, "cvv") == "cvv"
+        assert self.detector.detect_column_type(s) == "unknown"
 
     def test_detects_expiration_date(self):
         s = pd.Series(["01/25", "12/26", "06/27"])

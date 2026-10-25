@@ -2,7 +2,7 @@
 # Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
 # SPDX-License-Identifier: MIT
 
-from typing import Optional
+from typing import Optional, Sequence
 import pandas as pd
 import logging
 from godml.compliance_service.errors import ComplianceError, unsupported_standard
@@ -24,6 +24,7 @@ class ComplianceEngine:
         df: pd.DataFrame,
         compliance_type: Optional[str] = None,
         policy: Optional[str] = None,
+        exclude_columns: Optional[Sequence[str]] = None,
     ) -> pd.DataFrame:
         """
         Aplica el estándar de cumplimiento sobre el DataFrame.
@@ -74,7 +75,9 @@ class ComplianceEngine:
             )
 
         try:
-            engine = PciDssCompliance(policy=policy)
+            engine = PciDssCompliance(
+                policy=policy, exclude_columns=tuple(exclude_columns or ())
+            )
             df_out = engine.apply(df.copy())
         except Exception as e:
             raise ComplianceError(

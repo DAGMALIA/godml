@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import logging
 import os
+import re
 
 from godml.compliance_service.errors import ComplianceError
 
@@ -96,6 +97,24 @@ def mask_date(date_str) -> str:
     return "****-**-**"
 
 
+def name_tokens(col_name: str) -> list[str]:
+    """`customerEmail`, `zip-code` -> ["customer", "email"], ["zip", "code"]."""
+    spaced = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", str(col_name or ""))
+    return [t for t in re.split(r"[^A-Za-z0-9]+", spaced.lower()) if t]
+
+
+def name_has_hint(col_name: str, hint: str) -> bool:
+    """Whole-token match (F1-07): "tel" matches `tel_casa`, not `hotel_id`.
+
+    Multi-token hints such as "cc_num" must appear as consecutive tokens.
+    """
+    tokens, wanted = name_tokens(col_name), name_tokens(hint)
+    n = len(wanted)
+    return n > 0 and any(
+        tokens[i : i + n] == wanted for i in range(len(tokens) - n + 1)
+    )
+
+
 def is_pii_column(col_name: str) -> bool:
     if not col_name:
         return False
@@ -111,5 +130,4 @@ def is_pii_column(col_name: str) -> bool:
         "dob",
         "birth",
     ]
-    lower = col_name.lower()
-    return any(k in lower for k in pii_keywords)
+    return any(name_has_hint(col_name, k) for k in pii_keywords)

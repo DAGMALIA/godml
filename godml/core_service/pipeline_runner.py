@@ -32,7 +32,11 @@ def run_pipeline_preprocessing(
     # Fail-closed (F1-01): a ComplianceError propagates; the raw DataFrame is
     # never returned when compliance was requested.
     # ✅ 1. Aplicar cumplimiento in-memory
-    df_compliant = ComplianceEngine.apply(df.copy(), compliance_type, policy)
+    # F1-07: the target is never treated as PII (dropping or hashing it breaks training).
+    target = getattr(pipeline.dataset, "target", None)
+    df_compliant = ComplianceEngine.apply(
+        df.copy(), compliance_type, policy, exclude_columns=[target] if target else None
+    )
 
     # ✅ 2. Guardar dataset compliant si está definido en el YAML.
     # A failed save is logged and the in-memory (already compliant) data is used.

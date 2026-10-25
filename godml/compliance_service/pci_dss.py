@@ -1,6 +1,8 @@
 # Copyright (c) 2024
 # SPDX-License-Identifier: MIT
 
+from typing import Iterable
+
 import pandas as pd
 from .base_compliance import BaseCompliance
 from .pii_detector import PiiDetector
@@ -25,10 +27,17 @@ class PciDssCompliance(BaseCompliance):
           * 'hash_sensitive'  -> HMAC-SHA256 truncado con la llave GODML_PII_KEY
     """
 
-    def __init__(self, policy: str = "mask_sensitive", hash_len: int = 12):
+    def __init__(
+        self,
+        policy: str = "mask_sensitive",
+        hash_len: int = 12,
+        exclude_columns: Iterable[str] = (),
+    ):
         self.policy = (policy or "mask_sensitive").strip().lower()
         self.hash_len = hash_len
         self.detector = PiiDetector()
+        # Never treated as PII, e.g. the training target (F1-07).
+        self.exclude_columns = tuple(exclude_columns or ())
 
     def _mask_col(self, series: pd.Series, pii_type: str) -> pd.Series:
         # Regla específica según tipo
@@ -53,11 +62,15 @@ class PciDssCompliance(BaseCompliance):
         df = df.copy()
 
         # 1) Detección por contenido (muestra)
-        detected_content = self.detector.detect_all(df)  # dict: col -> pii_type
+        detected_content = self.detector.detect_all(
+            df, exclude_columns=self.exclude_columns
+        )  # dict: col -> pii_type
 
         # 2) Detección por nombre (heurística)
         detected_name = {
-            col: "name_heuristic" for col in df.columns if is_pii_column(col)
+            col: "name_heuristic"
+            for col in df.columns
+            if col not in self.exclude_columns and is_pii_column(col)
         }
 
         # Unimos resultados: preferimos el tipo del detector de contenido

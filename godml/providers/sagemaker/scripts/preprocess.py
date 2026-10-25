@@ -38,7 +38,9 @@ except ImportError:  # the stock sklearn image does not ship godml
         )
 
 
-def apply_compliance(df: pd.DataFrame, compliance: str, policy: str) -> pd.DataFrame:
+def apply_compliance(
+    df: pd.DataFrame, compliance: str, policy: str, target_col: str | None = None
+) -> pd.DataFrame:
     """Fail-closed (F1-04): any failure aborts; unprocessed data never reaches training."""
     if not compliance:
         return df
@@ -50,7 +52,9 @@ def apply_compliance(df: pd.DataFrame, compliance: str, policy: str) -> pd.DataF
             "in this processing image, so it cannot be applied. Refusing to "
             "continue with unprocessed data."
         ) from exc
-    df = ComplianceEngine.apply(df, compliance, policy)  # raises ComplianceError
+    df = ComplianceEngine.apply(  # raises ComplianceError
+        df, compliance, policy, exclude_columns=[target_col] if target_col else None
+    )
     print(f"Compliance '{compliance}' applied with policy '{policy}'")
     return df
 
@@ -91,7 +95,7 @@ def main() -> None:
     df = pd.read_csv(src) if src.endswith(".csv") else pd.read_parquet(src)
     print(f"Shape: {df.shape}, columns: {list(df.columns)}")
 
-    df = apply_compliance(df, compliance, policy)
+    df = apply_compliance(df, compliance, policy, target_col)
 
     # Validate target column
     if target_col not in df.columns:
