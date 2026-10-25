@@ -41,6 +41,10 @@ the run. Review these before upgrading (details in the sections below):
   the column name says so (`cvv`, `zip_code`, `lat`, ...): rename such
   columns if they have generic names. The dataset target is never treated as
   PII.
+- **Loss-metric thresholds are upper bounds.** For `mse`, `rmse`, `mae` and
+  `log_loss` a run passes when the value is `<=` the threshold (1.x required
+  `>=`, so good models were rejected and bad ones registered). Review
+  thresholds you tuned around the old behavior.
 - **Library logging is silent by default.** Outside the CLI (notebooks,
   scripts), godml no longer prints its own log lines or writes
   `logs/godml.log`. To see them, configure logging in your application, e.g.
@@ -148,6 +152,11 @@ the run. Review these before upgrading (details in the sections below):
   detect model types. Library loggers only have a `NullHandler`; the CLI
   configures output (`configure_cli_logging`) and sets the TensorFlow env
   vars as defaults.
+- Metric thresholds now have a direction. Loss metrics (`mse`, `rmse`, `mae`,
+  `log_loss`) pass when `<=` the threshold in the MLflow registration gate,
+  the CLI metrics table and the SageMaker RegisterModel condition; before,
+  every metric needed `>=`, so with `mse: 0.5` an error of 0.1 failed and
+  2.0 passed. `log_loss` thresholds are no longer limited to [0, 1].
 
 ### Changed
 

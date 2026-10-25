@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from godml.config_service.schema import PipelineDefinition, ComputeConfig
+from godml.monitoring_service.thresholds import register_condition_name
 
 SCRIPTS_DIR = Path(__file__).parent / "scripts"
 _SKLEARN_FW = "1.2-1"
@@ -203,11 +204,12 @@ def build_register_step(
     evaluation_report,
 ):
     """
-    Conditional RegisterModel: only registers if primary metric >= threshold.
+    Conditional RegisterModel: only registers if the primary metric meets its
+    threshold (<= for losses such as mse/rmse/mae/log_loss, >= otherwise; F1-10).
     Returns a ConditionStep (or None if no registry config).
     """
     from sagemaker.workflow.step_collections import RegisterModel
-    from sagemaker.workflow.conditions import ConditionGreaterThanOrEqualTo
+    from sagemaker.workflow import conditions
     from sagemaker.workflow.condition_step import ConditionStep
     from sagemaker.workflow.functions import JsonGet
 
@@ -234,7 +236,8 @@ def build_register_step(
         return register
 
     primary = pipeline.metrics[0]
-    condition = ConditionGreaterThanOrEqualTo(
+    condition_class = getattr(conditions, register_condition_name(primary.name))
+    condition = condition_class(
         left=JsonGet(
             step_name=evaluation_step.name,
             property_file=evaluation_report,

@@ -28,6 +28,7 @@ from godml.monitoring_service.metrics import (
     evaluate_regression,
 )
 from godml.monitoring_service.observability import build_baseline, save_baseline
+from godml.monitoring_service.thresholds import failed_thresholds
 
 logger = get_logger()
 
@@ -386,19 +387,16 @@ class MLflowExecutor(BaseExecutor):
                     # ╭───────────────────────────────
                     # 6️⃣ Validación por thresholds
                     # ────────────────────────────────╮
-                    all_metrics_passed = True
                     for metric in pipeline.metrics:
-                        value = metrics_dict.get(metric.name)
-                        if value is None:
+                        if metrics_dict.get(metric.name) is None:
                             logger.warning(
                                 f"⚠️ Métrica '{metric.name}' no fue calculada."
                             )
-                            continue
-                        if value < metric.threshold:
-                            logger.error(
-                                f"🚫 {metric.name.upper()} ({value:.4f}) < {metric.threshold}"
-                            )
-                            all_metrics_passed = False
+                    # F1-10: losses (mse, rmse, mae, log_loss) pass when <= threshold.
+                    failures = failed_thresholds(pipeline.metrics, metrics_dict)
+                    for failure in failures:
+                        logger.error(f"🚫 {failure}")
+                    all_metrics_passed = not failures
 
                     # ╭───────────────────────────────
                     # 7️⃣ Registro del modelo y batch output

@@ -3,6 +3,8 @@
 from godml.config_service.schema import PipelineDefinition, Metric
 from typing import List, Dict
 
+from godml.monitoring_service.thresholds import LOWER_IS_BETTER
+
 
 class ValidationError(Exception):
     pass
@@ -16,7 +18,8 @@ def is_valid_hash(hash_value: str) -> bool:
     return hash_value and hash_value != "auto"
 
 
-_UNBOUNDED_METRICS = {"mse", "mae", "rmse"}  # regresión: no acotadas a [0, 1]
+# Losses are not bounded to [0, 1] (F1-10 adds log_loss).
+_UNBOUNDED_METRICS = set(LOWER_IS_BETTER)
 _SIGNED_METRICS = {"r2"}  # regresión: puede ser negativo (peor que predecir la media)
 
 

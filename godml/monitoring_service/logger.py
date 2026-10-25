@@ -7,6 +7,8 @@ import os
 import warnings
 from logging.handlers import RotatingFileHandler
 
+from godml.monitoring_service.thresholds import passes_threshold
+
 
 # ============================================================================
 # EXCEPCIONES PERSONALIZADAS GODML
@@ -191,7 +193,7 @@ def print_metrics_table(metrics: dict, thresholds: dict | None = None) -> None:
             thr_str = f"{threshold:.2f}" if threshold is not None else "—"
             if threshold is None:
                 icon = ""
-            elif value >= threshold:
+            elif passes_threshold(metric, value, threshold):
                 icon = "[green]✓[/green]"
             else:
                 icon = "[red]✗[/red]"
