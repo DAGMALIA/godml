@@ -9,6 +9,7 @@ from pathlib import Path
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from godml.core_service.engine import BaseExecutor
+from godml.compliance_service.dataset_integrity import verify_dataset_hash
 from godml.config_service.schema import PipelineDefinition, ModelResult
 from godml.model_service.model_loader import load_custom_model_class
 from godml.monitoring_service.logger import (
@@ -141,6 +142,9 @@ class MLflowExecutor(BaseExecutor):
                     f"  * O crea previamente el archivo en esa ruta."
                 )
             df = pd.read_csv(dataset_path_abs)
+
+        # F1-05: a pinned dataset.hash must match the file that will be used.
+        verify_dataset_hash(dataset_path_abs, ds.hash)
 
         # ╭───────────────────────────────
         # 2️⃣ Target (obligatorio)

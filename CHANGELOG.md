@@ -6,6 +6,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [1.4.0] - Unreleased
 
+### Upgrading from 1.3.x
+
+1.4.0 is fail-closed: several checks that used to log and continue now stop
+the run. Review these before upgrading (details in the sections below):
+
+- **Unsupported `governance.compliance` values abort.** Anything other than
+  `pci-dss` was skipped silently, so that data was never protected. Use
+  `pci-dss` or remove the key.
+- **Governance validation blocks.** A blank `governance.owner`, an
+  out-of-range metric threshold or a batch deploy without
+  `deploy.batch_output` now fail `godml run`.
+- **A pinned `dataset.hash` is verified.** `godml run` fails if the file at
+  `dataset.uri` does not match it. Re-pin with
+  `godml calc-hash <file> --update-yaml <godml.yml>` when the change is
+  intended. With `provider: sagemaker` the hash is **not** verified for S3
+  data yet; a warning says so.
+- **SageMaker never applied compliance**, and `governance.compliance` with
+  `provider: sagemaker` is now rejected at validation. Until the official 2.0
+  image: apply compliance locally, upload the processed data to S3 and run
+  SageMaker without the `compliance` key.
+- **MLflow runs from 1.x may contain the raw dataset** under the `dataset/`
+  artifact path. Review and delete those artifacts if they hold personal data.
+
 ### Security
 
 - Compliance is now fail-closed. When `governance.compliance` is set and
@@ -51,6 +74,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   before uploading the data to S3 (for example with `godml dataprep`) and
   remove `governance.compliance` from that pipeline, or use
   `provider: mlflow`. Review data already used in SageMaker training jobs.
+
+- A pinned `dataset.hash` is now verified by `godml run` (MLflow executor)
+  before the data is used; a mismatch stops the run with
+  `DatasetIntegrityError` showing both hashes. Before, only `"auto"` vs. a
+  value was checked and any file was accepted. `auto` or empty still skips the
+  check. The SageMaker executor warns that S3 data is not verified.
 
 ### Fixed
 

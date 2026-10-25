@@ -25,3 +25,7 @@ def unsupported_standard(standard: str) -> ComplianceError:
         "To fix it, set `governance.compliance: pci-dss` or remove the "
         "`compliance` key. See CHANGELOG 1.4.0."
     )
+
+
+class DatasetIntegrityError(RuntimeError):
+    """The data at dataset.uri does not match the pinned dataset.hash (F1-05)."""
