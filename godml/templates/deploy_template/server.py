@@ -6,11 +6,14 @@ from pydantic import BaseModel
 import joblib
 import pandas as pd
 from pathlib import Path
-import inspect
 import os
 import time
-import xgboost as xgb
 from godml.monitoring_service.logger import godml_logger, SecurityError
+from godml.utils.serving import (
+    MissingFeaturesError,
+    align_features,
+    predict_with_proba,
+)
 from godml.monitoring_service.observability import (
     BASELINE_FILENAME,
     ModelObserver,
@@ -165,33 +168,14 @@ def predict(input_data: InputData, request: Request):
         godml_logger.info("📥 Input recibido:")
         godml_logger.info(str(df))
 
+        # F1-11: JSON key order is arbitrary; use the training column order.
         try:
-            # Detectar tipo de modelo y predecir
-            sig = inspect.signature(model.predict)
-            params = sig.parameters
+            df = align_features(model, df)
+        except MissingFeaturesError as e:
+            raise HTTPException(status_code=400, detail=f"Faltan columnas: {e.missing}")
 
-            if "data" in params or isinstance(model, xgb.Booster):
-                godml_logger.info("🔎 Detectado modelo XGBoost nativo (usa DMatrix)")
-
-                if hasattr(model, "feature_names") and model.feature_names:
-                    expected_features = model.feature_names
-                    df = df[expected_features]
-
-                dmatrix = xgb.DMatrix(df)
-                prediction = model.predict(dmatrix)
-            else:
-                godml_logger.info("🔎 Modelo sklearn o pipeline")
-                prediction = model.predict(df)
-
-            # Convertir predicción a formato serializable
-            if hasattr(prediction, "tolist"):
-                prediction_result = prediction.tolist()
-            else:
-                prediction_result = (
-                    list(prediction)
-                    if hasattr(prediction, "__iter__")
-                    else [prediction]
-                )
+        try:
+            prediction_result, probabilities = predict_with_proba(model, df)
 
             observer.record_prediction(
                 latency=time.time() - start,
@@ -199,7 +183,10 @@ def predict(input_data: InputData, request: Request):
                 predictions=prediction_result,
                 features=df,
             )
-            return {"prediction": prediction_result}
+            response = {"prediction": prediction_result}
+            if probabilities is not None:
+                response["probabilities"] = probabilities
+            return response
 
         except Exception as e:  # noqa: BLE001
             godml_logger.error(f"❌ Error durante predicción: {str(e)}")

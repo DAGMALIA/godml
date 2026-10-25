@@ -168,6 +168,13 @@ the run. Review these before upgrading (details in the sections below):
   listens on 8000, so any environment whose `deploy_config.<env>.port` was
   not 8000 (e.g. qa 8001, prod 80) was unreachable. It now publishes
   `<port>:8000`. `godml serve` runs uvicorn with auto-reload only in `dev`.
+- Inference servers (`deploy_service` and the scaffold template): request
+  features are reordered to the training order (`feature_names_in_` or the
+  Booster's `feature_names`) and unknown keys are ignored. Before, a payload
+  whose JSON keys came in another order failed (sklearn) or did not match
+  the Booster's features, and an extra key broke the request. A missing
+  feature is a 400. `/predict` also returns `probabilities` when the model
+  has `predict_proba` (the `prediction` field is unchanged).
 
 ### Changed
 

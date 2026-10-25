@@ -16,11 +16,15 @@ except ImportError:
 from pydantic import BaseModel
 import joblib
 import pandas as pd
-import inspect
 import os
 import time
 from pathlib import Path
 from godml import __version__
+from godml.utils.serving import (
+    MissingFeaturesError,
+    align_features,
+    predict_with_proba,
+)
 from godml.monitoring_service.logger import godml_logger, SecurityError
 from godml.monitoring_service.observability import (
     BASELINE_FILENAME,
@@ -139,28 +143,13 @@ def predict(input_data: InputData, request: Request):
         if model is None:
             raise HTTPException(status_code=500, detail="Modelo no cargado")
 
-        df = pd.DataFrame([input_data.data])
+        # F1-11: JSON key order is arbitrary; use the training column order.
+        try:
+            df = align_features(model, pd.DataFrame([input_data.data]))
+        except MissingFeaturesError as e:
+            raise HTTPException(status_code=400, detail=f"Faltan columnas: {e.missing}")
 
-        expected_features = getattr(model, "feature_names", None)
-        if expected_features:
-            missing = [f for f in expected_features if f not in df.columns]
-            if missing:
-                raise HTTPException(
-                    status_code=400, detail=f"Faltan columnas: {missing}"
-                )
-
-        sig = inspect.signature(model.predict)
-        if "data" in sig.parameters or isinstance(model, xgb.Booster):
-            dmatrix = xgb.DMatrix(df)
-            prediction = model.predict(dmatrix)
-        else:
-            prediction = model.predict(df)
-
-        result = (
-            prediction.tolist()
-            if hasattr(prediction, "tolist")
-            else [float(prediction)]
-        )
+        result, probabilities = predict_with_proba(model, df)
         latency = round(time.time() - start, 4)
         observer.record_prediction(
             latency=time.time() - start,
@@ -169,7 +158,10 @@ def predict(input_data: InputData, request: Request):
             features=df,
         )
         godml_logger.info(f"✅ Predicción en {latency}s -> {result}")
-        return {"prediction": result, "latency": latency}
+        response = {"prediction": result, "latency": latency}
+        if probabilities is not None:
+            response["probabilities"] = probabilities
+        return response
 
     except HTTPException as e:
         # Un 4xx es error de cliente y un 5xx es del modelo: separarlos evita que
