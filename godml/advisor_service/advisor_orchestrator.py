@@ -6,6 +6,7 @@ from godml.advisor_service.model_selector import ModelSelector
 from godml.advisor_service.hyperparam_advisor import HyperparamAdvisor
 from godml.advisor_service.data_quality_judge import DataQualityJudge
 from godml.advisor_service.rag_advisor import RAGAdvisor
+from godml.utils.dtypes import is_text_like
 
 
 def _json_safe(obj):
@@ -52,7 +53,7 @@ class AdvisorOrchestrator:
         dataset_summary = (
             f"{df.shape[0]} filas, "
             f"target {metrics['task_type']}, "
-            f"{len(df.select_dtypes(include=['object']).columns)} categóricas, "
+            f"{sum(is_text_like(dtype) for dtype in df.dtypes)} categóricas, "
             f"nulos: {quality['nulls']}"
         )
 
