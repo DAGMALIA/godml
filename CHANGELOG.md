@@ -92,6 +92,16 @@ the run. Review these before upgrading (details in the sections below):
   checked. Members are now resolved with `Path.resolve()` and must be
   `is_relative_to` the model dir; links are rejected.
 
+- Path containment checks compared strings with `startswith`, so a sibling
+  directory sharing the prefix (`/proj-evil` for `/proj`) counted as inside
+  the project: the CLI's absolute-path check, `validate_model_path` in the
+  deploy service and in the scaffold template copied into user projects, and
+  the local model loader (which imports a `.py` file). They now use
+  `Path.resolve()` + `is_relative_to`, and the CLI resolves its base dirs on
+  each call instead of once at import. Projects generated with
+  `godml deploy` before 1.4.0 keep the old template: regenerate
+  `deploy_service/` to get the fix.
+
 ### Fixed
 
 - pandas 3 support in the MLflow executor: text columns are now inferred as

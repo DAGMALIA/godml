@@ -81,7 +81,7 @@ def validate_model_path(model_path: Path) -> None:
         current_dir = Path.cwd().resolve()
 
         # Verificar que el modelo esté en el directorio del proyecto
-        if not str(resolved_path).startswith(str(current_dir)):
+        if not resolved_path.is_relative_to(current_dir):  # F1-13
             raise SecurityError("El modelo debe estar en el directorio del proyecto")
 
         if not resolved_path.exists():

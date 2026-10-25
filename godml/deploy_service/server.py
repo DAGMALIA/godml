@@ -77,7 +77,7 @@ def find_model_file() -> Path:
 def validate_model_path(model_path: Path) -> None:
     resolved = model_path.resolve()
     base = Path.cwd().resolve()
-    if not str(resolved).startswith(str(base)):
+    if not resolved.is_relative_to(base):  # F1-13: startswith accepted siblings
         raise SecurityError("Ruta del modelo fuera del proyecto")
     if not resolved.exists() or not resolved.is_file():
         raise FileNotFoundError(f"Archivo de modelo inválido: {resolved}")

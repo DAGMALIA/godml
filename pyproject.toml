@@ -233,8 +233,9 @@ addopts = "-v --tb=short"
 filterwarnings = [
   'error::DeprecationWarning:godml(\..*)?',
   'error::PendingDeprecationWarning:godml(\..*)?',
-  # Known: FastAPI on_event in the 1.x server; replaced by lifespan in F5-03.
-  'ignore:\s*on_event is deprecated:DeprecationWarning:godml\.deploy_service\.server',
+  # Known: FastAPI on_event in the 1.x server and its scaffold template;
+  # replaced by lifespan in F5-03.
+  'ignore:\s*on_event is deprecated:DeprecationWarning:godml\.(deploy_service|templates\.deploy_template)\.server',
 ]
 
 [tool.coverage.run]

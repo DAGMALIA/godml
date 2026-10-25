@@ -126,7 +126,7 @@ def load_custom_model_class(
                 resolved_file = model_file.resolve()
                 resolved_base = models_dir.resolve()
 
-                if not str(resolved_file).startswith(str(resolved_base)):
+                if not resolved_file.is_relative_to(resolved_base):  # F1-13
                     raise SecurityError("Path traversal detectado")
 
                 if not resolved_file.suffix == ".py":

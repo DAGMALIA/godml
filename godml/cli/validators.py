@@ -15,20 +15,19 @@ from godml.utils.path_utils import sanitize_for_log, validate_safe_path
 
 logger = get_logger()
 
-# Directories that are always considered safe for absolute paths.
-# Resolved at import time so they reflect the actual runtime CWD.
-_SAFE_BASE_DIRS: list[Path] = [
-    Path.cwd().resolve(),
-    Path.home().resolve(),
-]
-
 
 def _is_safe_absolute_path(path: str) -> bool:
-    """Cross-platform check: absolute path must be under a known-safe base dir."""
+    """Absolute path must be inside the current working dir or the home dir.
+
+    F1-13: containment via `is_relative_to` (`startswith` accepted siblings
+    such as `/proj-evil` for `/proj`), with the base dirs resolved per call
+    instead of once at import.
+    """
     try:
         resolved = Path(path).resolve()
-        return any(str(resolved).startswith(str(base)) for base in _SAFE_BASE_DIRS)
-    except Exception:  # noqa: BLE001
+        bases = (Path.cwd().resolve(), Path.home().resolve())
+        return any(resolved.is_relative_to(base) for base in bases)
+    except (OSError, RuntimeError, ValueError):
         return False
 
 
