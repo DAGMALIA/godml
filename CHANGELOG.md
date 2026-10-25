@@ -86,6 +86,12 @@ the run. Review these before upgrading (details in the sections below):
   value was checked and any file was accepted. `auto` or empty still skips the
   check. The SageMaker executor warns that S3 data is not verified.
 
+- SageMaker evaluation step: the model-archive path-traversal check used a
+  string prefix, so a member such as `../model_evil/x` could be written to a
+  sibling directory of the model dir, and symlinks/hardlinks were not
+  checked. Members are now resolved with `Path.resolve()` and must be
+  `is_relative_to` the model dir; links are rejected.
+
 ### Fixed
 
 - pandas 3 support in the MLflow executor: text columns are now inferred as
