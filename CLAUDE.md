@@ -33,6 +33,7 @@ El plan completo y el estado del proyecto viven en `GODML_2_0_PLAN.md`. **Ese ar
 - **No documentar lo que no existe.** README y docs solo describen funcionalidad implementada y probada.
 - **Una sola versión.** Nunca escribir la versión del paquete como literal; usar `importlib.metadata`.
 - **Seguridad.** Validar rutas con `Path.resolve()` + `is_relative_to`; no cargar pickles desde rutas no validadas; no secretos en código ni ejemplos.
+- **Tests herméticos.** Ningún test escribe fuera de `tmp_path` ni importa módulos con efectos colaterales a nivel módulo; los scripts ejecutables deben tener la lógica bajo `if __name__ == '__main__':`.
 
 ## Comandos útiles
 
