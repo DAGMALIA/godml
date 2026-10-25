@@ -45,8 +45,12 @@ def serve_command(environment: str = "dev") -> None:
         logger.info(
             f"Sirviendo modelo en http://{sanitize_for_log(str(host))}:{sanitize_for_log(str(port))}"
         )
+        # F1-08: auto-reload is a development aid; never outside dev.
         uvicorn.run(
-            "godml.deploy_service.server:app", host=host, port=port, reload=True
+            "godml.deploy_service.server:app",
+            host=host,
+            port=port,
+            reload=environment == "dev",
         )
 
     except ConfigurationError as e:

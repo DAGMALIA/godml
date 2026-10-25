@@ -164,6 +164,10 @@ the run. Review these before upgrading (details in the sections below):
   variables per value now work). An unset variable without default inside a
   longer string raises `ConfigurationError`; a value that is exactly
   `${VAR}` still becomes empty (None) as in 1.x.
+- `godml deploy` published `-p <port>:<port>`, but the generated image always
+  listens on 8000, so any environment whose `deploy_config.<env>.port` was
+  not 8000 (e.g. qa 8001, prod 80) was unreachable. It now publishes
+  `<port>:8000`. `godml serve` runs uvicorn with auto-reload only in `dev`.
 
 ### Changed
 

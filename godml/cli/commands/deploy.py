@@ -22,6 +22,11 @@ from ..validators import (
 logger = get_logger()
 
 
+# Port the generated image listens on (DOCKERFILE_TEMPLATE: CMD --port, EXPOSE,
+# HEALTHCHECK). deploy_config.<env>.port is the host port published to it.
+CONTAINER_PORT = 8000
+
+
 def find_model_for_deploy(environment: str) -> Path:
     if ".." in environment or os.path.isabs(environment):
         raise SecurityError("Ambiente no permitido")
@@ -110,10 +115,10 @@ def deploy_command(project_name: str, environment: str) -> None:
                         f"GODML_ENV={safe_environment}",
                         "-e",
                         f"HOST={safe_host}",
-                        "-e",
-                        f"PORT={safe_port}",
+                        # F1-08: host port -> fixed container port (was
+                        # {port}:{port}, unreachable for any port but 8000).
                         "-p",
-                        f"{safe_port}:{safe_port}",
+                        f"{safe_port}:{CONTAINER_PORT}",
                         safe_tag,
                     ],
                     check=True,
