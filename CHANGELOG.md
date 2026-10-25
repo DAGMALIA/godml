@@ -179,6 +179,11 @@ the run. Review these before upgrading (details in the sections below):
   `UnicodeEncodeError` when the terminal or redirected output is not UTF-8
   (Windows cp1252 consoles, CI logs): characters the stream cannot encode are
   printed as `?`. The emoji in the `dataprep` help text was removed.
+- RandomForest (and other scikit-learn models) could not be logged to MLflow
+  with recent MLflow versions (skops serialization): the sklearn branch of
+  the model logger never passed `skops_trusted_types`, and the allowlist only
+  covered XGBoost, so `sklearn.tree._tree.Tree` was rejected. All sklearn-API
+  models now go through the same path with a reviewed allowlist.
 
 ### Changed
 

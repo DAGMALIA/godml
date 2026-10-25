@@ -18,14 +18,19 @@ def ensure_valid_tracking_uri() -> str:
     return mlflow.get_tracking_uri()
 
 
-# Non-sklearn types that XGBoost's sklearn API wrapper (XGBClassifier/XGBRegressor)
-# embeds internally — skops' security model requires these to be explicitly
-# trusted, or mlflow.sklearn.log_model() raises UntrustedTypesFoundException.
-_XGBOOST_SKOPS_TRUSTED_TYPES = [
+# Types skops must be told to trust when MLflow serializes godml's catalog
+# models, or mlflow.sklearn.log_model() raises UntrustedTypesFoundException.
+# A reviewed allowlist, as skops recommends, not "everything get_untrusted_types
+# reports": these files are produced by godml itself.
+_SKOPS_TRUSTED_TYPES = [
+    # XGBoost's sklearn API wrapper (XGBClassifier/XGBRegressor)
     "xgboost.core.Booster",
     "xgboost.sklearn.XGBClassifier",
     "xgboost.sklearn.XGBRegressor",
     "xgboost.sklearn.XGBModel",
+    # Node storage of tree ensembles (random_forest). Without it every
+    # RandomForest failed to log with recent MLflow (found in F1-14).
+    "sklearn.tree._tree.Tree",
 ]
 
 
@@ -43,7 +48,7 @@ def _log_sklearn_model(model, log_args: dict) -> None:
     try:
         mlflow.sklearn.log_model(
             sk_model=model,
-            skops_trusted_types=_XGBOOST_SKOPS_TRUSTED_TYPES,
+            skops_trusted_types=_SKOPS_TRUSTED_TYPES,
             **log_args,
         )
     except TypeError:
@@ -114,7 +119,7 @@ def log_model_generic(
         from sklearn.base import BaseEstimator
 
         if isinstance(model, BaseEstimator):
-            mlflow.sklearn.log_model(sk_model=model, **log_args)
+            _log_sklearn_model(model, log_args)
             logger.info(
                 f"Modelo sklearn registrado: {registered_model_name or model_name}"
             )

@@ -330,16 +330,13 @@ class TestLogSklearnModel:
     def test_passes_skops_trusted_types_when_supported(self):
         from godml.utils.log_model_generic import (
             _log_sklearn_model,
-            _XGBOOST_SKOPS_TRUSTED_TYPES,
+            _SKOPS_TRUSTED_TYPES,
         )
 
         with patch("mlflow.sklearn.log_model") as mock_log:
             _log_sklearn_model(MagicMock(), {"name": "model"})
         mock_log.assert_called_once()
-        assert (
-            mock_log.call_args.kwargs["skops_trusted_types"]
-            == _XGBOOST_SKOPS_TRUSTED_TYPES
-        )
+        assert mock_log.call_args.kwargs["skops_trusted_types"] == _SKOPS_TRUSTED_TYPES
 
     def test_falls_back_when_kwarg_unsupported(self):
         from godml.utils.log_model_generic import _log_sklearn_model
