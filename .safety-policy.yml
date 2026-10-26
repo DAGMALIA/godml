@@ -28,43 +28,19 @@ report:
         unpinned-requirements: false
       cvss-severity: []
       vulnerabilities:
-        # All eight: MLflow deserializes model files (pickle/cloudpickle). A
-        # maliciously crafted model uploaded to an MLflow server or registry
-        # runs code when loaded. No fixed MLflow version exists. GoDML only
-        # loads models it trained itself, from validated paths (F1-13), and
-        # does not run an MLflow server that accepts third-party uploads.
-        71577:
-          reason: "mlflow, CVE-2024-37052: loading a malicious scikit-learn model executes code; godml loads only its own models"
+        # Reviewed 2026-10-25 against the Safety DB (API key) on the versions
+        # CI resolves; approved by the maintainer. Both: a maliciously crafted
+        # model executes code when loaded, and no fixed version exists. GoDML
+        # only loads models it trained itself, from validated paths (F1-13),
+        # and does not run an MLflow server that accepts third-party uploads.
+        SFTY-20240604-95861:
+          reason: "mlflow, CVE-2024-37058: loading a malicious Langchain AgentExecutor model executes code; godml never uses the Langchain flavor"
           expires: "2027-01-23"
           specifications: ["mlflow>=2.13.0,<4"]
-        71578:
-          reason: "mlflow, CVE-2024-37053: loading a malicious scikit-learn model executes code; godml loads only its own models"
+        71782:
+          reason: "skops, CVE-2024-37065: loading a malicious skops file executes code; godml only loads skops files it wrote itself"
           expires: "2027-01-23"
-          specifications: ["mlflow>=2.13.0,<4"]
-        71587:
-          reason: "mlflow, CVE-2024-37054: loading a malicious PyFunc model executes code; godml loads only its own models"
-          expires: "2027-01-23"
-          specifications: ["mlflow>=2.13.0,<4"]
-        71693:
-          reason: "mlflow, CVE-2024-37055: loading a malicious pmdarima model executes code; godml never uses pmdarima"
-          expires: "2027-01-23"
-          specifications: ["mlflow>=2.13.0,<4"]
-        71584:
-          reason: "mlflow, CVE-2024-37056: loading a malicious LightGBM model executes code; godml loads only its own models"
-          expires: "2027-01-23"
-          specifications: ["mlflow>=2.13.0,<4"]
-        71692:
-          reason: "mlflow, CVE-2024-37057: loading a malicious TensorFlow model executes code; godml loads only its own models"
-          expires: "2027-01-23"
-          specifications: ["mlflow>=2.13.0,<4"]
-        71691:
-          reason: "mlflow, CVE-2024-37059: loading a malicious PyTorch model executes code; godml never uses PyTorch models"
-          expires: "2027-01-23"
-          specifications: ["mlflow>=2.13.0,<4"]
-        71579:
-          reason: "mlflow, CVE-2024-37060: running a malicious MLflow Recipe executes code; godml does not use MLflow Recipes"
-          expires: "2027-01-23"
-          specifications: ["mlflow>=2.13.0,<4"]
+          specifications: ["skops>=0.6"]
 
 fail-scan-with-exit-code:
   dependency-vulnerabilities:

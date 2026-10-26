@@ -27,7 +27,9 @@ def test_security_md_lists_exactly_the_policy_ignores():
     table = SECURITY.split("**Safety:** exactly these ignores", 1)[1].split("\n\n", 2)[
         1
     ]
-    documented = set(re.findall(r"^\| (\d+) \|", table, flags=re.MULTILINE))
+    documented = set(
+        re.findall(r"^\| ([A-Z0-9][A-Z0-9-]*) \|", table, flags=re.MULTILINE)
+    )
     assert documented == set(policy_ignores())
 
 

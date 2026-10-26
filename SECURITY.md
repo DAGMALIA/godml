@@ -73,32 +73,29 @@ longer ignores unpinned or environment results).
 
 | Safety ID | Package | CVE | Issue | Expires |
 |-----------|---------|-----|-------|---------|
-| 71577 | mlflow | CVE-2024-37052 | Loading a malicious scikit-learn model executes code | 2027-01-23 |
-| 71578 | mlflow | CVE-2024-37053 | Loading a malicious scikit-learn model executes code | 2027-01-23 |
-| 71587 | mlflow | CVE-2024-37054 | Loading a malicious PyFunc model executes code | 2027-01-23 |
-| 71693 | mlflow | CVE-2024-37055 | Loading a malicious pmdarima model executes code | 2027-01-23 |
-| 71584 | mlflow | CVE-2024-37056 | Loading a malicious LightGBM model executes code | 2027-01-23 |
-| 71692 | mlflow | CVE-2024-37057 | Loading a malicious TensorFlow model executes code | 2027-01-23 |
-| 71691 | mlflow | CVE-2024-37059 | Loading a malicious PyTorch model executes code | 2027-01-23 |
-| 71579 | mlflow | CVE-2024-37060 | Loading a malicious MLflow Recipe executes code | 2027-01-23 |
+| SFTY-20240604-95861 | mlflow | CVE-2024-37058 | Loading a malicious Langchain AgentExecutor model executes code | 2027-01-23 |
+| 71782 | skops | CVE-2024-37065 | Loading a malicious skops file executes code | 2027-01-23 |
 
-Why they are accepted: MLflow deserializes model files (pickle /
-cloudpickle) and no fixed MLflow version exists (all affect the resolved
-mlflow 3.17.2). GoDML only loads models it trained itself, from validated
-paths, and does not run an MLflow server accepting third-party uploads.
+Why they are accepted (approved by the maintainer on 2026-10-25): both are
+code execution when a maliciously crafted model is loaded, and no fixed
+version exists (mlflow 3.17.2, skops 0.16.0 as resolved by CI). GoDML only
+loads models it trained itself, from validated paths, never uses MLflow's
+Langchain flavor and does not run an MLflow server accepting third-party
+uploads.
 
-Revalidated on 2026-10-25 against the versions CI resolves. Seven IDs ignored
-in 1.x (`71701`, `71703`, `71706`, `71707`, `62727`, `62800`, `62801`) could
-not be matched to any package in the public Safety DB and were **removed**:
-if they apply, the blocking scan reports them for review.
+Revalidated on 2026-10-25 with the Safety DB (API key) against the versions
+CI resolves. None of the 15 IDs ignored in 1.x is reported for those
+versions any more, so all 15 were **removed** (`71577`, `71578`, `71579`,
+`71584`, `71587`, `71691`, `71692`, `71693`, `71701`, `71703`, `71706`,
+`71707`, `62727`, `62800`, `62801`).
 
 **Review policy:** at every release and at most every 90 days (the
 `expires` date makes Safety report them again). An ignore stays only while
 the advisory still applies to the resolved versions and the reason holds.
 
-`safety scan` prefers a policy stored in Safety Platform for the `godml`
-project over `.safety-policy.yml`; the platform project must not override
-it, otherwise the list above is not what is applied.
+`.safety-policy.yml` in the repository is the source of truth. `safety scan`
+prefers a policy stored in Safety Platform for the `godml` project, so the
+project must not have its own policy there (removed by the maintainer).
 
 (`PYSEC-2024-230`, a certifi advisory fixed in
 2024.7.4, was ignored until 2026-10-24 and no longer applied.)
@@ -150,7 +147,7 @@ GODML adheres to the principles of **responsible disclosure**:
 | SBOM | CycloneDX on the Release; SPDX signed with Cosign as workflow artifact | ✅ Implemented (signed SBOM not yet on the Release) |
 | PyPI publishing | Trusted Publisher (OIDC) | ✅ Implemented |
 | Code scanning | Bandit HIGH blocking; ruff fail-closed rules for new code | ✅ Implemented |
-| Dependency scanning | Safety + pip-audit, both blocking; 8 reviewed Safety ignores | ✅ Implemented |
+| Dependency scanning | Safety + pip-audit, both blocking; 2 reviewed Safety ignores | ✅ Implemented |
 | Dependency locking | `requirements.lock` without hashes, not used by CI | ⚠️ Partial — hashed lockfile planned |
 | Third-party actions | Pinned by commit SHA (except `slsa-github-generator`, which requires a tag) | ✅ Implemented |
 
