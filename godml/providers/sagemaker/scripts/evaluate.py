@@ -16,6 +16,7 @@ import json
 import os
 import tarfile
 from pathlib import Path
+from typing import Any
 
 import joblib
 import pandas as pd
@@ -46,10 +47,20 @@ def _safe_members(tar: tarfile.TarFile, dest: str):
         yield member
 
 
+# Python >= 3.12 (and 3.11.4+) ships extraction filters; "data" also rejects
+# absolute paths, links out of the destination and special files. Older
+# interpreters (some SageMaker images) rely on _safe_members alone.
+_EXTRACT_KWARGS: dict[str, Any] = (
+    {"filter": "data"} if hasattr(tarfile, "data_filter") else {}
+)
+
+
 def extract_model_archives(model_dir: str) -> None:
     for archive in glob.glob(f"{model_dir}/*.tar.gz"):
         with tarfile.open(archive, "r:gz") as tar:
-            tar.extractall(model_dir, members=_safe_members(tar, model_dir))  # noqa: S202
+            tar.extractall(  # noqa: S202
+                model_dir, members=_safe_members(tar, model_dir), **_EXTRACT_KWARGS
+            )
 
 
 def compute_metrics(model, X_test: pd.DataFrame, y_test: pd.Series) -> dict:
