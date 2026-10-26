@@ -1,0 +1,78 @@
+# Safety CLI scan policy (F0-16). Reviewed source of truth for the Safety
+# ignores; the same list is documented in SECURITY.md.
+#
+# Review: at every release and at most every 90 days (see `expires`). An
+# ignore is kept only while the advisory still applies to the versions CI
+# resolves and the reason below still holds.
+#
+# NOTE: `safety scan` prefers a policy stored in Safety Platform for the
+# `godml` project over this file. Keep the platform project without its own
+# policy (or identical to this one), otherwise this file is not applied.
+version: "3.0"
+
+scanning-settings:
+  max-depth: 6
+  exclude: []
+  include-files: []
+  system:
+    targets: []
+
+report:
+  dependency-vulnerabilities:
+    enabled: true
+    auto-ignore-in-report:
+      python:
+        # CI scans a pinned `pip freeze` of the environment it installs; do
+        # not hide anything because of how a requirement is written.
+        environment-results: false
+        unpinned-requirements: false
+      cvss-severity: []
+      vulnerabilities:
+        # All eight: MLflow deserializes model files (pickle/cloudpickle). A
+        # maliciously crafted model uploaded to an MLflow server or registry
+        # runs code when loaded. No fixed MLflow version exists. GoDML only
+        # loads models it trained itself, from validated paths (F1-13), and
+        # does not run an MLflow server that accepts third-party uploads.
+        71577:
+          reason: "mlflow, CVE-2024-37052: loading a malicious scikit-learn model executes code; godml loads only its own models"
+          expires: "2027-01-23"
+          specifications: ["mlflow>=2.13.0,<4"]
+        71578:
+          reason: "mlflow, CVE-2024-37053: loading a malicious scikit-learn model executes code; godml loads only its own models"
+          expires: "2027-01-23"
+          specifications: ["mlflow>=2.13.0,<4"]
+        71587:
+          reason: "mlflow, CVE-2024-37054: loading a malicious PyFunc model executes code; godml loads only its own models"
+          expires: "2027-01-23"
+          specifications: ["mlflow>=2.13.0,<4"]
+        71693:
+          reason: "mlflow, CVE-2024-37055: loading a malicious pmdarima model executes code; godml never uses pmdarima"
+          expires: "2027-01-23"
+          specifications: ["mlflow>=2.13.0,<4"]
+        71584:
+          reason: "mlflow, CVE-2024-37056: loading a malicious LightGBM model executes code; godml loads only its own models"
+          expires: "2027-01-23"
+          specifications: ["mlflow>=2.13.0,<4"]
+        71692:
+          reason: "mlflow, CVE-2024-37057: loading a malicious TensorFlow model executes code; godml loads only its own models"
+          expires: "2027-01-23"
+          specifications: ["mlflow>=2.13.0,<4"]
+        71691:
+          reason: "mlflow, CVE-2024-37059: loading a malicious PyTorch model executes code; godml never uses PyTorch models"
+          expires: "2027-01-23"
+          specifications: ["mlflow>=2.13.0,<4"]
+        71579:
+          reason: "mlflow, CVE-2024-37060: running a malicious MLflow Recipe executes code; godml does not use MLflow Recipes"
+          expires: "2027-01-23"
+          specifications: ["mlflow>=2.13.0,<4"]
+
+fail-scan-with-exit-code:
+  dependency-vulnerabilities:
+    enabled: true
+    fail-on-any-of:
+      cvss-severity: [critical, high, medium, low, unknown]
+      exploitability: [critical, high, medium, low, unknown]
+
+security-updates:
+  dependency-vulnerabilities:
+    auto-security-updates-limit: [patch]

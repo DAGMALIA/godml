@@ -143,6 +143,14 @@ the run. Review these before upgrading (details in the sections below):
   the shape and column names. Projects generated before 1.4.0 keep the old
   template: regenerate `deploy_service/`.
 
+- The Safety dependency scan never audited anything: it scanned
+  `pyproject.toml` ranges and its policy ignored every unpinned requirement
+  ("92 vulnerabilities found, 92 ignored due to policy"), its `--ignore`
+  list was not a `safety scan` option, and the step ran with
+  `continue-on-error`. Safety now blocks CI (audit job and release pipeline),
+  scans the pinned environment CI installs, and applies only the 8 reviewed
+  ignores in `.safety-policy.yml` (listed in SECURITY.md).
+
 ### Fixed
 
 - pandas 3 support in the MLflow executor: text columns are now inferred as

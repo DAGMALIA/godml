@@ -70,6 +70,22 @@ jobs:
           pip install --upgrade pip setuptools
           pip install -e "." pip-audit
 
+      # Safety (F0-16): blocking. Scans the environment this job actually
+      # installed (pinned `pip freeze`), not pyproject's ranges, with the
+      # reviewed ignores in .safety-policy.yml (see SECURITY.md).
+      - name: Freeze resolved environment for Safety
+        run: |
+          mkdir -p safety-scan
+          pip freeze --exclude-editable > safety-scan/requirements.txt
+          wc -l safety-scan/requirements.txt
+
+      - name: Safety scan (blocking)
+        uses: pyupio/safety-action@7baf6605473beffc874c1313ddf2db085c0cacf2 # v1
+        with:
+          api-key: ${{ secrets.SAFETY_API_KEY }}
+          args: --target safety-scan --policy-file .safety-policy.yml --detailed-output
+          output-format: screen
+
       - name: Run pip-audit
         run: |
           touch pip-audit-report.md

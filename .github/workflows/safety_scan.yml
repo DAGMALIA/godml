@@ -75,7 +75,23 @@ jobs:
           sarif_file: bandit_report.sarif
           category: bandit
 
-      # 8️⃣ pip-audit: single blocking CVE audit (D10)
+      # Safety (F0-16): blocking. Scans the environment this job actually
+      # installed (pinned `pip freeze`), not pyproject's ranges, with the
+      # reviewed ignores in .safety-policy.yml (see SECURITY.md).
+      - name: 📌 Freeze resolved environment for Safety
+        run: |
+          mkdir -p safety-scan
+          pip freeze --exclude-editable > safety-scan/requirements.txt
+          wc -l safety-scan/requirements.txt
+
+      - name: 🛡️ Safety Dependency Scan
+        uses: pyupio/safety-action@7baf6605473beffc874c1313ddf2db085c0cacf2 # v1
+        with:
+          api-key: ${{ secrets.SAFETY_API_KEY }}
+          args: --target safety-scan --policy-file .safety-policy.yml --detailed-output
+          output-format: screen
+
+      # 9️⃣ pip-audit (blocking, alongside Safety)
       - name: 🔎 pip-audit dependency scan
         run: |
           echo "🔎 Running pip-audit..."
@@ -166,6 +182,7 @@ jobs:
           echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Tests | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| Bandit SAST | ✅ No HIGH/CRITICAL |" >> $GITHUB_STEP_SUMMARY
+          echo "| Safety (blocking, .safety-policy.yml) | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| pip-audit | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| SBOM (SPDX) | ✅ Signed with Cosign OIDC → Rekor |" >> $GITHUB_STEP_SUMMARY
           echo "| SLSA L3 + PyPI release | ✅ via release.yml on tag push |" >> $GITHUB_STEP_SUMMARY

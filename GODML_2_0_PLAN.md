@@ -13,7 +13,7 @@ Este documento es la fuente de verdad del proyecto 2.0. Claude Code lo lee al in
 
 | Fase | Nombre | Versión objetivo | Estado |
 |---|---|---|---|
-| F0 | Fundaciones del repo | 1.4.0 | ✅ |
+| F0 | Fundaciones del repo | 1.4.0 | 🟨 |
 | F1 | Hotfixes críticos 1.x (protege usuarios actuales) | 1.4.0 | 🟨 |
 | F2 | Arquitectura 2.0: core, spec v2, plugins | 2.0.0a1 | ⬜ |
 | F3 | Pilar **Govern** | 2.0.0a1 | ⬜ |
@@ -184,7 +184,7 @@ Requisito: el paquete debe ser `noarch: python` (puro Python). **Implica retirar
 | D7 | Build conda con **rattler-build** (`recipe.yaml` v1) | ✅ decidido 2026-10-24 |
 | D8 | Titularidad: el mantenedor revisó su contrato y no hay cláusula que reclame GoDML. El correo corporativo en commits se debe a la config de git en su PC personal. No se reescribe historial; se unifica con .mailmap hacia la identidad de Dagmalia (F0-14) | ✅ resuelto 2026-10-24 |
 | D9 | F0-04: el formateo masivo (`ruff format`) va en un **commit aislado primero**, registrado en `.git-blame-ignore-revs` | ✅ 2026-10-24 |
-| D10 | Retirar Safety del CI; pip-audit bloqueante es la fuente única de auditoría de CVE | ✅ decidido 2026-10-24 |
+| D10 | Safety se mantiene como escáner bloqueante junto a pip-audit, con API key (SAFETY_API_KEY sigue vigente). Su badge en el README solo refleja un scan bloqueante y con ignores revisados | ✅ 2026-10-25 (revierte la versión anterior de D10) |
 | D11 | La versión de hotfixes se publica como 1.4.0 (no 1.3.1) porque fail-closed cambia comportamiento visible (compliance no soportado ahora aborta) | ✅ 2026-10-24 |
 
 ---
@@ -209,7 +209,8 @@ Formato: **ID** · estado · descripción → *criterio de aceptación*
 - **F0-12** ✅ `LICENSE_REPORT.md` generado automáticamente (pip-licenses) en CI en lugar de mantenerse a mano
 - **F0-13** ✅ Extras de desarrollo mínimos: reemplazar moto[all] por los servicios que usan los tests (p. ej. moto[s3,sagemaker]); separar `dev` en `dev` + `test-<pilar>`; el job `licenses` deja de instalar .[all] (sin tensorflow) y agrega --fail-on para copyleft fuerte → *ningún test se salta por dependencia faltante y `dev` no arrastra fastapi/boto3 de forma oculta*
 - **F0-14** ✅ `.mailmap` que unifica las identidades del mantenedor en `Arturo Gutiérrez Rubio Rojas <agtzrubio@dagmalia.com>`, sin reescribir historial → *`git shortlog -sne` muestra una sola identidad humana*
-- **F0-15** ✅ Retirar Safety (D10): eliminar el workflow/job y sus 15 ignores; actualizar SECURITY.md
+- **F0-15** ⏭️ Retirar Safety (D10): eliminar el workflow/job y sus 15 ignores; actualizar SECURITY.md — *reemplazada por F0-16 al revertirse D10*
+- **F0-16** 🟨 Safety honesto: (1) restaurar el job de Safety (manteniendo `safety_scan.yml` por la identidad Cosign); (2) sin `continue-on-error`: Safety bloquea CI; (3) revalidar los 15 IDs ignorados contra las versiones que CI resuelve hoy (mlflow 3.17.x, etc.): eliminar los que ya no aplican, y los que se queden llevan motivo, paquete afectado y fecha de revisión; (4) SECURITY.md lista exactamente esos ignores y su política de revisión (cada release y como máximo cada 90 días); (5) badge de Safety en el README apuntando al resultado real del workflow
 
 ### F1 — Hotfixes críticos 1.x (1.4.0)
 

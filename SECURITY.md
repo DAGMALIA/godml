@@ -13,7 +13,7 @@ not claimed as implemented.
 Two workflows build and publish GODML:
 
 - **`safety_scan.yml`** (every push to `main`; the file name is historical):
-  tests, Bandit, pip-audit, SPDX SBOM signed with Cosign, then pushes the
+  tests, Bandit, Safety, pip-audit, SPDX SBOM signed with Cosign, then pushes the
   `v<version>` tag.
 - **`release.yml`** (on that tag): builds sdist and wheel, generates a
   CycloneDX SBOM and SLSA L3 provenance, creates the GitHub Release and
@@ -28,7 +28,8 @@ Two workflows build and publish GODML:
 | Tool | Purpose | Where | Enforcement |
 |------|---------|-------|-------------|
 | **Bandit** | Insecure code patterns | `ci.yml` (SAST job), `safety_scan.yml` | **Blocking** on HIGH severity (`-lll`). MEDIUM/LOW are reported in SARIF, not blocking |
-| **pip-audit** | Dependency CVEs (PyPI advisory DB / OSV) — the single CVE audit | `ci.yml` (core install), `safety_scan.yml` (dev install) | **Blocking**, no ignored IDs |
+| **Safety** | Dependency CVEs (Safety DB) | `ci.yml` (audit job), `safety_scan.yml` | **Blocking**, any severity, ignores only those listed below (`.safety-policy.yml`) |
+| **pip-audit** | Dependency CVEs (PyPI advisory DB / OSV) | `ci.yml` (core install), `safety_scan.yml` (dev install) | **Blocking**, no ignored IDs |
 | **ruff** (`S110`, `BLE001`) + **mypy** | No silent `except Exception: pass`, no blind excepts, type checks | `ci.yml` (lint job), pre-commit | **Blocking** for new code. Pre-existing cases are tagged `# noqa` as tracked debt |
 
 Scan reports (Bandit, pip-audit, signed SPDX SBOM) are uploaded as the
@@ -62,12 +63,42 @@ Release”**. Bandit SARIF is also sent to the repository's Security tab.
 
 ## 🧾 Known Vulnerabilities & Accepted Risks
 
-**No ignored advisories.** pip-audit is the single source of CVE auditing
-(Safety was removed from CI on 2026-10-24, together with its 15 ignored IDs
-that dated from MLflow 3.4.0). With the current range (`mlflow>=2.13.0,<4`)
-CI resolves MLflow 3.17.2 (2026-10-24) and pip-audit reports no known
-vulnerabilities. Any future exception must be added as `--ignore-vuln` in both
-workflows and documented here with its justification and review date.
+Two scanners block CI: **Safety** and **pip-audit**. Both scan the
+environment CI actually installs (Safety scans a pinned `pip freeze`; it no
+longer ignores unpinned or environment results).
+
+**pip-audit:** no ignored advisories.
+
+**Safety:** exactly these ignores, defined in `.safety-policy.yml`:
+
+| Safety ID | Package | CVE | Issue | Expires |
+|-----------|---------|-----|-------|---------|
+| 71577 | mlflow | CVE-2024-37052 | Loading a malicious scikit-learn model executes code | 2027-01-23 |
+| 71578 | mlflow | CVE-2024-37053 | Loading a malicious scikit-learn model executes code | 2027-01-23 |
+| 71587 | mlflow | CVE-2024-37054 | Loading a malicious PyFunc model executes code | 2027-01-23 |
+| 71693 | mlflow | CVE-2024-37055 | Loading a malicious pmdarima model executes code | 2027-01-23 |
+| 71584 | mlflow | CVE-2024-37056 | Loading a malicious LightGBM model executes code | 2027-01-23 |
+| 71692 | mlflow | CVE-2024-37057 | Loading a malicious TensorFlow model executes code | 2027-01-23 |
+| 71691 | mlflow | CVE-2024-37059 | Loading a malicious PyTorch model executes code | 2027-01-23 |
+| 71579 | mlflow | CVE-2024-37060 | Loading a malicious MLflow Recipe executes code | 2027-01-23 |
+
+Why they are accepted: MLflow deserializes model files (pickle /
+cloudpickle) and no fixed MLflow version exists (all affect the resolved
+mlflow 3.17.2). GoDML only loads models it trained itself, from validated
+paths, and does not run an MLflow server accepting third-party uploads.
+
+Revalidated on 2026-10-25 against the versions CI resolves. Seven IDs ignored
+in 1.x (`71701`, `71703`, `71706`, `71707`, `62727`, `62800`, `62801`) could
+not be matched to any package in the public Safety DB and were **removed**:
+if they apply, the blocking scan reports them for review.
+
+**Review policy:** at every release and at most every 90 days (the
+`expires` date makes Safety report them again). An ignore stays only while
+the advisory still applies to the resolved versions and the reason holds.
+
+`safety scan` prefers a policy stored in Safety Platform for the `godml`
+project over `.safety-policy.yml`; the platform project must not override
+it, otherwise the list above is not what is applied.
 
 (`PYSEC-2024-230`, a certifi advisory fixed in
 2024.7.4, was ignored until 2026-10-24 and no longer applied.)
@@ -119,7 +150,7 @@ GODML adheres to the principles of **responsible disclosure**:
 | SBOM | CycloneDX on the Release; SPDX signed with Cosign as workflow artifact | ✅ Implemented (signed SBOM not yet on the Release) |
 | PyPI publishing | Trusted Publisher (OIDC) | ✅ Implemented |
 | Code scanning | Bandit HIGH blocking; ruff fail-closed rules for new code | ✅ Implemented |
-| Dependency scanning | pip-audit, blocking, no ignored advisories | ✅ Implemented |
+| Dependency scanning | Safety + pip-audit, both blocking; 8 reviewed Safety ignores | ✅ Implemented |
 | Dependency locking | `requirements.lock` without hashes, not used by CI | ⚠️ Partial — hashed lockfile planned |
 | Third-party actions | Pinned by commit SHA (except `slsa-github-generator`, which requires a tag) | ✅ Implemented |
 
