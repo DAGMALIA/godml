@@ -33,14 +33,15 @@ report:
         # model executes code when loaded, and no fixed version exists. GoDML
         # only loads models it trained itself, from validated paths (F1-13),
         # and does not run an MLflow server that accepts third-party uploads.
+        # No `specifications`: Safety matches them literally against the
+        # scanned specifier (e.g. "==3.17.2"), so a range never matches and
+        # the ignore silently does nothing. The ID plus `expires` is the scope.
         SFTY-20240604-95861:
           reason: "mlflow, CVE-2024-37058: loading a malicious Langchain AgentExecutor model executes code; godml never uses the Langchain flavor"
           expires: "2027-01-23"
-          specifications: ["mlflow>=2.13.0,<4"]
         71782:
           reason: "skops, CVE-2024-37065: loading a malicious skops file executes code; godml only loads skops files it wrote itself"
           expires: "2027-01-23"
-          specifications: ["skops>=0.6"]
 
 fail-scan-with-exit-code:
   dependency-vulnerabilities:

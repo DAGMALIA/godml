@@ -37,6 +37,10 @@ def test_security_md_lists_exactly_the_policy_ignores():
 def test_each_ignore_has_reason_and_expiry_within_90_days(vid):
     entry = policy_ignores()[vid]
     assert len(entry["reason"]) >= 10
+    # Safety compares `specifications` literally with the scanned specifier
+    # ("==3.17.2"); a range like "mlflow>=2.13,<4" never matches, which made
+    # both ignores inert in CI.
+    assert "specifications" not in entry
     expires = datetime.date.fromisoformat(str(entry["expires"]))
     reviewed = datetime.date(2026, 10, 25)
     assert (expires - reviewed).days <= 90
