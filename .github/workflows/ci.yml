@@ -31,7 +31,7 @@ jobs:
       - name: Install core dependencies
         run: |
           pip install --upgrade pip
-          pip install -e ".[dev,test-serve,test-observe]"
+          pip install -e ".[dev,test-serve,test-observe,test-aws]"
 
       - name: Run tests with coverage
         run: |
@@ -108,7 +108,7 @@ jobs:
       - name: Install project + dev tools
         run: |
           pip install --upgrade pip
-          pip install -e ".[dev,test-serve,test-observe]"
+          pip install -e ".[dev,test-serve,test-observe,test-aws]"
 
       # Rules and debt list live in pyproject.toml ([tool.ruff], [tool.mypy]).
       - name: ruff check

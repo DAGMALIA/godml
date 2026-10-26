@@ -103,7 +103,7 @@ aws = [
   "boto3>=1.34.0,<2",
   # SDK v3 removed sagemaker.workflow / processing / image_uris used by the
   # executor (F1-23); porting to v3 is F4-07.
-  "sagemaker>=2.200.0,<3",
+  "sagemaker>=2.257.2,<3",  # 2.257.2 fixes PYSEC-2026-3060
 ]
 
 # pip install godml[deep]
@@ -144,16 +144,23 @@ dev = [
   "ruff>=0.15.17,<0.16",
   "mypy>=1.19,<2",
   "types-PyYAML>=6.0,<7",
-  "pre-commit>=4.0,<5",
+  # pre-commit is installed separately (`pipx install pre-commit`): its
+  # patched virtualenv needs packaging>=26.3 while the patched SageMaker SDK
+  # needs packaging<25, so one environment cannot hold both without CVEs.
 ]
 
 # Test dependencies per pillar. CI installs dev + every test-* extra, so no
 # test is skipped for a missing dependency.
-# pip install "godml[dev,test-serve,test-observe]"
+# pip install "godml[dev,test-serve,test-observe,test-aws]"
 test-serve = [
   "godml[api]",
   # fastapi.testclient.TestClient requires httpx
   "httpx>=0.27.0,<1",
+]
+test-aws = [
+  # Real SageMaker SDK for the SDK contract tests (F1-22): a fake-only test
+  # could not notice that SDK v3 removed every module the executor imports.
+  "godml[aws]",
 ]
 test-observe = [
   # Without prometheus_client the observability tests run against the no-op

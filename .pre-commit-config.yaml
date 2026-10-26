@@ -1,4 +1,5 @@
-# Install once: pip install -e ".[dev]" && pre-commit install
+# Install once: pipx install pre-commit && pre-commit install
+# (mypy runs from the project env: pip install -e ".[dev]")
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: 3b3f7c3f57fe9925356faf5fe6230835138be230  # frozen: v0.15.17

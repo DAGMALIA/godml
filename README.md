@@ -318,8 +318,8 @@ breaking changes come with a migration guide.
 ```bash
 git clone https://github.com/DAGMALIA/godml.git
 cd godml
-pip install -e ".[dev,test-serve,test-observe]"
-pre-commit install
+pip install -e ".[dev,test-serve,test-observe,test-aws]"
+pipx install pre-commit && pre-commit install
 pytest tests/ --cov=godml
 ```
 

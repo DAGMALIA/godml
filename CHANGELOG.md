@@ -195,10 +195,15 @@ the run. Review these before upgrading (details in the sections below):
 - `godml[aws]` allowed SageMaker Python SDK v3, which removed the
   `sagemaker.workflow`, `sagemaker.processing` and `sagemaker.image_uris`
   modules the SageMaker executor uses, so a fresh install had a broken
-  executor. The extra now requires `sagemaker>=2.200,<3`.
+  executor. The extra now requires `sagemaker>=2.257.2,<3` (2.257.2 fixes
+  PYSEC-2026-3059/3060).
 
 ### Changed
 
+- `pre-commit` is no longer part of the `dev` extra: install it with
+  `pipx install pre-commit`. Its patched `virtualenv` requires
+  `packaging>=26.3`, which conflicts with the patched SageMaker SDK
+  (`packaging<25`), so one environment could not hold both without CVEs.
 - README rewritten to document only what exists and works: removed the GDPR,
   HIPAA and SOX claims (only PCI-DSS is implemented) and the non-existent
   `GdprCompliance`, `GodmlNotebook.load_data/train_model/evaluate` and model
