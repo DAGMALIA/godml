@@ -5,6 +5,8 @@ sharing the prefix (`/proj-evil` vs `/proj`) passed as "inside the project".
 The CLI also froze its safe base dirs at import time.
 """
 
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -71,16 +73,27 @@ class TestServerValidateModelPath:
         self.load(module)(model)
 
 
+def link_dir(link, target) -> None:
+    """Directory symlink; on Windows without symlink privilege, a junction
+    (no admin needed) so the test runs everywhere instead of being skipped."""
+    try:
+        link.symlink_to(target, target_is_directory=True)
+    except OSError:
+        if sys.platform != "win32":
+            raise
+        subprocess.run(
+            ["cmd", "/c", "mklink", "/J", str(link), str(target)],
+            check=True,
+            capture_output=True,
+        )
+
+
 class TestLocalModelLoader:
     def test_symlinked_models_dir_to_sibling_is_rejected(self, project):
         from godml.model_service.model_loader import load_custom_model_class
 
         proj, evil = project
         (evil / "custom_model.py").write_text("raise SystemExit('executed')\n")
-        try:
-            (proj / "models").symlink_to(evil, target_is_directory=True)
-            # models/ -> <tmp>/proj-evil : the file resolves outside proj/models
-        except OSError:
-            pytest.skip("symlinks not permitted on this system")
+        link_dir(proj / "models", evil)  # models/ -> <tmp>/proj-evil
         with pytest.raises(SecurityError):
             load_custom_model_class(str(proj), "custom_model", "local")

@@ -117,7 +117,8 @@ the run. Review these before upgrading (details in the sections below):
   deploy service and in the scaffold template copied into user projects, and
   the local model loader (which imports a `.py` file). They now use
   `Path.resolve()` + `is_relative_to`, and the CLI resolves its base dirs on
-  each call instead of once at import. Projects generated with
+  each call instead of once at import. The local model loader also rejects a
+  symlinked `models/` directory pointing outside the project. Projects generated with
   `godml deploy` before 1.4.0 keep the old template: regenerate
   `deploy_service/` to get the fix.
 

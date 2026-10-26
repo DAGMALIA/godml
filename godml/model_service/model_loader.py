@@ -124,7 +124,10 @@ def load_custom_model_class(
             # Validaciones de seguridad estrictas
             try:
                 resolved_file = model_file.resolve()
-                resolved_base = models_dir.resolve()
+                # Resolve the project, not models/ itself: a symlinked models/
+                # dir would otherwise move the base along with the file and
+                # allow importing code from anywhere (found by CI on Linux).
+                resolved_base = Path(project_path).resolve() / "models"
 
                 if not resolved_file.is_relative_to(resolved_base):  # F1-13
                     raise SecurityError("Path traversal detectado")
