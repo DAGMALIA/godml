@@ -15,23 +15,19 @@ from godml.utils.path_utils import sanitize_for_log, validate_safe_path
 
 logger = get_logger()
 
-# Directories that are always considered safe for absolute paths.
-# Resolved at import time so they reflect the actual runtime CWD.
-_SAFE_BASE_DIRS: list[Path] = [
-    Path.cwd().resolve(),
-    Path.home().resolve(),
-]
-
 
 def _is_safe_absolute_path(path: str) -> bool:
-    """Cross-platform check: absolute path must be under a known-safe base dir."""
+    """Absolute path must be inside the current working dir or the home dir.
+
+    F1-13: containment via `is_relative_to` (`startswith` accepted siblings
+    such as `/proj-evil` for `/proj`), with the base dirs resolved per call
+    instead of once at import.
+    """
     try:
         resolved = Path(path).resolve()
-        return any(
-            str(resolved).startswith(str(base))
-            for base in _SAFE_BASE_DIRS
-        )
-    except Exception:
+        bases = (Path.cwd().resolve(), Path.home().resolve())
+        return any(resolved.is_relative_to(base) for base in bases)
+    except (OSError, RuntimeError, ValueError):
         return False
 
 
@@ -44,7 +40,13 @@ def validate_docker_available() -> None:
     try:
         if docker_path and (".." in docker_path or not os.path.isabs(docker_path)):
             raise SecurityError("Ruta Docker no segura")
-        subprocess.run([docker_path, "info"], stdout=DEVNULL, stderr=DEVNULL, check=True, timeout=10)
+        subprocess.run(
+            [docker_path, "info"],
+            stdout=DEVNULL,
+            stderr=DEVNULL,
+            check=True,
+            timeout=10,
+        )
     except CalledProcessError:
         logger.error("Docker no esta corriendo.")
         raise typer.Exit(1)
@@ -62,7 +64,9 @@ def load_yaml_config(yaml_path: str) -> dict:
 
     safe_path = validate_safe_path(yaml_path)
     if not safe_path.exists():
-        logger.error(f"No se encontro {sanitize_for_log(yaml_path)} en el directorio actual.")
+        logger.error(
+            f"No se encontro {sanitize_for_log(yaml_path)} en el directorio actual."
+        )
         raise typer.Exit(1)
 
     try:
@@ -80,7 +84,9 @@ def validate_docker_tag(tag: str) -> str:
     return safe_tag
 
 
-def validate_environment_vars(environment: str, host: str, port: str) -> tuple[str, str, str]:
+def validate_environment_vars(
+    environment: str, host: str, port: str
+) -> tuple[str, str, str]:
     safe_environment = re.sub(r"[^a-zA-Z0-9_-]", "", environment)
     safe_host = re.sub(r"[^a-zA-Z0-9._-]", "", str(host))
     safe_port = re.sub(r"[^0-9]", "", str(port))

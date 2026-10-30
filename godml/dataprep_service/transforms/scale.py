@@ -1,8 +1,10 @@
 import pandas as pd
 from .base import BaseTransform
 
+
 class StandardScale(BaseTransform):
     name = "standard_scale"
+
     def apply(self, df: pd.DataFrame, columns=None, **_):
         columns = columns or []
         out = df.copy()
@@ -12,9 +14,11 @@ class StandardScale(BaseTransform):
             out[c] = (out[c].astype(float) - mu) / sd
         return out
 
+
 class MinMaxScale(BaseTransform):
     name = "minmax_scale"
-    def apply(self, df: pd.DataFrame, columns=None, feature_range=(0,1), **_):
+
+    def apply(self, df: pd.DataFrame, columns=None, feature_range=(0, 1), **_):
         columns = columns or []
         a, b = feature_range
         out = df.copy()

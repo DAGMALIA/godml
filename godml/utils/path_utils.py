@@ -7,6 +7,7 @@ from typing import Optional
 
 class SecurityError(Exception):
     """Excepción para errores de seguridad"""
+
     pass
 
 
@@ -37,7 +38,7 @@ def normalize_path(path: str) -> str:
             normalized = str(Path(path).expanduser().resolve())
 
         return normalized
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise SecurityError(f"Error normalizando ruta: {str(e)}")
 
 
@@ -45,7 +46,7 @@ def sanitize_for_log(text: str) -> str:
     """Sanitiza texto para logging seguro removiendo caracteres peligrosos"""
     if not isinstance(text, str):
         text = str(text)
-    sanitized = re.sub(r'[\r\n\t\x00-\x1f\x7f-\x9f]', '', text)
+    sanitized = re.sub(r"[\r\n\t\x00-\x1f\x7f-\x9f]", "", text)
     return sanitized[:500] + "..." if len(sanitized) > 500 else sanitized
 
 
@@ -68,7 +69,7 @@ def validate_safe_path(path: str, base_dir: Optional[str | Path] = None) -> Path
 
     try:
         p = Path(path).expanduser().resolve(strict=False)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise SecurityError(f"No se pudo normalizar la ruta: {e}")
 
     # Si se define base_dir, exige contención
@@ -99,5 +100,5 @@ def safe_join(*paths) -> str:
     try:
         result = Path(*paths).resolve()
         return str(result)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise SecurityError(f"Error uniendo rutas: {str(e)}")

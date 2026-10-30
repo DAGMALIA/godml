@@ -1,4 +1,5 @@
 """Resolves AWS and compute config from a PipelineDefinition."""
+
 from __future__ import annotations
 
 import os
@@ -25,8 +26,9 @@ def resolve_aws(pipeline: PipelineDefinition) -> dict:
     if not role:
         try:
             import sagemaker
+
             role = sagemaker.get_execution_role()
-        except Exception:
+        except Exception:  # noqa: BLE001
             raise EnvironmentError(
                 "No IAM role found. Add 'aws.role_arn' to your godml.yml "
                 "or set the GODML_SAGEMAKER_ROLE environment variable."
@@ -36,8 +38,9 @@ def resolve_aws(pipeline: PipelineDefinition) -> dict:
     if not s3_bucket:
         try:
             import sagemaker
+
             s3_bucket = sagemaker.Session().default_bucket()
-        except Exception:
+        except Exception:  # noqa: BLE001
             raise EnvironmentError(
                 "No S3 bucket found. Add 'aws.s3_bucket' to your godml.yml "
                 "or set the GODML_S3_BUCKET environment variable."

@@ -2,9 +2,7 @@
 
 from typing import List
 from godml.config_service.schema import PipelineDefinition
-from godml.compliance_service.validation_helpers import (
-    validate_pipeline
-)
+from godml.compliance_service.validation_helpers import validate_pipeline
 
 
 def run_validations(pipeline: PipelineDefinition) -> List[str]:

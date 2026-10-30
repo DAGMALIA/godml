@@ -4,6 +4,8 @@ from __future__ import annotations
 import re
 import pandas as pd
 
+from godml.compliance_service.compliance_utils import name_has_hint
+
 
 class PiiDetector:
     """
@@ -27,27 +29,45 @@ class PiiDetector:
         "postal_mx": re.compile(r"^\d{5}$"),
         "cvv": re.compile(r"^\d{3,4}$"),
         "dob": re.compile(r"^\d{4}[-/]\d{2}[-/]\d{2}$"),
-        "expiration_date": re.compile(r"^(0[1-9]|1[0-2])\/?([0-9]{2})$"),
+        # The "/" is required: without it "1225" (a fare) looked like 12/25.
+        "expiration_date": re.compile(r"^(0[1-9]|1[0-2])\/([0-9]{2})$"),
         "curp": re.compile(r"^[A-Z]{4}\d{6}[HM][A-Z]{5}\d{2}$"),
         "rfc": re.compile(r"^[A-Z]{3,4}\d{6}[A-Z0-9]{3}$"),
         "url": re.compile(r"^https?://[^\s]+$"),
         "coordinates": re.compile(r"^-?\d{1,3}\.\d{4,}$"),
     }
 
-    # Column name heuristics (case-insensitive substring match)
+    # Content alone cannot tell these from ordinary numbers (any 3-4 digit
+    # number, any 5-digit amount, any float with 4 decimals): they are only
+    # detected when the column name confirms them (F1-07).
+    NAME_CONFIRMED: frozenset[str] = frozenset(
+        {"cvv", "zip_code", "postal_mx", "coordinates"}
+    )
+
+    # Column name heuristics: whole-token match (see name_has_hint), most
+    # specific types first ("card_cvv" is a CVV, not a card number).
     NAME_HINTS: dict[str, list[str]] = {
+        "cvv": ["cvv", "cvc", "cvv2", "security_code"],
         "email": ["email", "correo", "mail"],
         "phone_us": ["phone", "telefono", "tel", "mobile", "celular"],
         "card_number": ["card", "tarjeta", "cc_num", "credit", "debit"],
         "ssn": ["ssn", "social_security", "numero_seguro"],
         "dob": ["dob", "birth", "nacimiento", "fecha_nac", "birthdate"],
-        "zip_code": ["zip", "postal", "cp", "codigo_postal"],
+        "zip_code": ["zip", "zipcode", "postal", "postcode", "cp", "codigo_postal"],
         "ip_address": ["ip", "ip_address", "ipaddr", "direccion_ip"],
         "curp": ["curp"],
         "rfc": ["rfc"],
         "passport": ["passport", "pasaporte"],
         "iban": ["iban", "cuenta_bancaria", "bank_account"],
-        "coordinates": ["lat", "lon", "latitude", "longitude", "latitud", "longitud"],
+        "coordinates": [
+            "lat",
+            "lon",
+            "lng",
+            "latitude",
+            "longitude",
+            "latitud",
+            "longitud",
+        ],
     }
 
     def detect_column_type(self, series: pd.Series, col_name: str = "") -> str:
@@ -55,11 +75,9 @@ class PiiDetector:
         Infers PII type from column values and optionally the column name.
         Returns the detected type or 'unknown'.
         """
-        col_lower = col_name.lower()
-
         # Fast-path: column name heuristic
         for pii_type, hints in self.NAME_HINTS.items():
-            if any(hint in col_lower for hint in hints):
+            if any(name_has_hint(col_name, hint) for hint in hints):
                 return pii_type
 
         # Content-based detection on a sample
@@ -68,18 +86,24 @@ class PiiDetector:
             return "unknown"
 
         for pii_type, pattern in self.CONTENT_PATTERNS.items():
+            if pii_type in self.NAME_CONFIRMED:
+                continue
             if all(pattern.match(val.strip()) for val in sample):
                 return pii_type
 
         return "unknown"
 
-    def detect_all(self, df: pd.DataFrame) -> dict[str, str]:
+    def detect_all(
+        self, df: pd.DataFrame, exclude_columns: tuple[str, ...] = ()
+    ) -> dict[str, str]:
         """
         Detects PII type per column in a DataFrame.
         Returns {column_name: pii_type} for all detected PII columns.
         """
         detected: dict[str, str] = {}
         for col in df.columns:
+            if col in exclude_columns:
+                continue
             pii_type = self.detect_column_type(df[col], col_name=col)
             if pii_type != "unknown":
                 detected[col] = pii_type

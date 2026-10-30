@@ -7,6 +7,7 @@ logger = get_logger()
 
 def ensure_valid_tracking_uri() -> str:
     import mlflow
+
     uri = mlflow.get_tracking_uri()
     # MLflow 3.x dropped file-store support: solo redirige URIs `file:`/vacías.
     # OJO: no filtrar por "C:/" — eso pisaba cualquier sqlite:///C:/... absoluto
@@ -17,14 +18,19 @@ def ensure_valid_tracking_uri() -> str:
     return mlflow.get_tracking_uri()
 
 
-# Non-sklearn types that XGBoost's sklearn API wrapper (XGBClassifier/XGBRegressor)
-# embeds internally — skops' security model requires these to be explicitly
-# trusted, or mlflow.sklearn.log_model() raises UntrustedTypesFoundException.
-_XGBOOST_SKOPS_TRUSTED_TYPES = [
+# Types skops must be told to trust when MLflow serializes godml's catalog
+# models, or mlflow.sklearn.log_model() raises UntrustedTypesFoundException.
+# A reviewed allowlist, as skops recommends, not "everything get_untrusted_types
+# reports": these files are produced by godml itself.
+_SKOPS_TRUSTED_TYPES = [
+    # XGBoost's sklearn API wrapper (XGBClassifier/XGBRegressor)
     "xgboost.core.Booster",
     "xgboost.sklearn.XGBClassifier",
     "xgboost.sklearn.XGBRegressor",
     "xgboost.sklearn.XGBModel",
+    # Node storage of tree ensembles (random_forest). Without it every
+    # RandomForest failed to log with recent MLflow (found in F1-14).
+    "sklearn.tree._tree.Tree",
 ]
 
 
@@ -38,10 +44,11 @@ def _log_sklearn_model(model, log_args: dict) -> None:
     back for older installs.
     """
     import mlflow.sklearn
+
     try:
         mlflow.sklearn.log_model(
             sk_model=model,
-            skops_trusted_types=_XGBOOST_SKOPS_TRUSTED_TYPES,
+            skops_trusted_types=_SKOPS_TRUSTED_TYPES,
             **log_args,
         )
     except TypeError:
@@ -75,16 +82,21 @@ def log_model_generic(
     try:
         from xgboost import Booster as XGBBooster
         from xgboost.sklearn import XGBModel
+
         if isinstance(model, XGBBooster):
             # Native XGBoost Booster — use xgboost flavor (no skops involved)
             mlflow.xgboost.log_model(model, **log_args)
-            logger.info(f"Modelo XGBoost registrado: {registered_model_name or model_name}")
+            logger.info(
+                f"Modelo XGBoost registrado: {registered_model_name or model_name}"
+            )
             return
         if isinstance(model, XGBModel):
             # Sklearn-API XGBoost (XGBClassifier/XGBRegressor) — se registra
             # con el flavor sklearn, igual que cualquier BaseEstimator.
             _log_sklearn_model(model, log_args)
-            logger.info(f"Modelo XGBoost (sklearn API) registrado: {registered_model_name or model_name}")
+            logger.info(
+                f"Modelo XGBoost (sklearn API) registrado: {registered_model_name or model_name}"
+            )
             return
     except ImportError:
         pass
@@ -93,31 +105,40 @@ def log_model_generic(
         import mlflow.lightgbm
         from lightgbm import Booster as LGBMBooster
         from lightgbm.sklearn import LGBMModel
+
         if isinstance(model, (LGBMBooster, LGBMModel)):
             mlflow.lightgbm.log_model(model, **log_args)
-            logger.info(f"Modelo LightGBM registrado: {registered_model_name or model_name}")
+            logger.info(
+                f"Modelo LightGBM registrado: {registered_model_name or model_name}"
+            )
             return
     except ImportError:
         pass
 
     try:
         from sklearn.base import BaseEstimator
+
         if isinstance(model, BaseEstimator):
-            mlflow.sklearn.log_model(sk_model=model, **log_args)
-            logger.info(f"Modelo sklearn registrado: {registered_model_name or model_name}")
+            _log_sklearn_model(model, log_args)
+            logger.info(
+                f"Modelo sklearn registrado: {registered_model_name or model_name}"
+            )
             return
     except ImportError:
         pass
 
     try:
         import mlflow.keras
+
         try:
             from tensorflow.keras.models import Model as KerasModel
         except ImportError:
             from keras.models import Model as KerasModel
         if isinstance(model, KerasModel):
             mlflow.keras.log_model(model, **log_args)
-            logger.info(f"Modelo Keras registrado: {registered_model_name or model_name}")
+            logger.info(
+                f"Modelo Keras registrado: {registered_model_name or model_name}"
+            )
             return
     except ImportError:
         pass

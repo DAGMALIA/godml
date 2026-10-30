@@ -44,16 +44,21 @@ def _sk_estimator_for(model_type: str):
     key = (model_type or "").lower()
     if key in {"random_forest", "rf"}:
         from sklearn.ensemble import RandomForestClassifier
+
         return RandomForestClassifier
     if key in {"logistic_regression", "logreg", "logistic"}:
         from sklearn.linear_model import LogisticRegression
+
         return LogisticRegression
     if key in {"xgboost", "xgb"}:
         try:
             from xgboost import XGBClassifier
+
             return XGBClassifier
         except Exception as e:
-            raise ImportError("xgboost no está instalado para usar XGBClassifier") from e
+            raise ImportError(
+                "xgboost no está instalado para usar XGBClassifier"
+            ) from e
     raise ValueError(f"No hay mapeo sklearn para model_type='{model_type}'")
 
 
@@ -73,7 +78,7 @@ def tune_model(
     if use_optuna:
         try:
             import optuna  # noqa: F401
-        except Exception:
+        except Exception:  # noqa: BLE001
             print("Optuna no está instalado; continuo con RandomizedSearchCV.")
             use_optuna = False
 
@@ -90,7 +95,7 @@ def tune_model(
     try:
         tmp = EstCls()
         est_params = tmp.get_params()
-    except Exception:
+    except Exception:  # noqa: BLE001
         est_params = {}
     est_kwargs = {}
     if "random_state" in est_params:
@@ -132,7 +137,9 @@ def optimize_threshold(y_true, y_prob, metric: str = "f1"):
     try:
         from sklearn import metrics as sk
     except Exception as e:
-        raise ImportError("Se requiere scikit-learn y numpy para optimize_threshold.") from e
+        raise ImportError(
+            "Se requiere scikit-learn y numpy para optimize_threshold."
+        ) from e
 
     y_prob = np.asarray(y_prob).ravel()
     candidates = np.linspace(0.05, 0.95, 19)

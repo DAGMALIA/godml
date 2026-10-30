@@ -1,0 +1,62 @@
+# Safety CLI scan policy (F0-16). Reviewed source of truth for the Safety
+# ignores; the same list is documented in SECURITY.md.
+#
+# Review: at every release and at most every 90 days (see `expires`). An
+# ignore is kept only while the advisory still applies to the versions CI
+# resolves and the reason below still holds.
+#
+# NOTE: `safety scan` always applies the policy Safety Platform keeps for the
+# `godml` project, and the platform rejects IDs like `SFTY-...`. So CI does
+# not rely on Safety's own ignores: .github/scripts/safety_gate.py reads the
+# scan report and fails on any finding that is not listed here, unexpired.
+version: "3.0"
+
+scanning-settings:
+  max-depth: 6
+  exclude: []
+  include-files: []
+  system:
+    targets: []
+
+report:
+  dependency-vulnerabilities:
+    enabled: true
+    auto-ignore-in-report:
+      python:
+        # CI scans a pinned `pip freeze` of the environment it installs; do
+        # not hide anything because of how a requirement is written.
+        environment-results: false
+        unpinned-requirements: false
+      cvss-severity: []
+      vulnerabilities:
+        # Reviewed 2026-10-25 against the Safety DB (API key) on the versions
+        # CI resolves; approved by the maintainer. Both: a maliciously crafted
+        # model executes code when loaded, and no fixed version exists. GoDML
+        # only loads models it trained itself, from validated paths (F1-13),
+        # and does not run an MLflow server that accepts third-party uploads.
+        # No `specifications`: Safety matches them literally against the
+        # scanned specifier (e.g. "==3.17.2"), so a range never matches and
+        # the ignore silently does nothing. The ID plus `expires` is the scope.
+        SFTY-20240604-95861:
+          reason: "mlflow, CVE-2024-37058: loading a malicious Langchain AgentExecutor model executes code; godml never uses the Langchain flavor"
+          expires: "2027-01-23"
+        71782:
+          reason: "skops, CVE-2024-37065: loading a malicious skops file executes code; godml only loads skops files it wrote itself"
+          expires: "2027-01-23"
+        # Reviewed 2026-10-30; approved by the maintainer. Only in the
+        # `sagemaker` extra; fixed in sagemaker 3.8.0, a major version godml
+        # does not support yet (migration: plan F4-12).
+        SFTY-20260305-71051:
+          reason: "sagemaker 2.x: crafted search_hub() query parameters in JumpStart search; godml never calls JumpStart or search_hub"
+          expires: "2027-01-23"
+
+fail-scan-with-exit-code:
+  dependency-vulnerabilities:
+    enabled: true
+    fail-on-any-of:
+      cvss-severity: [critical, high, medium, low, unknown]
+      exploitability: [critical, high, medium, low, unknown]
+
+security-updates:
+  dependency-vulnerabilities:
+    auto-security-updates-limit: [patch]

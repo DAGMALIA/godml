@@ -2,9 +2,14 @@
 
 import os
 import logging
+from godml import __version__
 from godml.config_service.loader import load_config
 from godml.core_service.executors import get_executor
-from godml.monitoring_service.logger import godml_logger, PipelineError, ConfigurationError
+from godml.monitoring_service.logger import (
+    godml_logger,
+    PipelineError,
+    ConfigurationError,
+)
 
 # Silenciar logs molestos de SageMaker y boto3
 logging.getLogger("sagemaker").setLevel(logging.ERROR)
@@ -14,10 +19,18 @@ logging.getLogger("botocore").setLevel(logging.ERROR)
 
 def display_pipeline_summary(info, metrics):
     """Salida final del pipeline GODML sin Rich, usando el logger limpio."""
-    godml_logger.info("\n╭─────────────────────────── GODML ────────────────────────────╮")
-    godml_logger.info("│ 🤖 GODML PIPELINE EXECUTION                                  │")
-    godml_logger.info("│ Governed, Observable & Declarative Machine Learning (v1.0.2) │")
-    godml_logger.info("╰─────────────────────── Dagmalia Labs ────────────────────────╯")
+    godml_logger.info(
+        "\n╭─────────────────────────── GODML ────────────────────────────╮"
+    )
+    godml_logger.info(
+        "│ 🤖 GODML PIPELINE EXECUTION                                  │"
+    )
+    godml_logger.info(
+        f"│ Governed, Observable & Declarative Machine Learning (v{__version__}) │"
+    )
+    godml_logger.info(
+        "╰─────────────────────── Dagmalia Labs ────────────────────────╯"
+    )
 
     godml_logger.info("\n📄 YAML Configuration")
     godml_logger.info("───────────────────────────────────────────────────────────────")
@@ -46,7 +59,11 @@ def display_pipeline_summary(info, metrics):
     godml_logger.info("───────────────────────────────────────────────────────────────")
     if metrics:
         for m, v in metrics.items():
-            godml_logger.info(f"  • {m:<10} : {v:.4f}" if isinstance(v, float) else f"  • {m:<10} : {v}")
+            godml_logger.info(
+                f"  • {m:<10} : {v:.4f}"
+                if isinstance(v, float)
+                else f"  • {m:<10} : {v}"
+            )
     else:
         godml_logger.info("  (no metrics reported)")
 
@@ -55,16 +72,26 @@ def display_pipeline_summary(info, metrics):
         godml_logger.info(f"✅ Model registered: {info['model_name']}")
     if info.get("output_path"):
         godml_logger.info(f"📦 Predictions saved to: {info['output_path']}")
-    godml_logger.info("───────────────────────────────────────────────────────────────\n")
+    godml_logger.info(
+        "───────────────────────────────────────────────────────────────\n"
+    )
 
 
 def run_pipeline(config_path="godml.yml"):
     """Ejecución completa del pipeline GODML sin Rich y con formato unificado."""
     try:
-        godml_logger.info("\n╭─────────────────────────── GODML ────────────────────────────╮")
-        godml_logger.info("│ 🚀 STARTING PIPELINE EXECUTION                              │")
-        godml_logger.info("│ Governed, Observable & Declarative Machine Learning (v1.0.2) │")
-        godml_logger.info("╰─────────────────────── Dagmalia Labs ────────────────────────╯")
+        godml_logger.info(
+            "\n╭─────────────────────────── GODML ────────────────────────────╮"
+        )
+        godml_logger.info(
+            "│ 🚀 STARTING PIPELINE EXECUTION                              │"
+        )
+        godml_logger.info(
+            f"│ Governed, Observable & Declarative Machine Learning (v{__version__}) │"
+        )
+        godml_logger.info(
+            "╰─────────────────────── Dagmalia Labs ────────────────────────╯"
+        )
 
         godml_logger.info(f"\n📄 Usando archivo de configuración: {config_path}")
 
@@ -72,8 +99,10 @@ def run_pipeline(config_path="godml.yml"):
         try:
             config = load_config(config_path)
         except FileNotFoundError:
-            raise ConfigurationError(f"Archivo de configuración no encontrado: {config_path}")
-        except Exception as e:
+            raise ConfigurationError(
+                f"Archivo de configuración no encontrado: {config_path}"
+            )
+        except Exception as e:  # noqa: BLE001
             raise ConfigurationError(f"Error cargando configuración: {e}")
 
         # 2️⃣ Obtener executor
@@ -81,7 +110,7 @@ def run_pipeline(config_path="godml.yml"):
             executor = get_executor(config.provider)
         except ValueError as e:
             raise ConfigurationError(f"Provider no soportado: {e}")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise PipelineError(f"Error obteniendo executor: {e}")
 
         # 3️⃣ Validar configuración (sin log redundante del modelo)
@@ -89,7 +118,7 @@ def run_pipeline(config_path="godml.yml"):
             logging.getLogger("GODML").setLevel(logging.WARNING)  # silencio temporal
             executor.validate(config)
             logging.getLogger("GODML").setLevel(logging.INFO)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise PipelineError(f"Error validando configuración: {e}")
 
         # 4️⃣ Ejecutar pipeline principal
@@ -115,22 +144,24 @@ def run_pipeline(config_path="godml.yml"):
                 }
                 display_pipeline_summary(pipeline_info, result.metrics)
             else:
-                godml_logger.warning("⚠️ El executor no retornó métricas; mostrando logs estándar.")
+                godml_logger.warning(
+                    "⚠️ El executor no retornó métricas; mostrando logs estándar."
+                )
 
             godml_logger.info("\n📈 Final del pipeline")
             godml_logger.info("────────────────────────────────────────")
             godml_logger.info("  • Estado   : ✅ Éxito")
             godml_logger.info(f"  • Modelo   : {pipeline_info.get('model_name', '-')}")
-            if result.metrics and 'auc' in result.metrics:
+            if result.metrics and "auc" in result.metrics:
                 godml_logger.info(f"  • AUC      : {result.metrics.get('auc'):.4f}")
-            if pipeline_info.get('output_path'):
+            if pipeline_info.get("output_path"):
                 godml_logger.info(f"  • Output   : {pipeline_info['output_path']}")
             godml_logger.info("────────────────────────────────────────\n")
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise PipelineError(f"Error ejecutando pipeline: {e}")
 
     except (ConfigurationError, PipelineError):
         raise
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise PipelineError(f"Error inesperado en pipeline: {e}")

@@ -7,11 +7,14 @@ from typing import Optional
 from godml.config_service.schema import Governance
 from .recipe_executor import validate_recipe, preview_recipe, run_recipe
 
-app = typer.Typer(help="🧩 GODML DataPrep CLI — ejecución y cumplimiento de recetas de datos")
+app = typer.Typer(
+    help="GODML DataPrep CLI: ejecución y cumplimiento de recetas de datos"
+)
 
 # ---------------------------
 # Helper interno
 # ---------------------------
+
 
 def _load_governance_from_yaml(path: Path) -> Optional[dict]:
     """
@@ -30,7 +33,7 @@ def _load_governance_from_yaml(path: Path) -> Optional[dict]:
         return gov_model.model_dump()
     except FileNotFoundError:
         raise typer.BadParameter(f"Archivo no encontrado: {path}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         typer.echo(f"⚠️ Error cargando governance: {e}")
         return None
 
@@ -38,6 +41,7 @@ def _load_governance_from_yaml(path: Path) -> Optional[dict]:
 # ---------------------------
 # Comandos principales
 # ---------------------------
+
 
 @app.command()
 def validate(file: str):

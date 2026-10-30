@@ -3,6 +3,8 @@
 from godml.config_service.schema import PipelineDefinition, Metric
 from typing import List, Dict
 
+from godml.monitoring_service.thresholds import LOWER_IS_BETTER
+
 
 class ValidationError(Exception):
     pass
@@ -16,7 +18,8 @@ def is_valid_hash(hash_value: str) -> bool:
     return hash_value and hash_value != "auto"
 
 
-_UNBOUNDED_METRICS = {"mse", "mae", "rmse"}  # regresión: no acotadas a [0, 1]
+# Losses are not bounded to [0, 1] (F1-10 adds log_loss).
+_UNBOUNDED_METRICS = set(LOWER_IS_BETTER)
 _SIGNED_METRICS = {"r2"}  # regresión: puede ser negativo (peor que predecir la media)
 
 
@@ -27,7 +30,9 @@ def validate_metrics(metrics: List[Metric]) -> List[str]:
         if name in _UNBOUNDED_METRICS or name in _SIGNED_METRICS:
             continue
         if not (0 <= metric.threshold <= 1):
-            errors.append(f"El umbral de la métrica '{metric.name}' está fuera del rango permitido (0-1).")
+            errors.append(
+                f"El umbral de la métrica '{metric.name}' está fuera del rango permitido (0-1)."
+            )
     return errors
 
 
@@ -52,7 +57,9 @@ def validate_pipeline(pipeline: PipelineDefinition) -> List[str]:
         errors.append("Falta el campo 'governance.owner'.")
 
     if not is_valid_hash(pipeline.dataset.hash):
-        warnings.append("Advertencia: 'dataset.hash' está en modo automático. Considera calcularlo manualmente para trazabilidad.")
+        warnings.append(
+            "Advertencia: 'dataset.hash' está en modo automático. Considera calcularlo manualmente para trazabilidad."
+        )
 
     errors += validate_metrics(pipeline.metrics)
 
@@ -60,9 +67,13 @@ def validate_pipeline(pipeline: PipelineDefinition) -> List[str]:
         errors.append("Pipeline batch requiere definir 'deploy.batch_output'.")
 
     if not has_compliance_tag(pipeline.governance.tags or []):
-        warnings.append("Advertencia: No se especificó ningún tag de cumplimiento ('compliance:*').")
+        warnings.append(
+            "Advertencia: No se especificó ningún tag de cumplimiento ('compliance:*')."
+        )
 
     if errors:
-        raise ValidationError("Errores en la validación del pipeline:\n- " + "\n- ".join(errors))
+        raise ValidationError(
+            "Errores en la validación del pipeline:\n- " + "\n- ".join(errors)
+        )
 
     return warnings

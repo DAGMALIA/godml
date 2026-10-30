@@ -51,7 +51,7 @@ class DocRAGAdvisor:
                 return json.load(f)
         except FileNotFoundError:
             return []
-        except Exception:
+        except Exception:  # noqa: BLE001
             return []
 
     def retrieve_docs(self, question: str, top_k: int = 1) -> list:
@@ -59,13 +59,15 @@ class DocRAGAdvisor:
             return []
 
         def score_entry(d: dict) -> float:
-            text = " ".join([
-                d.get("name", ""),
-                d.get("signature", ""),
-                d.get("doc", ""),
-                " ".join(d.get("tags", [])),
-                " ".join(d.get("examples", [])),
-            ])
+            text = " ".join(
+                [
+                    d.get("name", ""),
+                    d.get("signature", ""),
+                    d.get("doc", ""),
+                    " ".join(d.get("tags", [])),
+                    " ".join(d.get("examples", [])),
+                ]
+            )
             return SequenceMatcher(None, question.lower(), text.lower()).ratio()
 
         scored = [(d, score_entry(d)) for d in self.docs]
@@ -79,7 +81,11 @@ class DocRAGAdvisor:
 
         for d in self.docs:
             if d.get("name", "").lower() in q:
-                example = d["examples"][0] if d.get("examples") else "No hay ejemplo disponible."
+                example = (
+                    d["examples"][0]
+                    if d.get("examples")
+                    else "No hay ejemplo disponible."
+                )
                 return (
                     f"Funcion: {d['name']}\n"
                     f"Firma: {d['signature']}\n"
@@ -90,7 +96,9 @@ class DocRAGAdvisor:
         docs = self.retrieve_docs(question, top_k=1)
         context = []
         for d in docs:
-            block = f"Funcion: {d['name']}\nFirma: {d['signature']}\nDocstring: {d['doc']}"
+            block = (
+                f"Funcion: {d['name']}\nFirma: {d['signature']}\nDocstring: {d['doc']}"
+            )
             if d.get("examples"):
                 block += "\n" + "\n".join([f"Ejemplo:\n{ex}" for ex in d["examples"]])
             context.append(block)

@@ -1,8 +1,6 @@
-import pytest
 import os
 import yaml
 import pandas as pd
-import numpy as np
 from godml.config_service.loader import load_config
 from godml.config_service.schema import PipelineDefinition
 from godml.compliance_service.pci_dss import PciDssCompliance
@@ -118,6 +116,7 @@ class TestCompliancePipelineIntegration:
 class TestModelIntegration:
     def test_config_model_type_maps_to_notebook_api(self, temp_yaml, binary_dataset):
         from godml.notebook_api import train_model
+
         config = load_config(temp_yaml)
         ds = binary_dataset
         result = train_model(

@@ -6,7 +6,11 @@ import typer
 
 from godml.core_service.parser import load_pipeline
 from godml.core_service.executors import get_executor
-from godml.monitoring_service.logger import get_logger, SecurityError, ConfigurationError
+from godml.monitoring_service.logger import (
+    get_logger,
+    SecurityError,
+    ConfigurationError,
+)
 from godml.utils.path_utils import sanitize_for_log, validate_safe_path
 
 logger = get_logger()
@@ -22,8 +26,13 @@ def _normalize_inline_to_full(dataprep: dict, dataset_uri: str) -> dict:
     else:
         connector = "csv"
 
-    read_step = next((s for s in steps if s.get("op") in ("read_csv", "read_parquet")), None)
-    write_step = next((s for s in reversed(steps) if s.get("op") in ("write_csv", "write_parquet")), None)
+    read_step = next(
+        (s for s in steps if s.get("op") in ("read_csv", "read_parquet")), None
+    )
+    write_step = next(
+        (s for s in reversed(steps) if s.get("op") in ("write_csv", "write_parquet")),
+        None,
+    )
 
     in_uri = (read_step or {}).get("params", {}).get("path") or dataset_uri
     if write_step and write_step.get("params", {}).get("path"):
@@ -35,7 +44,11 @@ def _normalize_inline_to_full(dataprep: dict, dataset_uri: str) -> dict:
     else:
         out_uri = dataset_uri + "_clean"
 
-    core_steps = [s for s in steps if s.get("op") not in ("read_csv", "read_parquet", "write_csv", "write_parquet")]
+    core_steps = [
+        s
+        for s in steps
+        if s.get("op") not in ("read_csv", "read_parquet", "write_csv", "write_parquet")
+    ]
 
     return {
         "inputs": [{"name": "raw", "connector": connector, "uri": in_uri}],
@@ -50,8 +63,11 @@ def run_command(file: str) -> None:
             raise SecurityError("Ruta no permitida")
         if os.path.isabs(file):
             from godml.cli.validators import _is_safe_absolute_path
+
             if not _is_safe_absolute_path(file):
-                raise SecurityError(f"Ruta absoluta fuera de directorio permitido: {file}")
+                raise SecurityError(
+                    f"Ruta absoluta fuera de directorio permitido: {file}"
+                )
 
         yaml_path = validate_safe_path(file)
         print(f"Usando archivo YAML: {yaml_path}")
@@ -60,8 +76,13 @@ def run_command(file: str) -> None:
         print(f"Dataset: {pipeline.dataset.uri}")
         print(f"Output: {pipeline.deploy.batch_output}")
 
-        if isinstance(pipeline.dataset.dataprep, dict) and "steps" in pipeline.dataset.dataprep and (
-            "inputs" not in pipeline.dataset.dataprep or "outputs" not in pipeline.dataset.dataprep
+        if (
+            isinstance(pipeline.dataset.dataprep, dict)
+            and "steps" in pipeline.dataset.dataprep
+            and (
+                "inputs" not in pipeline.dataset.dataprep
+                or "outputs" not in pipeline.dataset.dataprep
+            )
         ):
             pipeline.dataset.dataprep = _normalize_inline_to_full(
                 pipeline.dataset.dataprep, pipeline.dataset.uri
@@ -82,6 +103,6 @@ def run_command(file: str) -> None:
     except ConfigurationError as e:
         logger.error(f"Error de configuración: {sanitize_for_log(str(e))}")
         raise typer.Exit(1)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Error inesperado: {sanitize_for_log(str(e))}")
         raise typer.Exit(1)

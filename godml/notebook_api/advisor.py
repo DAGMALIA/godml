@@ -15,7 +15,9 @@ def advisor(df: pd.DataFrame, target: str | None = None):
     return orchestrator.analyze(df, target)
 
 
-def advisor_rag(df: pd.DataFrame, target: str | None = None, derive_target: bool = False):
+def advisor_rag(
+    df: pd.DataFrame, target: str | None = None, derive_target: bool = False
+):
     orchestrator = AdvisorOrchestrator(use_rag=True)
     return orchestrator.analyze(df, target, derive_target)
 
@@ -33,7 +35,9 @@ def metric_judge(X, y, task_type: str = "classification"):
     return judge.analyze(df, target_col)
 
 
-def advisor_full_report(df: pd.DataFrame, target: str | None = None, derive_target: bool = False):
+def advisor_full_report(
+    df: pd.DataFrame, target: str | None = None, derive_target: bool = False
+):
     orch = AdvisorOrchestrator()
     report = orch.analyze(df, target=target, derive_target=derive_target)
 

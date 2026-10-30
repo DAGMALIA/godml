@@ -1,6 +1,7 @@
 import pandas as pd
 from .base import BaseTransform
 
+
 def _cast_series(s: pd.Series, target: str):
     if target.startswith("datetime"):
         fmt = None
@@ -15,8 +16,10 @@ def _cast_series(s: pd.Series, target: str):
         return s.astype("string")
     return s
 
+
 class CastTypes(BaseTransform):
     name = "cast_types"
+
     def apply(self, df: pd.DataFrame, mapping=None, **_):
         mapping = mapping or {}
         out = df.copy()
@@ -24,6 +27,7 @@ class CastTypes(BaseTransform):
             if col in out.columns:
                 out[col] = _cast_series(out[col], t)
         return out
+
 
 class SafeCast(CastTypes):
     name = "safe_cast"

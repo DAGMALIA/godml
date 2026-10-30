@@ -32,6 +32,6 @@ def calc_hash_command(path: str, update_yaml: Optional[str] = None) -> None:
     except FileNotFoundError as e:
         logger.error(f"Archivo no encontrado: {sanitize_for_log(str(e))}")
         raise typer.Exit(1)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Error al calcular hash: {sanitize_for_log(str(e))}")
         raise typer.Exit(1)

@@ -46,7 +46,9 @@ def run(file: str = typer.Option(..., "--file", "-f", help="Ruta al archivo YAML
 @app.command("calc-hash")
 def calc_hash(
     path: str = typer.Argument(..., help="Ruta al archivo a hashear"),
-    update_yaml: Optional[str] = typer.Option(None, "--update-yaml", "-u", help="Ruta YAML donde actualizar el hash"),
+    update_yaml: Optional[str] = typer.Option(
+        None, "--update-yaml", "-u", help="Ruta YAML donde actualizar el hash"
+    ),
 ):
     """Calcula el hash SHA-256 de un archivo."""
     calc_hash_command(path, update_yaml)
@@ -67,7 +69,10 @@ def serve(environment: str = "dev"):
 @app.command()
 def deploy(
     project_name: str,
-    environment: str = typer.Argument(..., help="Ambiente: development, staging o production"),
+    environment: str = typer.Argument(
+        ...,
+        help="Ambiente definido en deploy_config de godml.yml (p. ej. dev, qa, prod)",
+    ),
 ):
     """Despliega el modelo como microservicio para un ambiente específico."""
     deploy_command(project_name, environment)

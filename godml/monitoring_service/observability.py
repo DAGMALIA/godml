@@ -1,6 +1,6 @@
 # godml/monitoring_service/observability.py
 # Copyright (c) 2025 Arturo Gutierrez Rubio Rojas
-# Licensed under the MIT License
+# SPDX-License-Identifier: MIT
 """
 Observabilidad de runtime para modelos servidos por GODML.
 
@@ -120,7 +120,19 @@ PSI_SIGNIFICANT_THRESHOLD = 0.25
 # Buckets pensados para inferencia: la mayoría de los modelos responden en
 # milisegundos, y los defaults de prometheus_client pierden resolución ahí.
 LATENCY_BUCKETS = (
-    0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0,
+    0.001,
+    0.0025,
+    0.005,
+    0.01,
+    0.025,
+    0.05,
+    0.1,
+    0.25,
+    0.5,
+    1.0,
+    2.5,
+    5.0,
+    10.0,
 )
 
 _MODEL_LABELS = ("model", "version", "environment")
@@ -214,7 +226,9 @@ drift_window_samples = _build(
 # ==========================================================
 # 🧮 PSI
 # ==========================================================
-def compute_psi(expected: Iterable[float], actual: Iterable[float], epsilon: float = 1e-6) -> float:
+def compute_psi(
+    expected: Iterable[float], actual: Iterable[float], epsilon: float = 1e-6
+) -> float:
     """
     Population Stability Index entre dos vectores de proporciones ya binneados.
 
@@ -226,7 +240,9 @@ def compute_psi(expected: Iterable[float], actual: Iterable[float], epsilon: flo
     e = np.clip(np.asarray(list(expected), dtype=float), epsilon, None)
     a = np.clip(np.asarray(list(actual), dtype=float), epsilon, None)
     if e.size == 0 or e.size != a.size:
-        raise ValueError("Los vectores de proporciones deben tener el mismo tamaño y no ser vacíos")
+        raise ValueError(
+            "Los vectores de proporciones deben tener el mismo tamaño y no ser vacíos"
+        )
     e = e / e.sum()
     a = a / a.sum()
     return float(np.sum((a - e) * np.log(a / e)))
@@ -269,8 +285,12 @@ def build_baseline(
         if series.empty:
             continue
 
-        if pd.api.types.is_numeric_dtype(series) and not pd.api.types.is_bool_dtype(series):
-            quantiles = np.quantile(series.to_numpy(dtype=float), np.linspace(0, 1, n_bins + 1))
+        if pd.api.types.is_numeric_dtype(series) and not pd.api.types.is_bool_dtype(
+            series
+        ):
+            quantiles = np.quantile(
+                series.to_numpy(dtype=float), np.linspace(0, 1, n_bins + 1)
+            )
             # Features constantes o casi constantes colapsan los bordes; unique()
             # los deja consistentes y np.histogram sigue siendo válido.
             edges = np.unique(quantiles)
@@ -336,7 +356,9 @@ def find_baseline(search_dirs: Iterable[str | Path]) -> Path | None:
         candidate = Path(override)
         if candidate.exists():
             return candidate
-        godml_logger.warning(f"⚠️ GODML_BASELINE_PATH apunta a una ruta inexistente: {candidate}")
+        godml_logger.warning(
+            f"⚠️ GODML_BASELINE_PATH apunta a una ruta inexistente: {candidate}"
+        )
 
     for directory in search_dirs:
         candidate = Path(directory) / BASELINE_FILENAME
@@ -375,12 +397,18 @@ class DriftMonitor:
         #     n=500 → mediana 0.016, p95 0.035, 0.0%
         # De ahí el mínimo de 300: por debajo de eso el ruido del estimador se
         # confunde con drift real y el dashboard queda en ámbar permanente.
-        self.window = window if window is not None else _env_int("GODML_DRIFT_WINDOW", 1000)
+        self.window = (
+            window if window is not None else _env_int("GODML_DRIFT_WINDOW", 1000)
+        )
         self.min_samples = (
-            min_samples if min_samples is not None else _env_int("GODML_DRIFT_MIN_SAMPLES", 300)
+            min_samples
+            if min_samples is not None
+            else _env_int("GODML_DRIFT_MIN_SAMPLES", 300)
         )
         self.refresh_every = (
-            refresh_every if refresh_every is not None else _env_int("GODML_DRIFT_REFRESH_EVERY", 100)
+            refresh_every
+            if refresh_every is not None
+            else _env_int("GODML_DRIFT_REFRESH_EVERY", 100)
         )
         self._buffers: dict[str, deque] = {
             name: deque(maxlen=self.window) for name in self.features
@@ -413,7 +441,10 @@ class DriftMonitor:
                 if values:
                     self._buffers[name].extend(values)
             self._since_refresh += len(rows)
-            if self._since_refresh >= self.refresh_every and self.samples >= self.min_samples:
+            if (
+                self._since_refresh >= self.refresh_every
+                and self.samples >= self.min_samples
+            ):
                 self._since_refresh = 0
                 return True
             return False
@@ -446,7 +477,11 @@ class DriftMonitor:
         # caigan en el primer/último bin en lugar de descartarse: un shift hacia
         # afuera del rango es justamente la señal de drift que interesa.
         open_edges = np.concatenate(([-np.inf], edges[1:-1], [np.inf]))
-        numeric = pd.to_numeric(pd.Series(values), errors="coerce").dropna().to_numpy(dtype=float)
+        numeric = (
+            pd.to_numeric(pd.Series(values), errors="coerce")
+            .dropna()
+            .to_numpy(dtype=float)
+        )
         if numeric.size == 0:
             raise ValueError("sin valores numéricos válidos en la ventana")
         counts, _ = np.histogram(numeric, bins=open_edges)
@@ -467,7 +502,9 @@ class DriftMonitor:
         expected.setdefault(_CATEGORICAL_OTHER, 0.0)
 
         keys = sorted(expected)
-        return compute_psi([expected[k] for k in keys], [actual.get(k, 0.0) for k in keys])
+        return compute_psi(
+            [expected[k] for k in keys], [actual.get(k, 0.0) for k in keys]
+        )
 
 
 # ==========================================================
@@ -489,14 +526,18 @@ class ModelObserver:
         baseline_path: str | Path | None = None,
     ):
         self.model_name = model_name or os.getenv("GODML_MODEL_NAME", "unknown")
-        self.model_version = model_version or os.getenv("GODML_MODEL_VERSION", "unknown")
+        self.model_version = model_version or os.getenv(
+            "GODML_MODEL_VERSION", "unknown"
+        )
         self.environment = environment or os.getenv("GODML_ENV", "dev").lower()
         self._labels = (self.model_name, self.model_version, self.environment)
         self._drift_labels = (self.model_name, self.environment)
 
         baseline = load_baseline(baseline_path) if baseline_path else None
         self.drift = DriftMonitor(baseline if DRIFT_ENABLED else None)
-        drift_baseline_loaded.labels(*self._drift_labels).set(1 if self.drift.enabled else 0)
+        drift_baseline_loaded.labels(*self._drift_labels).set(
+            1 if self.drift.enabled else 0
+        )
         if self.drift.enabled:
             godml_logger.info(
                 f"🌊 Drift activo sobre {len(self.drift.features)} features "
@@ -540,10 +581,14 @@ class ModelObserver:
         psi_by_feature = self.drift.compute()
         significant = 0
         for feature, psi in psi_by_feature.items():
-            feature_drift_psi.labels(self.model_name, self.environment, feature).set(psi)
+            feature_drift_psi.labels(self.model_name, self.environment, feature).set(
+                psi
+            )
             if psi >= PSI_SIGNIFICANT_THRESHOLD:
                 significant += 1
-                godml_logger.warning(f"🚨 Drift significativo en '{feature}': PSI={psi:.4f}")
+                godml_logger.warning(
+                    f"🚨 Drift significativo en '{feature}': PSI={psi:.4f}"
+                )
         drift_features_significant.labels(*self._drift_labels).set(significant)
 
     # ── HTTP ────────────────────────────────────────────

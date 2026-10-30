@@ -1,5 +1,5 @@
 # Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
-# Licensed under the MIT License
+# SPDX-License-Identifier: MIT
 
 import joblib
 import json
@@ -7,7 +7,10 @@ from pathlib import Path
 from datetime import datetime
 import shutil
 
-def save_model_to_structure(model, model_name: str = None, environment: str = "experiments"):
+
+def save_model_to_structure(
+    model, model_name: str = None, environment: str = "experiments"
+):
     """
     Guarda modelo usando pickle en estructura organizada
 
@@ -54,7 +57,7 @@ def save_model_to_structure(model, model_name: str = None, environment: str = "e
         "timestamp": timestamp,
         "environment": environment,
         "file_path": str(model_path),
-        "format": "pickle"
+        "format": "pickle",
     }
 
     metadata_path = env_path / f"{model_name}_metadata.json"
@@ -63,6 +66,7 @@ def save_model_to_structure(model, model_name: str = None, environment: str = "e
 
     print(f"Modelo {model_type} guardado: {model_path}")
     return str(model_path)
+
 
 def load_model_from_structure(model_name: str, environment: str = "production"):
     """
@@ -85,6 +89,7 @@ def load_model_from_structure(model_name: str, environment: str = "production"):
 
     print(f"Modelo cargado: {model_path}")
     return model
+
 
 def list_models(environment=None):
     """
@@ -115,6 +120,7 @@ def list_models(environment=None):
                 all_models[env] = []
         return all_models
 
+
 def promote_model(model_name: str, from_env: str, to_env: str):
     """
     Promover modelo entre ambientes
@@ -138,6 +144,7 @@ def promote_model(model_name: str, from_env: str, to_env: str):
 
     print(f"Modelo promovido de {from_env} a {to_env}")
     return new_path
+
 
 def _detect_model_type(model):
     """

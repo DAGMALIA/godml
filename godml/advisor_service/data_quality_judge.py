@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 class DataQualityJudge:
     def check(self, df: pd.DataFrame):
         report = {}

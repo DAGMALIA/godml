@@ -17,6 +17,7 @@ jobs:
       contents: write
       id-token: write
       security-events: write
+      actions: read
 
     steps:
       # 1️⃣ Checkout
@@ -42,12 +43,36 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "📦 Version: $VERSION"
 
+      # F1-24: a final X.Y.Z is only tagged once the latest X.Y.ZrcN, installed
+      # from PyPI, passed post_publish_smoke.yml. Pre-releases skip this check.
+      - name: 🧪 Require green post-publish smoke of the latest RC
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Pre-release $VERSION: no RC smoke required."
+            exit 0
+          fi
+          RC=$(git ls-remote --tags origin "refs/tags/v${VERSION}rc*" \
+            | sed -E 's|.*refs/tags/v||; s|\^\{\}$||' | sort -uV | tail -1)
+          if [ -z "$RC" ]; then
+            echo "::error::$VERSION has no published RC; publish and smoke-test ${VERSION}rc1 first"
+            exit 1
+          fi
+          gh run list --repo "$GITHUB_REPOSITORY" --workflow post_publish_smoke.yml \
+            --status success --limit 200 --json displayTitle --jq '.[].displayTitle' \
+            > smoke_runs.txt
+          if ! grep -qxF -e "Post-publish smoke $RC" -e "Post-publish smoke v$RC" smoke_runs.txt; then
+            echo "::error::No green post-publish smoke for $RC; run post_publish_smoke.yml with version=$RC"
+            exit 1
+          fi
+          echo "✅ $RC passed the post-publish smoke test"
+
       # 4️⃣ Install dependencies
       - name: 📦 Install project dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel build
-          pip install -e ".[dev]" bandit[sarif] safety pip-audit pip-tools
-          pip list --format=freeze > requirements.lock
+          pip install -e ".[dev,test-serve,test-observe,test-aws]" bandit[sarif] pip-audit
 
       # 5️⃣ Tests antes de publicar
       - name: 🧪 Run tests
@@ -60,7 +85,7 @@ jobs:
         run: |
           echo "🔍 Running Bandit for static code security..."
           bandit -r godml -f sarif -o bandit_report.sarif -lll || BANDIT_EXIT=$?
-          bandit -r godml -f txt -o bandit_report.txt -lll || true
+          bandit -r godml -f txt -o bandit_report.txt -lll --exit-zero  # report only; exit comes from the SARIF run
           cat bandit_report.txt
           if [ "${BANDIT_EXIT:-0}" -ne 0 ]; then
             echo "::error::Bandit encontró vulnerabilidades HIGH o CRITICAL. Revisa bandit_report.sarif."
@@ -76,27 +101,26 @@ jobs:
           sarif_file: bandit_report.sarif
           category: bandit
 
-      # 8️⃣ Dependency security scan (Safety)
-      - name: 🛡️ Safety Dependency Scan
-        uses: pyupio/safety-action@7baf6605473beffc874c1313ddf2db085c0cacf2 # v1
-        continue-on-error: true
-        with:
-          api-key: ${{ secrets.SAFETY_API_KEY }}
-          args: >
-            --file requirements.lock
-            --full-report
-            --ignore 71691,71693,71578,71577,71587,71692,71579,71584,71701,71703,71706,71707,62727,62800,62801
-          output-format: screen
-      # 🧾 Justificación de CVEs ignorados
-      # MLflow 3.4.0 mantiene vulnerabilidades reportadas sin fix disponible.
-      # Mitigaciones:
-      # - Ejecución en entorno aislado (CI/CD y contenedores)
-      # - Sin ejecución arbitraria ni entrada de usuario directa
-      # - Dependencias verificadas por hash en requirements.lock
-      # - Monitoreo continuo en Safety Platform
-      # Política: "Risk accepted with documented mitigation" (Supply Chain).
+      # Safety (F0-16): blocking. Scans the environment this job actually
+      # installed (pinned `pip freeze`), not pyproject's ranges. `safety scan`
+      # applies the Safety Platform policy, so the gate script decides: every
+      # finding must be a reviewed ignore in .safety-policy.yml (SECURITY.md).
+      - name: 📌 Freeze resolved environment for Safety
+        run: |
+          mkdir -p safety-scan
+          pip freeze --exclude-editable > safety-scan/requirements.txt
+          wc -l safety-scan/requirements.txt
 
-# 9️⃣ pip-audit (open-source, no requiere API key)
+      - name: 🛡️ Safety Dependency Scan
+        env:
+          SAFETY_API_KEY: ${{ secrets.SAFETY_API_KEY }}
+        run: |
+          python -m venv "$RUNNER_TEMP/safety-venv"
+          "$RUNNER_TEMP/safety-venv/bin/pip" install --quiet safety==3.3.1 typer==0.16.0 click==8.2.1
+          "$RUNNER_TEMP/safety-venv/bin/safety" --stage cicd scan             --target safety-scan --policy-file .safety-policy.yml --detailed-output             --save-as json safety-report.json || SAFETY_EXIT=$?
+          python .github/scripts/safety_gate.py             --report safety-report.json --policy .safety-policy.yml             --requirements safety-scan/requirements.txt             --safety-exit-code "${SAFETY_EXIT:-0}"
+
+      # 9️⃣ pip-audit (blocking, alongside Safety)
       - name: 🔎 pip-audit dependency scan
         run: |
           echo "🔎 Running pip-audit..."
@@ -105,18 +129,14 @@ jobs:
             --desc \
             --format markdown \
             --output pip-audit-report.md \
-            --ignore-vuln PYSEC-2024-230 \
-            || true
+            || AUDIT_EXIT=$?
           if [ -s pip-audit-report.md ]; then
             cat pip-audit-report.md >> $GITHUB_STEP_SUMMARY
           else
             echo "✅ No known vulnerabilities found by pip-audit." >> $GITHUB_STEP_SUMMARY
           fi
           echo "✅ pip-audit complete."
-      # 🧾 Justificación CVE ignorada (pip-audit)
-      # PYSEC-2024-230: sin fix disponible al momento del release.
-      # Mitigación: entorno aislado en CI/CD, sin input de usuario directo.
-      # Política: "Risk accepted with documented mitigation" (Supply Chain).
+          exit "${AUDIT_EXIT:-0}"
 
       # 🔟 Generate SBOM (SPDX)
       - name: 🧱 Generate SBOM (SPDX)
@@ -191,9 +211,8 @@ jobs:
           echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Tests | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| Bandit SAST | ✅ No HIGH/CRITICAL |" >> $GITHUB_STEP_SUMMARY
-          echo "| Safety dep scan | ✅ (best-effort, continue-on-error) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Safety (blocking, .safety-policy.yml) | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| pip-audit | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| SBOM (SPDX) | ✅ Signed with Cosign OIDC → Rekor |" >> $GITHUB_STEP_SUMMARY
           echo "| SLSA L3 + PyPI release | ✅ via release.yml on tag push |" >> $GITHUB_STEP_SUMMARY
           echo "| Commit | $GITHUB_SHA |" >> $GITHUB_STEP_SUMMARY
-          echo "::notice::Residual risk: MLflow vulnerabilities documented and accepted under supply chain policy"

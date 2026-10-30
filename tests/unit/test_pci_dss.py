@@ -1,4 +1,3 @@
-import pytest
 import pandas as pd
 from godml.compliance_service.pci_dss import PciDssCompliance
 
@@ -100,10 +99,12 @@ class TestPciDssComplianceEdgeCases:
 
     def test_pii_detected_by_column_name_heuristic(self):
         compliance = PciDssCompliance(policy="mask_sensitive")
-        df = pd.DataFrame({
-            "customer_name": ["Alice Smith", "Bob Jones"],
-            "revenue": [1000, 2000],
-        })
+        df = pd.DataFrame(
+            {
+                "customer_name": ["Alice Smith", "Bob Jones"],
+                "revenue": [1000, 2000],
+            }
+        )
         result = compliance.apply(df)
         assert "revenue" in result.columns
         assert result["customer_name"].iloc[0] != "Alice Smith"

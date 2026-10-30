@@ -27,7 +27,7 @@ def load_config(path):
                 raw = yaml.safe_load(f)
         except yaml.YAMLError as e:
             raise ConfigurationError(f"Error parseando YAML: {e}")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise ConfigurationError(f"Error leyendo archivo: {e}")
 
         if raw is None:
@@ -35,17 +35,17 @@ def load_config(path):
 
         try:
             resolved = resolve_env_variables(raw)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise ConfigurationError(f"Error resolviendo variables de entorno: {e}")
 
         try:
             config = PipelineDefinition(**resolved)
             godml_logger.info(f"Configuracion cargada desde {path}")
             return config
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise ConfigurationError(f"Error creando definicion de pipeline: {e}")
 
     except (FileNotFoundError, ConfigurationError):
         raise
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise ConfigurationError(f"Error inesperado cargando configuracion: {e}")

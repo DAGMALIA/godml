@@ -19,12 +19,12 @@ def train_model(
     if seed is not None and hasattr(model, "set_random_state"):
         try:
             model.set_random_state(seed)
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
     if hyperparams and hasattr(model, "set_hyperparameters"):
         try:
             model.set_hyperparameters(hyperparams)
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
     _fit_any(model, X, y, hyperparams or {})
     return type("ModelResultLike", (), {"model": model, "metrics": None})()
@@ -35,11 +35,14 @@ def predict(model_or_wrapper: Any, X: pd.DataFrame):
     return _predict_any(model, X)
 
 
-def evaluate(y_true, y_pred, metrics: Sequence[str] | Dict[str, Any]) -> Dict[str, float]:
+def evaluate(
+    y_true, y_pred, metrics: Sequence[str] | Dict[str, Any]
+) -> Dict[str, float]:
     try:
         from godml.monitoring_service.metrics import compute_metrics as _cm
+
         return _cm(y_true, y_pred, metrics)
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
     try:
         from sklearn import metrics as sk
@@ -49,18 +52,36 @@ def evaluate(y_true, y_pred, metrics: Sequence[str] | Dict[str, Any]) -> Dict[st
     wanted = list(metrics.keys()) if isinstance(metrics, dict) else list(metrics)
     out: Dict[str, float] = {}
     y_pred_arr = np.asarray(y_pred)
-    is_prob_like = y_pred_arr.dtype.kind in {"f"} and y_pred_arr.min() >= 0 and y_pred_arr.max() <= 1
+    is_prob_like = (
+        y_pred_arr.dtype.kind in {"f"}
+        and y_pred_arr.min() >= 0
+        and y_pred_arr.max() <= 1
+    )
 
     for m in wanted:
         m_l = m.lower()
         if m_l in {"accuracy", "acc"}:
-            out[m] = float(sk.accuracy_score(y_true, (y_pred_arr > 0.5) if is_prob_like else y_pred_arr))
+            out[m] = float(
+                sk.accuracy_score(
+                    y_true, (y_pred_arr > 0.5) if is_prob_like else y_pred_arr
+                )
+            )
         elif m_l in {"precision", "prec"}:
-            out[m] = float(sk.precision_score(y_true, (y_pred_arr > 0.5) if is_prob_like else y_pred_arr))
+            out[m] = float(
+                sk.precision_score(
+                    y_true, (y_pred_arr > 0.5) if is_prob_like else y_pred_arr
+                )
+            )
         elif m_l in {"recall", "tpr"}:
-            out[m] = float(sk.recall_score(y_true, (y_pred_arr > 0.5) if is_prob_like else y_pred_arr))
+            out[m] = float(
+                sk.recall_score(
+                    y_true, (y_pred_arr > 0.5) if is_prob_like else y_pred_arr
+                )
+            )
         elif m_l in {"f1", "f1_score"}:
-            out[m] = float(sk.f1_score(y_true, (y_pred_arr > 0.5) if is_prob_like else y_pred_arr))
+            out[m] = float(
+                sk.f1_score(y_true, (y_pred_arr > 0.5) if is_prob_like else y_pred_arr)
+            )
         elif m_l in {"roc_auc", "auc"} and is_prob_like:
             out[m] = float(sk.roc_auc_score(y_true, y_pred_arr))
         else:

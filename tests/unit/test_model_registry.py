@@ -1,9 +1,9 @@
 """Tests for model_registry, logistic_regression_model, auto_tuner."""
+
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import pytest
 
 
 class TestLogisticRegressionModel:
@@ -16,7 +16,10 @@ class TestLogisticRegressionModel:
         return X_train, y_train, X_test, y_test
 
     def test_train_returns_model_and_metrics(self):
-        from godml.model_service.model_registry.logistic_regression_model import LogisticRegressionModel
+        from godml.model_service.model_registry.logistic_regression_model import (
+            LogisticRegressionModel,
+        )
+
         model = LogisticRegressionModel()
         X_train, y_train, X_test, y_test = self._make_data()
         fitted, y_pred, metrics = model.train(X_train, y_train, X_test, y_test, {})
@@ -25,7 +28,10 @@ class TestLogisticRegressionModel:
         assert 0 <= metrics["accuracy"] <= 1
 
     def test_predict_after_train(self):
-        from godml.model_service.model_registry.logistic_regression_model import LogisticRegressionModel
+        from godml.model_service.model_registry.logistic_regression_model import (
+            LogisticRegressionModel,
+        )
+
         model = LogisticRegressionModel()
         X_train, y_train, X_test, _ = self._make_data()
         model.train(X_train, y_train, X_test, np.array([0] * 10 + [1] * 10), {})
@@ -33,7 +39,10 @@ class TestLogisticRegressionModel:
         assert len(preds) == len(X_test)
 
     def test_max_iter_param(self):
-        from godml.model_service.model_registry.logistic_regression_model import LogisticRegressionModel
+        from godml.model_service.model_registry.logistic_regression_model import (
+            LogisticRegressionModel,
+        )
+
         model = LogisticRegressionModel()
         X_train, y_train, X_test, y_test = self._make_data()
         fitted, _, _ = model.train(X_train, y_train, X_test, y_test, {"max_iter": 200})
@@ -43,12 +52,14 @@ class TestLogisticRegressionModel:
 class TestModelRegistry:
     def test_registry_contains_known_models(self):
         from godml.model_service.model_registry.model_registry import model_registry
+
         assert "random_forest" in model_registry
         assert "xgboost" in model_registry
         assert "logistic_regression" in model_registry
 
     def test_registry_instantiable(self):
         from godml.model_service.model_registry.model_registry import model_registry
+
         cls = model_registry["random_forest"]
         instance = cls()
         assert instance is not None
@@ -60,6 +71,7 @@ class TestAutoTuner:
 
     def test_xgboost_binary(self):
         from godml.model_service.auto_tuner import auto_tune_hyperparameters
+
         X = pd.DataFrame(np.random.randn(30, 2), columns=["a", "b"])
         y = self._labels([0, 1] * 15)
         params = auto_tune_hyperparameters("xgboost", {}, X, y)
@@ -67,6 +79,7 @@ class TestAutoTuner:
 
     def test_xgboost_multiclass(self):
         from godml.model_service.auto_tuner import auto_tune_hyperparameters
+
         X = pd.DataFrame(np.random.randn(30, 2), columns=["a", "b"])
         y = self._labels([0, 1, 2] * 10)
         params = auto_tune_hyperparameters("xgboost", {}, X, y)
@@ -75,6 +88,7 @@ class TestAutoTuner:
 
     def test_xgboost_regression(self):
         from godml.model_service.auto_tuner import auto_tune_hyperparameters
+
         X = pd.DataFrame(np.random.randn(30, 2), columns=["a", "b"])
         y = np.random.randn(30)
         params = auto_tune_hyperparameters("xgboost", {}, X, y)
@@ -82,6 +96,7 @@ class TestAutoTuner:
 
     def test_random_forest_binary(self):
         from godml.model_service.auto_tuner import auto_tune_hyperparameters
+
         X = pd.DataFrame(np.random.randn(20, 2), columns=["a", "b"])
         y = self._labels([0, 1] * 10)
         params = auto_tune_hyperparameters("random_forest", {}, X, y)
@@ -89,6 +104,7 @@ class TestAutoTuner:
 
     def test_random_forest_multiclass(self):
         from godml.model_service.auto_tuner import auto_tune_hyperparameters
+
         X = pd.DataFrame(np.random.randn(30, 2), columns=["a", "b"])
         y = self._labels([0, 1, 2] * 10)
         params = auto_tune_hyperparameters("random_forest", {}, X, y)
@@ -96,6 +112,7 @@ class TestAutoTuner:
 
     def test_logistic_regression_binary(self):
         from godml.model_service.auto_tuner import auto_tune_hyperparameters
+
         X = pd.DataFrame(np.random.randn(20, 2), columns=["a", "b"])
         y = self._labels([0, 1] * 10)
         params = auto_tune_hyperparameters("logistic_regression", {}, X, y)
@@ -103,6 +120,7 @@ class TestAutoTuner:
 
     def test_logistic_regression_multiclass(self):
         from godml.model_service.auto_tuner import auto_tune_hyperparameters
+
         X = pd.DataFrame(np.random.randn(30, 2), columns=["a", "b"])
         y = self._labels([0, 1, 2] * 10)
         params = auto_tune_hyperparameters("logistic_regression", {}, X, y)
@@ -110,6 +128,7 @@ class TestAutoTuner:
 
     def test_unknown_model(self):
         from godml.model_service.auto_tuner import auto_tune_hyperparameters
+
         X = pd.DataFrame(np.random.randn(20, 2), columns=["a", "b"])
         y = self._labels([0, 1] * 10)
         params = auto_tune_hyperparameters("unknown_model", {"foo": "bar"}, X, y)
@@ -117,6 +136,7 @@ class TestAutoTuner:
 
     def test_removes_none_values(self):
         from godml.model_service.auto_tuner import auto_tune_hyperparameters
+
         X = pd.DataFrame(np.random.randn(10, 2), columns=["a", "b"])
         y = self._labels([0, 1] * 5)
         params = auto_tune_hyperparameters("xgboost", {"null_param": None}, X, y)
@@ -124,13 +144,17 @@ class TestAutoTuner:
 
     def test_removes_invalid_multi_class(self):
         from godml.model_service.auto_tuner import auto_tune_hyperparameters
+
         X = pd.DataFrame(np.random.randn(10, 2), columns=["a", "b"])
         y = self._labels([0, 1] * 5)
-        params = auto_tune_hyperparameters("xgboost", {"multi_class": "bad_value"}, X, y)
+        params = auto_tune_hyperparameters(
+            "xgboost", {"multi_class": "bad_value"}, X, y
+        )
         assert "multi_class" not in params
 
     def test_pandas_series_y(self):
         from godml.model_service.auto_tuner import auto_tune_hyperparameters
+
         X = pd.DataFrame(np.random.randn(20, 2), columns=["a", "b"])
         y = pd.Series([0, 1] * 10)
         params = auto_tune_hyperparameters("random_forest", {}, X, y)

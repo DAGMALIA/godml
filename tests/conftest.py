@@ -1,18 +1,46 @@
+from pathlib import Path
+
 import pytest
 import numpy as np
 import pandas as pd
 import yaml
+
+from tests.hermetic import changed_files, snapshot
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+@pytest.fixture(autouse=True)
+def pii_key(monkeypatch):
+    """Compliance requires GODML_PII_KEY (F1-06); tests about a missing key delete it."""
+    monkeypatch.setenv("GODML_PII_KEY", "test-only-pii-key-not-secret")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def hermetic_tests():
+    """F1-19: fail the run if any test wrote into the repo (use tmp_path)."""
+    before = snapshot(REPO_ROOT)
+    yield
+    changed = changed_files(REPO_ROOT, before)
+    if changed:
+        pytest.fail(
+            "Tests created or modified files outside tmp_path "
+            "(CLAUDE.md, 'Tests herméticos'):\n  " + "\n  ".join(changed),
+            pytrace=False,
+        )
 
 
 @pytest.fixture
 def binary_dataset():
     np.random.seed(42)
     n = 120
-    X = pd.DataFrame({
-        "feat_a": np.random.randn(n),
-        "feat_b": np.random.randn(n),
-        "feat_c": np.random.randint(0, 10, n).astype(float),
-    })
+    X = pd.DataFrame(
+        {
+            "feat_a": np.random.randn(n),
+            "feat_b": np.random.randn(n),
+            "feat_c": np.random.randint(0, 10, n).astype(float),
+        }
+    )
     y = np.where(X["feat_a"] + X["feat_b"] > 0, 1, 0)
     split = int(n * 0.8)
     return {
@@ -29,10 +57,12 @@ def binary_dataset():
 def regression_dataset():
     np.random.seed(42)
     n = 80
-    X = pd.DataFrame({
-        "x1": np.random.randn(n),
-        "x2": np.random.randn(n),
-    })
+    X = pd.DataFrame(
+        {
+            "x1": np.random.randn(n),
+            "x2": np.random.randn(n),
+        }
+    )
     y = 3.0 * X["x1"] + 2.0 * X["x2"] + np.random.randn(n) * 0.1
     split = int(n * 0.8)
     return {
@@ -45,14 +75,16 @@ def regression_dataset():
 
 @pytest.fixture
 def pii_dataframe():
-    return pd.DataFrame({
-        "card_number": ["4111111111111111", "5500005555555559", "340000000000009"],
-        "email": ["user@example.com", "admin@test.org", "john@company.co"],
-        "ssn": ["123-45-6789", "987-65-4321", "456-78-9012"],
-        "zip_code": ["12345", "90210", "10001"],
-        "age": [25, 30, 45],
-        "score": [0.8, 0.6, 0.9],
-    })
+    return pd.DataFrame(
+        {
+            "card_number": ["4111111111111111", "5500005555555559", "340000000000009"],
+            "email": ["user@example.com", "admin@test.org", "john@company.co"],
+            "ssn": ["123-45-6789", "987-65-4321", "456-78-9012"],
+            "zip_code": ["12345", "90210", "10001"],
+            "age": [25, 30, 45],
+            "score": [0.8, 0.6, 0.9],
+        }
+    )
 
 
 @pytest.fixture

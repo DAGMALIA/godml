@@ -5,6 +5,7 @@ SageMaker passes hyperparameters as CLI args and sets:
   SM_MODEL_DIR    — where to write the saved model
   SM_CHANNEL_TRAIN — where training data is mounted
 """
+
 import argparse
 import glob
 import os
@@ -21,8 +22,14 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--eta", type=float, default=0.3)
     p.add_argument("--n_estimators", type=int, default=100)
     p.add_argument("--objective", type=str, default="binary:logistic")
-    p.add_argument("--model-dir", type=str, default=os.environ.get("SM_MODEL_DIR", "/opt/ml/model"))
-    p.add_argument("--train", type=str, default=os.environ.get("SM_CHANNEL_TRAIN", "/opt/ml/input/data/train"))
+    p.add_argument(
+        "--model-dir", type=str, default=os.environ.get("SM_MODEL_DIR", "/opt/ml/model")
+    )
+    p.add_argument(
+        "--train",
+        type=str,
+        default=os.environ.get("SM_CHANNEL_TRAIN", "/opt/ml/input/data/train"),
+    )
     return p.parse_args()
 
 
@@ -51,7 +58,7 @@ def main() -> None:
     try:
         auc = roc_auc_score(y, model.predict_proba(X)[:, 1])
         print(f"Train AUC: {auc:.4f}")
-    except Exception:
+    except Exception:  # noqa: BLE001, S110
         pass
 
     os.makedirs(args.model_dir, exist_ok=True)

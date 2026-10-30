@@ -1,9 +1,11 @@
 """SageMaker executor — runs a godml pipeline as a SageMaker Pipeline."""
+
 from __future__ import annotations
 
 from godml.core_service.engine import BaseExecutor
 from godml.config_service.schema import PipelineDefinition
 from godml.monitoring_service.logger import get_logger
+from godml.compliance_service.dataset_integrity import is_pinned
 
 logger = get_logger()
 
@@ -36,6 +38,28 @@ class SageMakerExecutor(BaseExecutor):
     """
 
     def validate(self, pipeline: PipelineDefinition) -> None:
+        # Fail-closed (F1-04), checked before anything AWS-related: the stock
+        # sklearn processing image does not ship godml, so compliance cannot
+        # run inside the job. Earlier versions skipped it silently and trained
+        # on unprocessed data.
+        compliance = getattr(pipeline.governance, "compliance", None)
+        if compliance:
+            raise ValueError(
+                f"governance.compliance ('{compliance}') is not supported with "
+                "provider: sagemaker yet: the processing image does not include "
+                "godml, so compliance cannot be applied inside the job. Apply it "
+                "before uploading the data to S3 (godml dataprep), or use "
+                "provider: mlflow."
+            )
+
+        # F1-05: S3 data cannot be hashed locally yet (F3-03); say so instead of
+        # implying the pinned hash was checked.
+        if is_pinned(pipeline.dataset.hash):
+            logger.warning(
+                f"dataset.hash is pinned but not verified for S3 data "
+                f"({pipeline.dataset.uri}): provider sagemaker does not check it yet."
+            )
+
         _require_aws()
         errors: list[str] = []
 
@@ -51,6 +75,7 @@ class SageMakerExecutor(BaseExecutor):
                 errors.append("aws.s3_bucket is required.")
         else:
             import os
+
             if not os.environ.get("GODML_SAGEMAKER_ROLE"):
                 errors.append(
                     "No IAM role configured. Add 'aws.role_arn' to your godml.yml "

@@ -1,5 +1,5 @@
 # Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
-# Licensed under the MIT License
+# SPDX-License-Identifier: MIT
 
 from godml.providers.mlflow import MLflowExecutor
 from godml.providers.sagemaker import SageMakerExecutor
@@ -12,6 +12,7 @@ _providers_map = {
     "sagemaker": SageMakerExecutor,
 }
 
+
 def get_executor(provider_name: str):
     try:
         if not provider_name:
@@ -22,13 +23,17 @@ def get_executor(provider_name: str):
         if provider in _providers_map:
             try:
                 return _providers_map[provider]()
-            except Exception as e:
-                raise ConfigurationError(f"Error inicializando executor {provider}: {e}")
+            except Exception as e:  # noqa: BLE001
+                raise ConfigurationError(
+                    f"Error inicializando executor {provider}: {e}"
+                )
         else:
             available = ", ".join(_providers_map.keys())
-            raise ConfigurationError(f"Provider '{provider_name}' no soportado. Disponibles: {available}")
+            raise ConfigurationError(
+                f"Provider '{provider_name}' no soportado. Disponibles: {available}"
+            )
 
     except ConfigurationError:
         raise
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         raise ConfigurationError(f"Error inesperado obteniendo executor: {e}")

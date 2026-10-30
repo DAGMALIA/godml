@@ -4,7 +4,6 @@ Cubre el arreglo del path de deploy: el Dockerfile generado apuntaba a un tag
 hardcodeado que dejó de existir, y `godml init` escribía un `COPY deploy_service`
 sobre un directorio que solo creaba `godml deploy`.
 """
-import pytest
 
 from godml import __version__
 from godml.utils.scaffold import DEPLOY_SERVICE_DIRNAME, scaffold_deploy_service
@@ -26,7 +25,6 @@ def directivas(dockerfile: str) -> str:
 
 
 class TestScaffoldDeployService:
-
     def test_crea_el_servicio_desde_la_plantilla(self, tmp_path):
         destino = scaffold_deploy_service(tmp_path)
         assert destino == tmp_path / DEPLOY_SERVICE_DIRNAME
@@ -41,20 +39,23 @@ class TestScaffoldDeployService:
 
     def test_es_idempotente_y_respeta_customizaciones(self, tmp_path):
         destino = scaffold_deploy_service(tmp_path)
-        (destino / "server.py").write_text("# customizado por el usuario", encoding="utf-8")
+        (destino / "server.py").write_text(
+            "# customizado por el usuario", encoding="utf-8"
+        )
 
         scaffold_deploy_service(tmp_path)
 
         # La copia existe para que el usuario la edite: una segunda llamada no
         # puede pisarla.
-        assert (destino / "server.py").read_text(encoding="utf-8") == "# customizado por el usuario"
+        assert (destino / "server.py").read_text(
+            encoding="utf-8"
+        ) == "# customizado por el usuario"
 
 
 class TestGenerateDockerfile:
-
     def test_inyecta_la_version_instalada(self):
         dockerfile = generate_dockerfile_txt()
-        assert f'godml[api,observability]=={__version__}' in dockerfile
+        assert f"godml[api,observability]=={__version__}" in dockerfile
 
     def test_no_quedan_placeholders_sin_resolver(self):
         assert "__GODML_VERSION__" not in generate_dockerfile_txt()
@@ -101,7 +102,7 @@ class TestGenerateDockerfile:
         from pathlib import Path
 
         pedidos = set(
-            re.search(r'godml\[([^\]]+)\]', directivas(generate_dockerfile_txt()))
+            re.search(r"godml\[([^\]]+)\]", directivas(generate_dockerfile_txt()))
             .group(1)
             .split(",")
         )
@@ -117,8 +118,9 @@ class TestGenerateDockerfile:
 
 
 class TestInitGeneraProyectoBuildeable:
-
-    def test_init_crea_el_deploy_service_que_el_dockerfile_copia(self, tmp_path, monkeypatch):
+    def test_init_crea_el_deploy_service_que_el_dockerfile_copia(
+        self, tmp_path, monkeypatch
+    ):
         from godml.cli.commands.init import init_command
 
         monkeypatch.chdir(tmp_path)
@@ -132,12 +134,16 @@ class TestInitGeneraProyectoBuildeable:
         assert "COPY deploy_service" in dockerfile
         assert (proyecto / DEPLOY_SERVICE_DIRNAME / "server.py").is_file()
 
-    def test_el_dockerfile_generado_no_apunta_a_un_tag_fantasma(self, tmp_path, monkeypatch):
+    def test_el_dockerfile_generado_no_apunta_a_un_tag_fantasma(
+        self, tmp_path, monkeypatch
+    ):
         from godml.cli.commands.init import init_command
 
         monkeypatch.chdir(tmp_path)
         init_command("proyecto")
 
-        instrucciones = directivas((tmp_path / "proyecto" / "Dockerfile").read_text(encoding="utf-8"))
+        instrucciones = directivas(
+            (tmp_path / "proyecto" / "Dockerfile").read_text(encoding="utf-8")
+        )
         assert "0.4.10" not in instrucciones
         assert __version__ in instrucciones

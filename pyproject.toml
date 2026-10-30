@@ -4,11 +4,12 @@ requires = ["setuptools>=78.1.1", "wheel"]
 
 [project]
 description = "Governed, Observable & Declarative Machine Learning Framework"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 name = "godml"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
-version = "1.3.0"
+version = "1.4.0"
 
 authors = [{name = "Arturo Gutierrez Rubio Rojas", email = "agtzrubio@dagmalia.com"}]
 
@@ -35,7 +36,6 @@ classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
@@ -101,7 +101,9 @@ api = [
 # AWS / SageMaker support
 aws = [
   "boto3>=1.34.0,<2",
-  "sagemaker>=2.200.0,<4",
+  # SDK v3 removed sagemaker.workflow / processing / image_uris used by the
+  # executor (F1-23); porting to v3 is F4-07.
+  "sagemaker>=2.257.2,<3",  # 2.257.2 fixes PYSEC-2026-3060
 ]
 
 # pip install godml[deep]
@@ -133,16 +135,36 @@ observability = [
 ]
 
 # pip install godml[dev]
-# Development & testing
+# Development tools only: test runner, lint, types, hooks. No runtime extras,
+# so nothing (fastapi, boto3, ...) is pulled in implicitly (F0-13).
 dev = [
   "pytest>=8.0.0,<10",
   "pytest-cov>=5.0.0,<8",
   "pytest-mock>=3.14.0,<4",
-  "moto[all]>=5.0.0,<6",
+  "ruff>=0.15.17,<0.16",
+  "mypy>=1.19,<2",
+  "types-PyYAML>=6.0,<7",
+  # pre-commit is installed separately (`pipx install pre-commit`): its
+  # patched virtualenv needs packaging>=26.3 while the patched SageMaker SDK
+  # needs packaging<25, so one environment cannot hold both without CVEs.
+]
+
+# Test dependencies per pillar. CI installs dev + every test-* extra, so no
+# test is skipped for a missing dependency.
+# pip install "godml[dev,test-serve,test-observe,test-aws]"
+test-serve = [
+  "godml[api]",
+  # fastapi.testclient.TestClient requires httpx
   "httpx>=0.27.0,<1",
-  # Sin esto los tests de observabilidad se ejecutan contra las métricas
-  # degradadas a no-op y dejan de verificar nada: prometheus_client es
-  # opcional en runtime, pero obligatorio para testear el camino real.
+]
+test-aws = [
+  # Real SageMaker SDK for the SDK contract tests (F1-22): a fake-only test
+  # could not notice that SDK v3 removed every module the executor imports.
+  "godml[aws]",
+]
+test-observe = [
+  # Without prometheus_client the observability tests run against the no-op
+  # metrics fallback and verify nothing.
   "godml[observability]",
 ]
 
@@ -165,33 +187,75 @@ exclude = ["tests*", "venv*", "*.egg-info*"]
 include = ["godml*"]
 where = ["."]
 
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+# pycodestyle + pyflakes (as the previous CI lint) plus the fail-closed rules:
+# no silent `except Exception: pass` and no blind excepts. Pre-existing
+# violations are tagged `# noqa: S110` / `# noqa: BLE001` as tracked debt
+# (F1 removes them); new ones fail CI.
+extend-select = ["E", "W", "S110", "BLE001"]
+ignore = ["E501"]  # line length is the formatter's job
+
+[tool.ruff.lint.per-file-ignores]
+# Example notebooks re-import across cells and demo optional steps.
+"*.ipynb" = ["F811", "BLE001"]
+
+[tool.mypy]
+# Gradual mode (F0-04): default strictness, every module is checked.
+python_version = "3.11"
+files = ["godml"]
+ignore_missing_imports = true
+
+# Debt: modules with type errors at F0-04 (46 errors). Remove an entry once
+# the module is clean; never add new ones.
+[[tool.mypy.overrides]]
+module = [
+  "godml.advisor_service.advisor_orchestrator",
+  "godml.compliance_service.validation_helpers",
+  "godml.dataprep_service.recipe_executor",
+  "godml.dataprep_service.transforms.quality",
+  "godml.dataprep_service.transforms.text",
+  "godml.dataprep_service.transforms.window",
+  "godml.model_service.model_registry.lstm_forecast_model",
+  "godml.model_service.model_registry.model_registry",
+  "godml.monitoring_service.observability",
+  "godml.notebook_api.advisor",
+  "godml.notebook_api.pipeline",
+  "godml.providers.mlflow",
+  "godml.providers.sagemaker.scripts.preprocess",
+  "godml.utils.model_storage",
+  "godml.utils.predict_safely",
+]
+ignore_errors = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --tb=short -p no:warnings"
+addopts = "-v --tb=short"
+# Third-party warnings stay visible in the summary. Deprecations raised from
+# godml's own modules fail the test (F0-11).
+filterwarnings = [
+  'error::DeprecationWarning:godml(\..*)?',
+  'error::PendingDeprecationWarning:godml(\..*)?',
+  # Known: FastAPI on_event in the 1.x server and its scaffold template;
+  # replaced by lifespan in F5-03.
+  'ignore:\s*on_event is deprecated:DeprecationWarning:godml\.(deploy_service|templates\.deploy_template)\.server',
+]
 
 [tool.coverage.run]
 source = ["godml"]
+# Real coverage: only tests and generated code are excluded. Do not add
+# modules here to hide them; raise fail_under per phase instead (F0-10).
 omit = [
   "*/tests/*",
-  "*/examples/*",
   "*/__pycache__/*",
-  "*/templates/*",
-  # CLI requires subprocess integration tests
-  "godml/cli/*",
-  "godml/godml_cli.py",
-  # Deploy service requires Docker + FastAPI server
-  "godml/deploy_service/*",
-  # External cloud providers — require live AWS/SageMaker credentials
-  "godml/providers/sagemaker/*",
-  "godml/providers/sagemaker/scripts/*",
-  "godml/dataprep_service/connectors/s3.py",
-  # LSTM requires TensorFlow installation + GPU/CPU warmup
-  "godml/model_service/model_registry/lstm_forecast_model.py",
-  # build_doc_index is a one-shot setup script
-  "godml/build_doc_index.py",
+  # Scaffold copied verbatim into user projects by `godml init`/`godml deploy`
+  "godml/templates/*",
 ]
 
 [tool.coverage.report]
@@ -199,7 +263,6 @@ exclude_lines = [
   "pragma: no cover",
   "if __name__ == .__main__.:",
   "raise NotImplementedError",
-  "except ImportError",
 ]
 show_missing = true
-fail_under = 54
+fail_under = 48  # real coverage at F0-10 (48.4 %); raise per phase

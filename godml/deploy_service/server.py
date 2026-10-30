@@ -5,8 +5,7 @@ try:
     from fastapi.middleware.cors import CORSMiddleware
 except ImportError as _e:
     raise ImportError(
-        "El deploy service requiere fastapi. "
-        "Instala con: pip install godml[api]"
+        "El deploy service requiere fastapi. Instala con: pip install godml[api]"
     ) from _e
 
 try:
@@ -17,11 +16,15 @@ except ImportError:
 from pydantic import BaseModel
 import joblib
 import pandas as pd
-import inspect
 import os
 import time
 from pathlib import Path
 from godml import __version__
+from godml.utils.serving import (
+    MissingFeaturesError,
+    align_features,
+    predict_with_proba,
+)
 from godml.monitoring_service.logger import godml_logger, SecurityError
 from godml.monitoring_service.observability import (
     BASELINE_FILENAME,
@@ -41,7 +44,7 @@ IS_DEV = ENVIRONMENT in ("dev", "qa")
 # ==========================================================
 app = FastAPI(
     title=f"GODML Model API ({ENVIRONMENT})",
-    version="1.1.0",
+    version=__version__,
     description="Microservicio de inferencia robusto para GODML",
 )
 
@@ -54,11 +57,13 @@ if IS_DEV:
         allow_headers=["*"],
     )
 
+
 # ==========================================================
 # 📦 MODEL UTILITIES
 # ==========================================================
 class InputData(BaseModel):
     data: dict
+
 
 def find_model_file() -> Path:
     """Busca el archivo del modelo para el entorno actual"""
@@ -72,13 +77,15 @@ def find_model_file() -> Path:
                 return model_file
     raise FileNotFoundError(f"No se encontró modelo para {ENVIRONMENT}")
 
+
 def validate_model_path(model_path: Path) -> None:
     resolved = model_path.resolve()
     base = Path.cwd().resolve()
-    if not str(resolved).startswith(str(base)):
+    if not resolved.is_relative_to(base):  # F1-13: startswith accepted siblings
         raise SecurityError("Ruta del modelo fuera del proyecto")
     if not resolved.exists() or not resolved.is_file():
         raise FileNotFoundError(f"Archivo de modelo inválido: {resolved}")
+
 
 # ==========================================================
 # ⚡ CARGA DE MODELO
@@ -92,7 +99,7 @@ def load_model():
         validate_model_path(model_path)
         app.state.model = joblib.load(model_path)
         godml_logger.info(f"✅ Modelo cargado: {model_path}")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         godml_logger.error(f"⚠️ Error al cargar modelo: {e}")
         app.state.model = None  # Permite dry-run (CI/CD)
 
@@ -112,6 +119,7 @@ def load_model():
         baseline_path=baseline_path,
     )
     app.state.observer.set_model_loaded(app.state.model is not None)
+
 
 # ==========================================================
 # 🧠 ENDPOINT DE INFERENCIA
@@ -135,22 +143,13 @@ def predict(input_data: InputData, request: Request):
         if model is None:
             raise HTTPException(status_code=500, detail="Modelo no cargado")
 
-        df = pd.DataFrame([input_data.data])
+        # F1-11: JSON key order is arbitrary; use the training column order.
+        try:
+            df = align_features(model, pd.DataFrame([input_data.data]))
+        except MissingFeaturesError as e:
+            raise HTTPException(status_code=400, detail=f"Faltan columnas: {e.missing}")
 
-        expected_features = getattr(model, "feature_names", None)
-        if expected_features:
-            missing = [f for f in expected_features if f not in df.columns]
-            if missing:
-                raise HTTPException(status_code=400, detail=f"Faltan columnas: {missing}")
-
-        sig = inspect.signature(model.predict)
-        if "data" in sig.parameters or isinstance(model, xgb.Booster):
-            dmatrix = xgb.DMatrix(df)
-            prediction = model.predict(dmatrix)
-        else:
-            prediction = model.predict(df)
-
-        result = prediction.tolist() if hasattr(prediction, "tolist") else [float(prediction)]
+        result, probabilities = predict_with_proba(model, df)
         latency = round(time.time() - start, 4)
         observer.record_prediction(
             latency=time.time() - start,
@@ -159,7 +158,10 @@ def predict(input_data: InputData, request: Request):
             features=df,
         )
         godml_logger.info(f"✅ Predicción en {latency}s -> {result}")
-        return {"prediction": result, "latency": latency}
+        response = {"prediction": result, "latency": latency}
+        if probabilities is not None:
+            response["probabilities"] = probabilities
+        return response
 
     except HTTPException as e:
         # Un 4xx es error de cliente y un 5xx es del modelo: separarlos evita que
@@ -167,10 +169,11 @@ def predict(input_data: InputData, request: Request):
         status = "client_error" if e.status_code < 500 else "error"
         observer.record_prediction(latency=time.time() - start, status=status)
         raise e
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         observer.record_prediction(latency=time.time() - start, status="error")
         godml_logger.error(f"❌ Error en predict: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 # ==========================================================
 # ❤️ HEALTH, METADATA & VERSION
@@ -184,11 +187,13 @@ def health_check():
         "model_loaded": model_loaded,
     }
 
+
 @app.get("/metadata")
 def metadata():
     model = getattr(app.state, "model", None)
     features = getattr(model, "feature_names", [])
     return {"status": "ok", "environment": ENVIRONMENT, "features": features}
+
 
 @app.get("/version")
 def version():
@@ -198,9 +203,10 @@ def version():
         # casi todos. Se conserva la variable como override para builds que
         # quieran marcar algo distinto, pero el fallback ahora es la versión real.
         "godml_version": os.getenv("GODML_VERSION") or __version__,
-        "service_version": "1.1.0",
+        "service_version": __version__,
         "environment": ENVIRONMENT,
     }
+
 
 # ==========================================================
 # 📊 OBSERVABILIDAD: PROMETHEUS & DRIFT
@@ -211,10 +217,12 @@ def metrics():
     payload, content_type = render_metrics()
     return Response(content=payload, media_type=content_type)
 
+
 @app.get("/drift")
 def drift(request: Request):
     """Estado del drift en JSON, para inspección sin levantar Grafana."""
     return get_observer(request).snapshot()
+
 
 # ==========================================================
 # 🧩 MANEJO GLOBAL DE ERRORES Y MÉTRICAS
@@ -230,6 +238,7 @@ def _metric_path(request: Request) -> str:
     route = request.scope.get("route")
     return getattr(route, "path", None) or "unmatched"
 
+
 @app.middleware("http")
 async def timing_and_logging(request: Request, call_next):
     start = time.time()
@@ -240,7 +249,7 @@ async def timing_and_logging(request: Request, call_next):
         if IS_DEV:
             godml_logger.info(f"📡 {request.method} {request.url.path} - {duration}s")
         status = response.status_code
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         duration = time.time() - start
         godml_logger.error(f"🔥 Error inesperado: {exc}")
         response = JSONResponse(status_code=500, content={"detail": str(exc)})
@@ -249,13 +258,17 @@ async def timing_and_logging(request: Request, call_next):
     path = _metric_path(request)
     # El propio scrape no se contabiliza: inflaría el RPS con tráfico interno.
     if path != "/metrics":
-        get_observer(request).record_http(request.method, path, status, time.time() - start)
+        get_observer(request).record_http(
+            request.method, path, status, time.time() - start
+        )
     return response
+
 
 # ==========================================================
 # 🧰 ENDPOINT SOLO DEV: /debug/config
 # ==========================================================
 if IS_DEV:
+
     @app.get("/debug/config")
     def debug_config():
         """Dev-only endpoint para validar entorno"""

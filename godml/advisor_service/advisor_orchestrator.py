@@ -6,6 +6,7 @@ from godml.advisor_service.model_selector import ModelSelector
 from godml.advisor_service.hyperparam_advisor import HyperparamAdvisor
 from godml.advisor_service.data_quality_judge import DataQualityJudge
 from godml.advisor_service.rag_advisor import RAGAdvisor
+from godml.utils.dtypes import is_text_like
 
 
 def _json_safe(obj):
@@ -38,17 +39,21 @@ class AdvisorOrchestrator:
             hyperparams = {}
             if derive_target:
                 if {"precio", "cantidad"}.issubset(df.columns):
-                    df["target"] = (df["precio"].fillna(0) * df["cantidad"].fillna(0) > 1000).astype(int)
+                    df["target"] = (
+                        df["precio"].fillna(0) * df["cantidad"].fillna(0) > 1000
+                    ).astype(int)
                     print("⚡ Target derivado automáticamente: 'venta_grande'")
                     metrics = self.metric_judge.analyze(df, "target")
-                    models = self.model_selector.suggest(metrics["task_type"], *df.shape)
+                    models = self.model_selector.suggest(
+                        metrics["task_type"], *df.shape
+                    )
                     hyperparams = self.hyperparam_advisor.suggest(models[0])
 
         # 3) LLM / RAG para receta
         dataset_summary = (
             f"{df.shape[0]} filas, "
             f"target {metrics['task_type']}, "
-            f"{len(df.select_dtypes(include=['object']).columns)} categóricas, "
+            f"{sum(is_text_like(dtype) for dtype in df.dtypes)} categóricas, "
             f"nulos: {quality['nulls']}"
         )
 
@@ -61,7 +66,7 @@ class AdvisorOrchestrator:
                 else:
                     # Si ya es dict de Python → lo normalizamos a JSON válido
                     json.loads(json.dumps(raw_recipe))
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 print(f"⚠️ Error validando receta: {e}")
                 {"error": "Receta inválida", "raw": str(raw_recipe)}
 

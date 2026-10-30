@@ -34,11 +34,13 @@ def rng():
 
 @pytest.fixture
 def training_data(rng):
-    return pd.DataFrame({
-        "edad": rng.normal(40, 10, 5000),
-        "ingreso": rng.lognormal(10, 0.5, 5000),
-        "pais": rng.choice(["AR", "MX", "CO"], 5000, p=[0.6, 0.3, 0.1]),
-    })
+    return pd.DataFrame(
+        {
+            "edad": rng.normal(40, 10, 5000),
+            "ingreso": rng.lognormal(10, 0.5, 5000),
+            "pais": rng.choice(["AR", "MX", "CO"], 5000, p=[0.6, 0.3, 0.1]),
+        }
+    )
 
 
 @pytest.fixture
@@ -47,7 +49,6 @@ def baseline(training_data):
 
 
 class TestComputePSI:
-
     def test_distribuciones_identicas_dan_cero(self):
         assert compute_psi([0.25] * 4, [0.25] * 4) == pytest.approx(0.0, abs=1e-9)
 
@@ -71,7 +72,6 @@ class TestComputePSI:
 
 
 class TestBuildBaseline:
-
     def test_captura_numericas_y_categoricas(self, baseline):
         assert baseline["features"]["edad"]["type"] == "numeric"
         assert baseline["features"]["pais"]["type"] == "categorical"
@@ -108,7 +108,6 @@ class TestBuildBaseline:
 
 
 class TestBaselinePersistence:
-
     def test_roundtrip(self, baseline, tmp_path):
         path = save_baseline(baseline, tmp_path)
         assert path.name == BASELINE_FILENAME
@@ -126,34 +125,43 @@ class TestBaselinePersistence:
         segundo = tmp_path / "segundo"
         segundo.mkdir()
         save_baseline(baseline, segundo)
-        assert find_baseline([tmp_path / "vacio", segundo]) == segundo / BASELINE_FILENAME
+        assert (
+            find_baseline([tmp_path / "vacio", segundo]) == segundo / BASELINE_FILENAME
+        )
 
     def test_find_baseline_sin_resultados(self, tmp_path):
         assert find_baseline([tmp_path]) is None
 
 
 class TestDriftMonitor:
-
     def _monitor(self, baseline, n):
         return DriftMonitor(baseline, window=n, min_samples=n, refresh_every=n)
 
     def test_misma_distribucion_es_estable(self, baseline, rng):
         mon = self._monitor(baseline, 2000)
-        mon.observe(pd.DataFrame({
-            "edad": rng.normal(40, 10, 2000),
-            "ingreso": rng.lognormal(10, 0.5, 2000),
-            "pais": rng.choice(["AR", "MX", "CO"], 2000, p=[0.6, 0.3, 0.1]),
-        }))
+        mon.observe(
+            pd.DataFrame(
+                {
+                    "edad": rng.normal(40, 10, 2000),
+                    "ingreso": rng.lognormal(10, 0.5, 2000),
+                    "pais": rng.choice(["AR", "MX", "CO"], 2000, p=[0.6, 0.3, 0.1]),
+                }
+            )
+        )
         for feature, psi in mon.compute().items():
             assert psi < 0.1, f"{feature} deberia ser estable, dio {psi}"
 
     def test_shift_de_media_se_detecta(self, baseline, rng):
         mon = self._monitor(baseline, 2000)
-        mon.observe(pd.DataFrame({
-            "edad": rng.normal(65, 10, 2000),          # +25 años
-            "ingreso": rng.lognormal(10, 0.5, 2000),   # sin cambio
-            "pais": rng.choice(["AR", "MX", "CO"], 2000, p=[0.6, 0.3, 0.1]),
-        }))
+        mon.observe(
+            pd.DataFrame(
+                {
+                    "edad": rng.normal(65, 10, 2000),  # +25 años
+                    "ingreso": rng.lognormal(10, 0.5, 2000),  # sin cambio
+                    "pais": rng.choice(["AR", "MX", "CO"], 2000, p=[0.6, 0.3, 0.1]),
+                }
+            )
+        )
         psi = mon.compute()
         assert psi["edad"] > PSI_SIGNIFICANT_THRESHOLD
         # Una feature que no cambió no debe contagiarse del drift de otra.
@@ -161,11 +169,17 @@ class TestDriftMonitor:
 
     def test_categoria_nueva_se_detecta(self, baseline, rng):
         mon = self._monitor(baseline, 2000)
-        mon.observe(pd.DataFrame({
-            "edad": rng.normal(40, 10, 2000),
-            "ingreso": rng.lognormal(10, 0.5, 2000),
-            "pais": rng.choice(["AR", "BR"], 2000, p=[0.3, 0.7]),  # BR no está en el baseline
-        }))
+        mon.observe(
+            pd.DataFrame(
+                {
+                    "edad": rng.normal(40, 10, 2000),
+                    "ingreso": rng.lognormal(10, 0.5, 2000),
+                    "pais": rng.choice(
+                        ["AR", "BR"], 2000, p=[0.3, 0.7]
+                    ),  # BR no está en el baseline
+                }
+            )
+        )
         assert mon.compute()["pais"] > PSI_SIGNIFICANT_THRESHOLD
 
     def test_valores_fuera_del_rango_de_training(self, baseline, rng):
@@ -202,13 +216,14 @@ class TestDriftMonitor:
 
 
 class TestModelObserver:
-
     @requiere_prometheus
     def test_expone_metricas_en_el_formato_prometheus(self, baseline, tmp_path):
         path = save_baseline(baseline, tmp_path)
         obs = ModelObserver(
-            model_name="test-model", model_version="1.0",
-            environment="dev", baseline_path=path,
+            model_name="test-model",
+            model_version="1.0",
+            environment="dev",
+            baseline_path=path,
         )
         obs.set_model_loaded(True)
         obs.record_prediction(0.01, "success", predictions=[0.7])
@@ -236,7 +251,6 @@ class TestModelObserver:
 
 
 class TestVersionEndpoint:
-
     def test_reporta_la_version_real_y_no_la_cadena_dev(self, monkeypatch):
         """
         El default era literalmente "dev", así que cualquier despliegue que no

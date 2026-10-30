@@ -10,10 +10,13 @@ SageMaker mounts:
 Output:
   /opt/ml/processing/evaluation/evaluation.json
 """
+
 import glob
 import json
 import os
 import tarfile
+from pathlib import Path
+from typing import Any
 
 import joblib
 import pandas as pd
@@ -29,59 +32,93 @@ MODEL_DIR = "/opt/ml/processing/model"
 TEST_DIR = "/opt/ml/processing/test"
 OUT_DIR = "/opt/ml/processing/evaluation"
 
-os.makedirs(OUT_DIR, exist_ok=True)
 
-target_col = os.environ.get("GODML_TARGET_COL", "target")
+def _safe_members(tar: tarfile.TarFile, dest: str):
+    """Yield members that stay inside `dest` (F1-18).
 
-# Extract model archive — filter members to prevent path traversal (B202)
-def _safe_members(tar: tarfile.TarFile):
+    `str.startswith` let siblings such as `<dest>_evil/` through; links are
+    rejected because a model archive never needs them and they can point out.
+    """
+    root = Path(dest).resolve()
     for member in tar.getmembers():
-        member_path = os.path.realpath(os.path.join(MODEL_DIR, member.name))
-        if not member_path.startswith(os.path.realpath(MODEL_DIR)):
+        target = (root / member.name).resolve()
+        if member.issym() or member.islnk() or not target.is_relative_to(root):
             raise ValueError(f"Unsafe path in tarball: {member.name}")
         yield member
 
-for archive in glob.glob(f"{MODEL_DIR}/*.tar.gz"):
-    with tarfile.open(archive, "r:gz") as tar:
-        tar.extractall(MODEL_DIR, members=_safe_members(tar))  # noqa: S202
 
-model_files = glob.glob(f"{MODEL_DIR}/**/*.joblib", recursive=True) + glob.glob(f"{MODEL_DIR}/*.joblib")
-if not model_files:
-    raise FileNotFoundError(f"No .joblib model found under {MODEL_DIR}")
-model = joblib.load(model_files[0])
-print(f"Model loaded: {model_files[0]}")
+# Python >= 3.12 (and 3.11.4+) ships extraction filters; "data" also rejects
+# absolute paths, links out of the destination and special files. Older
+# interpreters (some SageMaker images) rely on _safe_members alone.
+_EXTRACT_KWARGS: dict[str, Any] = (
+    {"filter": "data"} if hasattr(tarfile, "data_filter") else {}
+)
 
-# Load test data
-test_files = glob.glob(f"{TEST_DIR}/*.csv")
-if not test_files:
-    raise FileNotFoundError(f"No CSV found in {TEST_DIR}")
-df = pd.read_csv(test_files[0])
 
-if target_col not in df.columns:
-    target_col = df.columns[-1]
+def extract_model_archives(model_dir: str) -> None:
+    for archive in glob.glob(f"{model_dir}/*.tar.gz"):
+        with tarfile.open(archive, "r:gz") as tar:
+            tar.extractall(  # noqa: S202
+                model_dir, members=_safe_members(tar, model_dir), **_EXTRACT_KWARGS
+            )
 
-X_test = df.drop(columns=[target_col])
-y_test = df[target_col]
 
-# Compute metrics
-try:
-    preds_proba = model.predict_proba(X_test)[:, 1]
-    preds = (preds_proba >= 0.5).astype(int)
-    metrics = {
-        "auc": float(roc_auc_score(y_test, preds_proba)),
-        "accuracy": float(accuracy_score(y_test, preds)),
-        "f1": float(f1_score(y_test, preds, zero_division=0)),
-        "precision": float(precision_score(y_test, preds, zero_division=0)),
-        "recall": float(recall_score(y_test, preds, zero_division=0)),
-    }
-except Exception as exc:
-    print(f"Warning: binary classification metrics failed ({exc}), falling back to accuracy only")
-    preds = model.predict(X_test)
-    metrics = {"accuracy": float(accuracy_score(y_test, preds))}
+def compute_metrics(model, X_test: pd.DataFrame, y_test: pd.Series) -> dict:
+    try:
+        preds_proba = model.predict_proba(X_test)[:, 1]
+        preds = (preds_proba >= 0.5).astype(int)
+        return {
+            "auc": float(roc_auc_score(y_test, preds_proba)),
+            "accuracy": float(accuracy_score(y_test, preds)),
+            "f1": float(f1_score(y_test, preds, zero_division=0)),
+            "precision": float(precision_score(y_test, preds, zero_division=0)),
+            "recall": float(recall_score(y_test, preds, zero_division=0)),
+        }
+    except Exception as exc:  # noqa: BLE001
+        print(
+            f"Warning: binary classification metrics failed ({exc}), falling back to accuracy only"
+        )
+        preds = model.predict(X_test)
+        return {"accuracy": float(accuracy_score(y_test, preds))}
 
-print("Metrics:", json.dumps(metrics, indent=2))
 
-out_path = f"{OUT_DIR}/evaluation.json"
-with open(out_path, "w") as f:
-    json.dump(metrics, f)
-print(f"Saved: {out_path}")
+def main(
+    model_dir: str = MODEL_DIR, test_dir: str = TEST_DIR, out_dir: str = OUT_DIR
+) -> None:
+    os.makedirs(out_dir, exist_ok=True)
+    target_col = os.environ.get("GODML_TARGET_COL", "target")
+
+    # Extract model archive — members are checked against path traversal (B202)
+    extract_model_archives(model_dir)
+
+    model_files = glob.glob(f"{model_dir}/**/*.joblib", recursive=True) + glob.glob(
+        f"{model_dir}/*.joblib"
+    )
+    if not model_files:
+        raise FileNotFoundError(f"No .joblib model found under {model_dir}")
+    model = joblib.load(model_files[0])
+    print(f"Model loaded: {model_files[0]}")
+
+    # Load test data
+    test_files = glob.glob(f"{test_dir}/*.csv")
+    if not test_files:
+        raise FileNotFoundError(f"No CSV found in {test_dir}")
+    df = pd.read_csv(test_files[0])
+
+    if target_col not in df.columns:
+        target_col = df.columns[-1]
+
+    X_test = df.drop(columns=[target_col])
+    y_test = df[target_col]
+
+    metrics = compute_metrics(model, X_test, y_test)
+    print("Metrics:", json.dumps(metrics, indent=2))
+
+    out_path = f"{out_dir}/evaluation.json"
+    with open(out_path, "w") as f:
+        json.dump(metrics, f)
+    print(f"Saved: {out_path}")
+
+
+if __name__ == "__main__":
+    main()

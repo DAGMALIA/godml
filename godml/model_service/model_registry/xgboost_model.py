@@ -1,6 +1,6 @@
 # godml/model_service/model_registry/xgboost_model.py
 # Copyright (c) 2025 Arturo Gutierrez Rubio Rojas
-# Licensed under the MIT License
+# SPDX-License-Identifier: MIT
 
 import numpy as np
 import pandas as pd
@@ -26,11 +26,25 @@ class XgboostModel(BaseClassificationModel):
     """
 
     ALLOWED_PARAMS = {
-        "n_estimators", "max_depth", "learning_rate", "eta", "subsample",
-        "colsample_bytree", "gamma", "reg_alpha", "reg_lambda",
-        "min_child_weight", "n_jobs", "random_state", "tree_method",
-        "max_bin", "scale_pos_weight", "eval_metric", "verbosity",
-        "objective", "num_class"
+        "n_estimators",
+        "max_depth",
+        "learning_rate",
+        "eta",
+        "subsample",
+        "colsample_bytree",
+        "gamma",
+        "reg_alpha",
+        "reg_lambda",
+        "min_child_weight",
+        "n_jobs",
+        "random_state",
+        "tree_method",
+        "max_bin",
+        "scale_pos_weight",
+        "eval_metric",
+        "verbosity",
+        "objective",
+        "num_class",
     }
 
     DEFAULTS = {
@@ -64,7 +78,9 @@ class XgboostModel(BaseClassificationModel):
         if "multi_class" in params:
             val = params["multi_class"]
             if val not in ("ovr", "ovo"):
-                logger.warning(f"⚠️ Eliminando multi_class inválido '{val}' para XGBoost.")
+                logger.warning(
+                    f"⚠️ Eliminando multi_class inválido '{val}' para XGBoost."
+                )
                 params.pop("multi_class", None)
 
         # ⚙️ Construcción segura del conjunto final
@@ -86,7 +102,7 @@ class XgboostModel(BaseClassificationModel):
         y_train: np.ndarray,
         X_test: pd.DataFrame,
         y_test: np.ndarray,
-        params: Dict
+        params: Dict,
     ) -> Tuple[ClassifierMixin, np.ndarray, Dict[str, float]]:
         """
         Entrena el modelo XGBoost con limpieza automática y soporte multiclase.
@@ -99,14 +115,20 @@ class XgboostModel(BaseClassificationModel):
         if "num_class" in full and unique_classes > 2:
             full["objective"] = "multi:softprob"
             full["num_class"] = unique_classes
-            logger.info(f"🧩 Ajuste automático multiclase detectado: num_class={unique_classes}, objective=multi:softprob")
+            logger.info(
+                f"🧩 Ajuste automático multiclase detectado: num_class={unique_classes}, objective=multi:softprob"
+            )
 
         elif unique_classes == 2 and "objective" not in full:
             full["objective"] = "binary:logistic"
-            logger.info("🧩 Ajuste automático binario detectado: objective=binary:logistic")
+            logger.info(
+                "🧩 Ajuste automático binario detectado: objective=binary:logistic"
+            )
 
         elif unique_classes == 1:
-            raise ValueError("❌ Dataset con una sola clase. No puede entrenarse un modelo supervisado.")
+            raise ValueError(
+                "❌ Dataset con una sola clase. No puede entrenarse un modelo supervisado."
+            )
 
         logger.info(f"🚀 Entrenando XGBoost con hiperparámetros finales:\n{full}")
 

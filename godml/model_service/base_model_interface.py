@@ -1,5 +1,5 @@
 # Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
-# Licensed under the MIT License
+# SPDX-License-Identifier: MIT
 
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Tuple
@@ -19,7 +19,7 @@ class BaseModel(ABC):
         y_train: np.ndarray,
         X_test: pd.DataFrame,
         y_test: np.ndarray,
-        params: Dict
+        params: Dict,
     ) -> Tuple[Any, np.ndarray, Dict[str, float]]:
         pass
 
@@ -33,10 +33,13 @@ class BaseClassificationModel(BaseModel):
     Clase base para modelos de clasificación.
     Por ahora no agrega nada extra, pero sirve para claridad y especialización futura.
     """
+
     task_type: str = "classification"
+
 
 class BaseRegressionModel(BaseModel):
     """
     Clase base para modelos de regresión.
     """
+
     task_type: str = "regression"

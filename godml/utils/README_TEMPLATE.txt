@@ -2,8 +2,7 @@
 **Proyecto GODML - Machine Learning con Gobernanza**
 
 [![GODML](https://img.shields.io/badge/Powered%20by-GODML-blue.svg)](https://pypi.org/project/godml/)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
 > Proyecto generado automáticamente con **GODML Framework** - Governed, Observable & Declarative ML
 
@@ -105,10 +104,11 @@ godml.create_pipeline(
     name="churn_rf",
     model_type="random_forest",
     hyperparameters={{"max_depth": 3}},
-    dataset_path="./data/churn.csv"
+    dataset_path="./data/churn.csv",
+    target="churn",
 )
 godml.train()
-godml.save_model("churn_rf", environment="experiments")
+godml.save_model(model_name="churn_rf", environment="experiments")
 ```
 
 ## ⚡ Entrenamiento rápido
@@ -119,7 +119,8 @@ from godml.notebook_api import quick_train
 quick_train(
     model_type="xgboost",
     hyperparameters={{"eta": 0.1, "max_depth": 4}},
-    dataset_path="./data/churn.csv"
+    dataset_path="./data/churn.csv",
+    target="churn",
 )
 ```
 
@@ -136,8 +137,8 @@ train_from_yaml("godml.yml")
 
 - `godml init <nombre>`: inicializa proyecto
 - `godml run -f godml.yml`: ejecuta pipeline
-- `godml hash <path>`: calcula hash de un archivo
-- `godml version`: muestra versión instalada
+- `godml calc-hash <path>`: calcula el hash SHA-256 de un archivo
+- `godml --version`: muestra la versión instalada
 
 ---
 
@@ -300,4 +301,4 @@ http://127.0.0.1:8000/docs
 © 2025 **godmlcore** — Arquitectura GODML
 Creado por [Arturo Gutiérrez Rubio R.](mailto:agtzrubio@dagmalia.com)
 
-                      Generado con ❤️ por **GODML Framework v1.0.0**
+                      Generado con ❤️ por **GODML Framework v{godml_version}**
