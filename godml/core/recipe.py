@@ -1,3 +1,8 @@
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Data model of a dataprep recipe (F2-02: lives in core; the executor is in
+``godml.train.dataprep``)."""
+
 from pydantic import BaseModel, Field, field_validator
 from typing import Any, Dict, List, Optional, Union
 

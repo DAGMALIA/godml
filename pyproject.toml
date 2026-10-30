@@ -282,7 +282,6 @@ source_modules = ["godml.core"]
 forbidden_modules = ["godml.govern", "godml.train", "godml.serve", "godml.observe", "godml.tools", "godml.cli"]
 ignore_imports = [
   "godml.core.logger -> godml.govern.thresholds",  # F2-07
-  "godml.core.config.schema -> godml.train.dataprep.schema",  # F2-02
 ]
 
 [[tool.importlinter.contracts]]
@@ -291,7 +290,6 @@ type = "forbidden"
 source_modules = ["godml.govern"]
 forbidden_modules = ["godml.train", "godml.serve", "godml.observe", "godml.tools", "godml.cli"]
 ignore_imports = [
-  "godml.core.config.schema -> godml.train.dataprep.schema",  # F2-02
   "godml.govern.preprocessor -> godml.observe.lineage.openlineage_emitter",  # F2-14
 ]
 

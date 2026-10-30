@@ -18,7 +18,7 @@ CONTRACTS = tomllib.loads(PYPROJECT)["tool"]["importlinter"]["contracts"]
 
 # Distinct violating imports when F2-13 landed. Lower it when one is fixed;
 # never raise it.
-MAX_IGNORED_IMPORTS = 9
+MAX_IGNORED_IMPORTS = 8
 
 IGNORE_LINE = re.compile(r'^\s*"(godml[\w.]* -> godml[\w.]*)",\s*# (F\d+-\d+)\s*$')
 
