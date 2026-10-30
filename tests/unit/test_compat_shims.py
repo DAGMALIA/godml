@@ -108,6 +108,16 @@ def test_warning_points_at_the_importing_code():
     assert record and all(Path(w.filename) == Path(__file__) for w in record)
 
 
+def test_warning_points_at_the_caller_of_import_module():
+    for name in ("godml.compliance_service.pci_dss", "godml.compliance_service"):
+        sys.modules.pop(name, None)
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        importlib.import_module("godml.compliance_service.pci_dss")
+    assert len(record) == 2  # the package shim and the module shim
+    assert all(Path(w.filename) == Path(__file__) for w in record)
+
+
 def test_mock_patch_on_an_old_path_reaches_the_new_module(monkeypatch):
     with pytest.warns(GoDMLDeprecationWarning):
         old = fresh_import("godml.compliance_service.pii_detector")
