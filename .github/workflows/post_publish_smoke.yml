@@ -1,0 +1,110 @@
+name: Post-publish smoke test
+
+# F1-24: installs the version that was just published from PyPI, in a clean
+# environment without the repository, and exercises the CLI end to end.
+# Promoting X.Y.Z to final requires this workflow to be green for the latest
+# X.Y.ZrcN (enforced in safety_scan.yml before the final tag is pushed).
+run-name: Post-publish smoke ${{ inputs.version || github.event.workflow_run.head_branch }}
+
+on:
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version published on PyPI (e.g. 1.4.0rc1)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Smoke test from PyPI
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RAW_VERSION: ${{ inputs.version || github.event.workflow_run.head_branch }}
+
+    steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+
+      - name: Resolve version
+        run: |
+          VERSION="${RAW_VERSION#v}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+((a|b|rc)[0-9]+)?$ ]]; then
+            echo "::error::Not a release version: '$RAW_VERSION'"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      # PyPI can take a few minutes to serve a file that was just uploaded.
+      - name: Install godml[all]==${{ env.VERSION }} from PyPI in a clean venv
+        run: |
+          python -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet --upgrade pip
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            if "$RUNNER_TEMP/venv/bin/pip" install --no-cache-dir "godml[all]==$VERSION"; then
+              break
+            fi
+            if [ "$attempt" = 10 ]; then
+              echo "::error::godml[all]==$VERSION could not be installed from PyPI"
+              exit 1
+            fi
+            sleep 30
+          done
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+
+      - name: Installed version matches
+        run: |
+          INSTALLED=$(godml --version)
+          echo "$INSTALLED"
+          test "$INSTALLED" = "godml $VERSION"
+
+      - name: godml --help
+        run: |
+          godml --help
+          PYTHONIOENCODING=ascii godml --help > /dev/null
+
+      - name: godml init demo
+        working-directory: ${{ runner.temp }}
+        run: |
+          godml init demo
+          test -f demo/godml.yml
+          python - <<'PY'
+          import numpy as np
+          import pandas as pd
+
+          rng = np.random.default_rng(0)
+          X = rng.normal(size=(600, 4))
+          df = pd.DataFrame(X, columns=["f1", "f2", "f3", "f4"])
+          df["target"] = (X[:, 0] + X[:, 1] > 0).astype(int)
+          df.to_csv("demo/data/your_dataset.csv", index=False)
+          PY
+
+      # The generated project enables compliance (pci-dss): without
+      # GODML_PII_KEY the run must stop before training, with a clear error.
+      - name: godml run without GODML_PII_KEY fails closed
+        working-directory: ${{ runner.temp }}/demo
+        run: |
+          unset GODML_PII_KEY GODML_ALLOW_INSECURE_PII_KEY
+          if godml run -f godml.yml > nokey.log 2>&1; then
+            cat nokey.log
+            echo "::error::godml run succeeded without GODML_PII_KEY"
+            exit 1
+          fi
+          cat nokey.log
+          grep -q "GODML_PII_KEY is required" nokey.log
+          test ! -e outputs/predictions.csv
+
+      - name: godml run
+        working-directory: ${{ runner.temp }}/demo
+        run: |
+          export GODML_PII_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
+          godml run -f godml.yml
+          test -s outputs/predictions.csv
+          test -s models/dev/model.pkl
