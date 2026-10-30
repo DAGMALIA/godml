@@ -144,6 +144,7 @@ dev = [
   "ruff>=0.15.17,<0.16",
   "mypy>=1.19,<2",
   "types-PyYAML>=6.0,<7",
+  "import-linter>=2.15,<3",
   # pre-commit is installed separately (`pipx install pre-commit`): its
   # patched virtualenv needs packaging>=26.3 while the patched SageMaker SDK
   # needs packaging<25, so one environment cannot hold both without CVEs.
@@ -266,3 +267,59 @@ exclude_lines = [
 ]
 show_missing = true
 fail_under = 48  # real coverage at F0-10 (48.4 %); raise per phase
+# F2-13: dependency rules between pillars (CLAUDE.md). tools and cli are
+# integrators and may import any pillar (lazily; not checked here).
+# Each ignore_imports entry is a known violation tagged with the plan task
+# that removes it; tests/unit/test_import_contracts.py keeps the list from
+# growing.
+[tool.importlinter]
+root_package = "godml"
+
+[[tool.importlinter.contracts]]
+name = "core imports no pillar"
+type = "forbidden"
+source_modules = ["godml.core"]
+forbidden_modules = ["godml.govern", "godml.train", "godml.serve", "godml.observe", "godml.tools", "godml.cli"]
+ignore_imports = [
+  "godml.core.logger -> godml.govern.thresholds",  # F2-07
+  "godml.core.config.schema -> godml.train.dataprep.schema",  # F2-02
+]
+
+[[tool.importlinter.contracts]]
+name = "govern imports only core"
+type = "forbidden"
+source_modules = ["godml.govern"]
+forbidden_modules = ["godml.train", "godml.serve", "godml.observe", "godml.tools", "godml.cli"]
+ignore_imports = [
+  "godml.core.config.schema -> godml.train.dataprep.schema",  # F2-02
+  "godml.govern.preprocessor -> godml.observe.lineage.openlineage_emitter",  # F2-14
+]
+
+[[tool.importlinter.contracts]]
+name = "train imports only core and govern"
+type = "forbidden"
+source_modules = ["godml.train"]
+forbidden_modules = ["godml.serve", "godml.observe", "godml.tools", "godml.cli"]
+ignore_imports = [
+  "godml.govern.preprocessor -> godml.observe.lineage.openlineage_emitter",  # F2-14
+  "godml.train.dataprep.recipe_executor -> godml.observe.lineage.openlineage_emitter",  # F2-14
+  "godml.train.providers.mlflow -> godml.observe.observability",  # F2-14
+  "godml.train.providers.mlflow -> godml.serve.model_loader",  # F2-15
+  "godml.train.providers.mlflow -> godml.tools.notebook_api",  # F2-16
+]
+
+[[tool.importlinter.contracts]]
+name = "serve imports only core and govern"
+type = "forbidden"
+source_modules = ["godml.serve"]
+forbidden_modules = ["godml.train", "godml.observe", "godml.tools", "godml.cli"]
+ignore_imports = [
+  "godml.serve.deploy.server -> godml.observe.observability",  # F2-14
+  "godml.serve.model_loader -> godml.train.models.base_model_interface",  # F2-15
+]
+
+[[tool.importlinter.contracts]]
+name = "observe imports only core and govern"
+type = "forbidden"
+source_modules = ["godml.observe"]
+forbidden_modules = ["godml.train", "godml.serve", "godml.tools", "godml.cli"]
