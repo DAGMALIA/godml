@@ -76,8 +76,9 @@ jobs:
           category: bandit
 
       # Safety (F0-16): blocking. Scans the environment this job actually
-      # installed (pinned `pip freeze`), not pyproject's ranges, with the
-      # reviewed ignores in .safety-policy.yml (see SECURITY.md).
+      # installed (pinned `pip freeze`), not pyproject's ranges. `safety scan`
+      # applies the Safety Platform policy, so the gate script decides: every
+      # finding must be a reviewed ignore in .safety-policy.yml (SECURITY.md).
       - name: 📌 Freeze resolved environment for Safety
         run: |
           mkdir -p safety-scan
@@ -85,11 +86,13 @@ jobs:
           wc -l safety-scan/requirements.txt
 
       - name: 🛡️ Safety Dependency Scan
-        uses: pyupio/safety-action@7baf6605473beffc874c1313ddf2db085c0cacf2 # v1
-        with:
-          api-key: ${{ secrets.SAFETY_API_KEY }}
-          args: --target safety-scan --policy-file .safety-policy.yml --detailed-output
-          output-format: screen
+        env:
+          SAFETY_API_KEY: ${{ secrets.SAFETY_API_KEY }}
+        run: |
+          python -m venv "$RUNNER_TEMP/safety-venv"
+          "$RUNNER_TEMP/safety-venv/bin/pip" install --quiet safety==3.3.1 typer==0.16.0 click==8.2.1
+          "$RUNNER_TEMP/safety-venv/bin/safety" --stage cicd scan             --target safety-scan --policy-file .safety-policy.yml --detailed-output             --save-as json safety-report.json || SAFETY_EXIT=$?
+          python .github/scripts/safety_gate.py             --report safety-report.json --policy .safety-policy.yml             --requirements safety-scan/requirements.txt             --safety-exit-code "${SAFETY_EXIT:-0}"
 
       # 9️⃣ pip-audit (blocking, alongside Safety)
       - name: 🔎 pip-audit dependency scan

@@ -94,8 +94,14 @@ versions any more, so all 15 were **removed** (`71577`, `71578`, `71579`,
 the advisory still applies to the resolved versions and the reason holds.
 
 `.safety-policy.yml` in the repository is the source of truth. `safety scan`
-prefers a policy stored in Safety Platform for the `godml` project, so the
-project must not have its own policy there (removed by the maintainer).
+always applies the policy Safety Platform keeps for the `godml` project (one
+is assigned automatically and cannot be removed), and the platform does not
+accept `SFTY-...` IDs. So CI does not rely on Safety's own ignore handling:
+`.github/scripts/safety_gate.py` reads the JSON report of the scan and fails
+on any finding that is not in `.safety-policy.yml` with an unexpired
+`expires`, regardless of what Safety marked as ignored. It also fails if
+Safety does not complete or if a package of the scanned environment is
+missing from the report.
 
 (`PYSEC-2024-230`, a certifi advisory fixed in
 2024.7.4, was ignored until 2026-10-24 and no longer applied.)

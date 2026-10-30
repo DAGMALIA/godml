@@ -5,9 +5,10 @@
 # ignore is kept only while the advisory still applies to the versions CI
 # resolves and the reason below still holds.
 #
-# NOTE: `safety scan` prefers a policy stored in Safety Platform for the
-# `godml` project over this file. Keep the platform project without its own
-# policy (or identical to this one), otherwise this file is not applied.
+# NOTE: `safety scan` always applies the policy Safety Platform keeps for the
+# `godml` project, and the platform rejects IDs like `SFTY-...`. So CI does
+# not rely on Safety's own ignores: .github/scripts/safety_gate.py reads the
+# scan report and fails on any finding that is not listed here, unexpired.
 version: "3.0"
 
 scanning-settings:

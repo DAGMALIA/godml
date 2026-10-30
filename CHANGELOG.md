@@ -150,7 +150,9 @@ the run. Review these before upgrading (details in the sections below):
   `continue-on-error`. Safety now blocks CI (audit job and release pipeline),
   scans the pinned environment CI installs, and applies only the 2 reviewed
   ignores in `.safety-policy.yml` (listed in SECURITY.md); the 15 ignores
-  of 1.x no longer apply and were removed.
+  of 1.x no longer apply and were removed. Because `safety scan` always
+  applies the Safety Platform policy, a gate script in the repository
+  enforces those ignores on the scan report.
 
 ### Fixed
 
