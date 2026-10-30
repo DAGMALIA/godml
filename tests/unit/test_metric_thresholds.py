@@ -7,9 +7,9 @@ error 0.1 failed the gate and one with error 2.0 passed it.
 
 import pytest
 
-from godml.compliance_service.validation_helpers import validate_metrics
-from godml.config_service.schema import Metric
-from godml.monitoring_service.thresholds import (
+from godml.govern.compliance.validation_helpers import validate_metrics
+from godml.core.config.schema import Metric
+from godml.govern.thresholds import (
     failed_thresholds,
     passes_threshold,
     register_condition_name,
@@ -59,7 +59,7 @@ def test_log_loss_threshold_is_not_limited_to_0_1():
 
 
 def test_cli_table_marks_low_loss_as_passing(capsys):
-    from godml.monitoring_service.logger import print_metrics_table
+    from godml.core.logger import print_metrics_table
 
     print_metrics_table({"mse": 0.1}, {"mse": 0.5})
     out = capsys.readouterr().out

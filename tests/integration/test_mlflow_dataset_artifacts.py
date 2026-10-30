@@ -11,9 +11,9 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from godml.config_service.schema import PipelineDefinition
-from godml.providers.mlflow import MLflowExecutor
-from godml.utils.hash import calculate_file_hash
+from godml.core.config.schema import PipelineDefinition
+from godml.train.providers.mlflow import MLflowExecutor
+from godml.govern.hash import calculate_file_hash
 
 N_ROWS = 40
 RAW_CARD = "4111111111111111"

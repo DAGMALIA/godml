@@ -15,7 +15,7 @@ def _warn_from(module: str, category: type[Warning]) -> None:
     )
 
 
-@pytest.mark.parametrize("module", ["godml", "godml.core_service.parser"])
+@pytest.mark.parametrize("module", ["godml", "godml.core.parser"])
 @pytest.mark.parametrize("category", [DeprecationWarning, PendingDeprecationWarning])
 def test_own_deprecations_are_errors(module, category):
     with pytest.raises(category):

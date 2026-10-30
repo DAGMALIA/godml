@@ -11,8 +11,8 @@ from pathlib import Path
 import mlflow
 import pytest
 
-import godml.providers.mlflow as mlflow_provider
-from godml.providers.mlflow import MLflowExecutor
+import godml.train.providers.mlflow as mlflow_provider
+from godml.train.providers.mlflow import MLflowExecutor
 
 
 @pytest.fixture

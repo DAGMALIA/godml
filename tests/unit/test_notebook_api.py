@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from godml.notebook_api import (
+from godml.tools.notebook_api import (
     train_model,
     predict,
     evaluate,

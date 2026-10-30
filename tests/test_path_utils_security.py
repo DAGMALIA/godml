@@ -2,7 +2,7 @@
 import pytest
 import tempfile
 from pathlib import Path
-from godml.utils.path_utils import (
+from godml.core.path_utils import (
     SecurityError,
     normalize_path,
     validate_safe_path,

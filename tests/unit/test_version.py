@@ -8,7 +8,7 @@ import importlib.metadata
 from pathlib import Path
 
 import godml
-from godml.utils.yaml_utils import generate_readme_md
+from godml.tools.yaml_utils import generate_readme_md
 
 PACKAGE_DIR = Path(godml.__file__).parent
 

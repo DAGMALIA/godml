@@ -13,16 +13,16 @@ import hmac
 import pandas as pd
 import pytest
 
-import godml.compliance_service.compliance_utils as utils
-from godml.compliance_service.compliance_utils import (
+import godml.govern.compliance.compliance_utils as utils
+from godml.govern.compliance.compliance_utils import (
     DEV_PII_KEY,
     hash_truncated,
     hmac_truncated,
     pii_hash_key,
 )
-from godml.compliance_service.errors import ComplianceError
-from godml.compliance_service.pci_dss import PciDssCompliance
-from godml.core_service.preprocessor import ComplianceEngine
+from godml.govern.compliance.errors import ComplianceError
+from godml.govern.compliance.pci_dss import PciDssCompliance
+from godml.govern.preprocessor import ComplianceEngine
 
 EMAIL = "person@example.com"
 

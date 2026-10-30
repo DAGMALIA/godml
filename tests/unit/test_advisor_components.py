@@ -8,7 +8,7 @@ import pandas as pd
 
 class TestDataQualityJudge:
     def setup_method(self):
-        from godml.advisor_service.data_quality_judge import DataQualityJudge
+        from godml.tools.advisor.data_quality_judge import DataQualityJudge
 
         self.judge = DataQualityJudge()
 
@@ -37,7 +37,7 @@ class TestDataQualityJudge:
 
 class TestMetricJudge:
     def setup_method(self):
-        from godml.advisor_service.metric_judge import MetricJudge
+        from godml.tools.advisor.metric_judge import MetricJudge
 
         self.judge = MetricJudge()
 
@@ -81,7 +81,7 @@ class TestMetricJudge:
 
 class TestModelSelector:
     def setup_method(self):
-        from godml.advisor_service.model_selector import ModelSelector
+        from godml.tools.advisor.model_selector import ModelSelector
 
         self.selector = ModelSelector()
 
@@ -100,7 +100,7 @@ class TestModelSelector:
 
 class TestHyperparamAdvisor:
     def setup_method(self):
-        from godml.advisor_service.hyperparam_advisor import HyperparamAdvisor
+        from godml.tools.advisor.hyperparam_advisor import HyperparamAdvisor
 
         self.advisor = HyperparamAdvisor()
 

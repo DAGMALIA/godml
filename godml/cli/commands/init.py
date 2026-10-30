@@ -5,10 +5,10 @@ from pathlib import Path
 
 import typer
 
-from godml.monitoring_service.logger import get_logger, SecurityError
-from godml.utils.path_utils import sanitize_for_log, validate_safe_path
-from godml.utils.scaffold import scaffold_deploy_service
-from godml.utils.yaml_utils import (
+from godml.core.logger import get_logger, SecurityError
+from godml.core.path_utils import sanitize_for_log, validate_safe_path
+from godml.tools.scaffold import scaffold_deploy_service
+from godml.tools.yaml_utils import (
     generate_default_yaml,
     generate_dockerfile_txt,
     generate_readme_md,

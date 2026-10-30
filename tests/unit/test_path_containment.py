@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from godml.monitoring_service.logger import SecurityError
+from godml.core.logger import SecurityError
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ class TestCliSafeAbsolutePath:
 
 @pytest.mark.parametrize(
     "module",
-    ["godml.deploy_service.server", "godml.templates.deploy_template.server"],
+    ["godml.serve.deploy.server", "godml.templates.deploy_template.server"],
 )
 class TestServerValidateModelPath:
     def load(self, module):
@@ -90,7 +90,7 @@ def link_dir(link, target) -> None:
 
 class TestLocalModelLoader:
     def test_symlinked_models_dir_to_sibling_is_rejected(self, project):
-        from godml.model_service.model_loader import load_custom_model_class
+        from godml.serve.model_loader import load_custom_model_class
 
         proj, evil = project
         (evil / "custom_model.py").write_text("raise SystemExit('executed')\n")

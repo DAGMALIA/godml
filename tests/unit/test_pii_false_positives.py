@@ -9,11 +9,11 @@ PCI-DSS drop or hash ordinary features, including the target.
 import pandas as pd
 import pytest
 
-from godml.compliance_service.compliance_utils import is_pii_column
-from godml.compliance_service.pci_dss import PciDssCompliance
-from godml.compliance_service.pii_detector import PiiDetector
-from godml.config_service.schema import PipelineDefinition
-from godml.core_service.pipeline_runner import run_pipeline_preprocessing
+from godml.govern.compliance.compliance_utils import is_pii_column
+from godml.govern.compliance.pci_dss import PciDssCompliance
+from godml.govern.compliance.pii_detector import PiiDetector
+from godml.core.config.schema import PipelineDefinition
+from godml.govern.pipeline_runner import run_pipeline_preprocessing
 
 NOT_PII = {
     "hotel_id": [1001, 1002, 1003],

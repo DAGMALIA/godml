@@ -4,7 +4,7 @@
 import pandas as pd
 import pytest
 
-from godml.utils.dtypes import is_text_like
+from godml.core.dtypes import is_text_like
 
 
 @pytest.mark.parametrize(

@@ -8,8 +8,8 @@ replaced a whole string by the variable when it only contained one
 
 import pytest
 
-from godml.config_service.resolver import resolve_env_variables
-from godml.monitoring_service.logger import ConfigurationError
+from godml.core.config.resolver import resolve_env_variables
+from godml.core.logger import ConfigurationError
 
 
 @pytest.fixture(autouse=True)
@@ -78,7 +78,7 @@ class TestThroughGodmlRunLoader:
         return str(path)
 
     def test_yaml_interpolation(self, tmp_path, monkeypatch, minimal_pipeline_config):
-        from godml.core_service.parser import load_pipeline
+        from godml.core.parser import load_pipeline
 
         monkeypatch.chdir(tmp_path)
         pipeline = load_pipeline(
@@ -90,7 +90,7 @@ class TestThroughGodmlRunLoader:
     def test_yaml_unset_partial_variable(
         self, tmp_path, monkeypatch, minimal_pipeline_config
     ):
-        from godml.core_service.parser import load_pipeline
+        from godml.core.parser import load_pipeline
 
         monkeypatch.chdir(tmp_path)
         path = self.write(

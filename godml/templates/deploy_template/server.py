@@ -8,13 +8,13 @@ import pandas as pd
 from pathlib import Path
 import os
 import time
-from godml.monitoring_service.logger import godml_logger, SecurityError
-from godml.utils.serving import (
+from godml.core.logger import godml_logger, SecurityError
+from godml.serve.serving import (
     MissingFeaturesError,
     align_features,
     predict_with_proba,
 )
-from godml.monitoring_service.observability import (
+from godml.observe.observability import (
     BASELINE_FILENAME,
     ModelObserver,
     find_baseline,

@@ -12,11 +12,11 @@ import sys
 import pandas as pd
 import pytest
 
-from godml.compliance_service.errors import ComplianceError
-from godml.compliance_service.pci_dss import PciDssCompliance
-from godml.utils.dtypes import is_text_like
+from godml.govern.compliance.errors import ComplianceError
+from godml.govern.compliance.pci_dss import PciDssCompliance
+from godml.core.dtypes import is_text_like
 
-SCRIPT = "godml.providers.sagemaker.scripts.preprocess"
+SCRIPT = "godml.train.providers.sagemaker.scripts.preprocess"
 
 
 def load_script(monkeypatch, *, without=()):
@@ -50,7 +50,7 @@ class TestCompliance:
             script.apply_compliance(pii_dataframe, "gdpr", "mask_sensitive")
 
     def test_missing_godml_in_image_aborts(self, monkeypatch, pii_dataframe):
-        script = load_script(monkeypatch, without=["godml.core_service.preprocessor"])
+        script = load_script(monkeypatch, without=["godml.govern.preprocessor"])
         with pytest.raises(RuntimeError, match="godml is not installed"):
             script.apply_compliance(pii_dataframe, "pci-dss", "mask_sensitive")
 
@@ -78,7 +78,7 @@ class TestEncoding:
 
     def test_fallback_matches_shared_helper(self, monkeypatch):
         """Without godml in the image the script uses its own copy of the helper."""
-        script = load_script(monkeypatch, without=["godml.utils.dtypes"])
+        script = load_script(monkeypatch, without=["godml.core.dtypes"])
         assert script.is_text_like is not is_text_like
         samples = [
             pd.Series(["a"], dtype=object),

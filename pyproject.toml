@@ -180,7 +180,7 @@ all = [
 ]
 
 [tool.setuptools.package-data]
-"godml.utils" = ["README_TEMPLATE.txt", "DOCKERFILE_TEMPLATE.txt"]
+"godml.tools" = ["README_TEMPLATE.txt", "DOCKERFILE_TEMPLATE.txt"]
 
 [tool.setuptools.packages.find]
 exclude = ["tests*", "venv*", "*.egg-info*"]
@@ -213,21 +213,21 @@ ignore_missing_imports = true
 # the module is clean; never add new ones.
 [[tool.mypy.overrides]]
 module = [
-  "godml.advisor_service.advisor_orchestrator",
-  "godml.compliance_service.validation_helpers",
-  "godml.dataprep_service.recipe_executor",
-  "godml.dataprep_service.transforms.quality",
-  "godml.dataprep_service.transforms.text",
-  "godml.dataprep_service.transforms.window",
-  "godml.model_service.model_registry.lstm_forecast_model",
-  "godml.model_service.model_registry.model_registry",
-  "godml.monitoring_service.observability",
-  "godml.notebook_api.advisor",
-  "godml.notebook_api.pipeline",
-  "godml.providers.mlflow",
-  "godml.providers.sagemaker.scripts.preprocess",
-  "godml.utils.model_storage",
-  "godml.utils.predict_safely",
+  "godml.tools.advisor.advisor_orchestrator",
+  "godml.govern.compliance.validation_helpers",
+  "godml.train.dataprep.recipe_executor",
+  "godml.train.dataprep.transforms.quality",
+  "godml.train.dataprep.transforms.text",
+  "godml.train.dataprep.transforms.window",
+  "godml.train.models.model_registry.lstm_forecast_model",
+  "godml.train.models.model_registry.model_registry",
+  "godml.observe.observability",
+  "godml.tools.notebook_api.advisor",
+  "godml.tools.notebook_api.pipeline",
+  "godml.train.providers.mlflow",
+  "godml.train.providers.sagemaker.scripts.preprocess",
+  "godml.train.model_storage",
+  "godml.train.predict_safely",
 ]
 ignore_errors = true
 
@@ -244,7 +244,7 @@ filterwarnings = [
   'error::PendingDeprecationWarning:godml(\..*)?',
   # Known: FastAPI on_event in the 1.x server and its scaffold template;
   # replaced by lifespan in F5-03.
-  'ignore:\s*on_event is deprecated:DeprecationWarning:godml\.(deploy_service|templates\.deploy_template)\.server',
+  'ignore:\s*on_event is deprecated:DeprecationWarning:godml\.(serve\.deploy|templates\.deploy_template)\.server',
 ]
 
 [tool.coverage.run]

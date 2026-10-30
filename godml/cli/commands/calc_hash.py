@@ -5,10 +5,10 @@ from typing import Optional
 
 import typer
 
-from godml.monitoring_service.logger import get_logger, SecurityError
-from godml.utils.hash import calculate_file_hash
-from godml.utils.path_utils import sanitize_for_log, validate_safe_path
-from godml.utils.yaml_utils import update_dataset_hash_in_yaml
+from godml.core.logger import get_logger, SecurityError
+from godml.govern.hash import calculate_file_hash
+from godml.core.path_utils import sanitize_for_log, validate_safe_path
+from godml.tools.yaml_utils import update_dataset_hash_in_yaml
 
 logger = get_logger()
 

@@ -71,7 +71,7 @@ def test_container_port_matches_dockerfile_template():
     """The mapping is only right while the image really listens on CONTAINER_PORT."""
     import re
 
-    from godml.utils.yaml_utils import generate_dockerfile_txt
+    from godml.tools.yaml_utils import generate_dockerfile_txt
 
     dockerfile = generate_dockerfile_txt("0.0.0")
     port = str(deploy.CONTAINER_PORT)

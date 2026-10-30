@@ -30,6 +30,7 @@ El plan completo y el estado del proyecto viven en `GODML_2_0_PLAN.md`. **Ese ar
 - **Sin `print` en la librería.** Usa `logging.getLogger("godml.<modulo>")`. La salida visual es solo de la CLI.
 - **Dependencias por pilar.** Una dependencia nueva va en el extra de su pilar, nunca en el core sin aprobación. Los imports de extras opcionales se hacen dentro de funciones o con guardas que lancen `MissingExtra` con el comando de instalación.
 - **Dependencias entre módulos.** `core` no importa pilares. Los pilares solo importan `core` (y `govern` cuando aplique).
+- **Integradores.** `tools` y `cli` son integradores: pueden importar cualquier pilar, pero solo de forma perezosa (dentro de la función que lo usa), nunca a nivel de módulo.
 - **No documentar lo que no existe.** README y docs solo describen funcionalidad implementada y probada.
 - **Una sola versión.** Nunca escribir la versión del paquete como literal; usar `importlib.metadata`.
 - **Seguridad.** Validar rutas con `Path.resolve()` + `is_relative_to`; no cargar pickles desde rutas no validadas; no secretos en código ni ejemplos.

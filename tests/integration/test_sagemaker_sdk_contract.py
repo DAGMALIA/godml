@@ -52,7 +52,7 @@ def test_real_register_condition(metric, threshold, expected_type):
     from sagemaker.workflow.functions import JsonGet
     from sagemaker.workflow.properties import PropertyFile
 
-    from godml.monitoring_service.thresholds import register_condition_name
+    from godml.govern.thresholds import register_condition_name
 
     report = PropertyFile(
         name="EvaluationReport", output_name="evaluation", path="evaluation.json"

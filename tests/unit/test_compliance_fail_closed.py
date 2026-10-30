@@ -9,12 +9,12 @@ import sys
 import pandas as pd
 import pytest
 
-from godml.compliance_service.pci_dss import PciDssCompliance
-from godml.config_service.schema import PipelineDefinition
-from godml.core_service.pipeline_runner import run_pipeline_preprocessing
-from godml.core_service.preprocessor import ComplianceEngine
-from godml.dataprep_service.recipe_executor import _apply_compliance
-from godml.compliance_service.errors import ComplianceError
+from godml.govern.compliance.pci_dss import PciDssCompliance
+from godml.core.config.schema import PipelineDefinition
+from godml.govern.pipeline_runner import run_pipeline_preprocessing
+from godml.govern.preprocessor import ComplianceEngine
+from godml.train.dataprep.recipe_executor import _apply_compliance
+from godml.govern.compliance.errors import ComplianceError
 
 
 def assert_unsupported_message(message: str, standard: str) -> None:
@@ -57,14 +57,14 @@ class TestComplianceEngine:
         assert_unsupported_message(str(excinfo.value), "gdpr")
 
     def test_import_failure_raises(self, pii_dataframe, monkeypatch):
-        monkeypatch.setitem(sys.modules, "godml.compliance_service.pci_dss", None)
+        monkeypatch.setitem(sys.modules, "godml.govern.compliance.pci_dss", None)
         with pytest.raises(ComplianceError):
             ComplianceEngine.apply(pii_dataframe, "pci-dss", "mask_sensitive")
 
     def test_lineage_failure_does_not_block_compliance(
         self, pii_dataframe, monkeypatch
     ):
-        import godml.core_service.preprocessor as preprocessor
+        import godml.govern.preprocessor as preprocessor
 
         def no_lineage(*args, **kwargs):
             raise OSError("lineage backend down")
@@ -96,7 +96,7 @@ class TestMLflowExecutor:
     def test_compliance_failure_aborts_before_training(
         self, compliance_pipeline, pii_dataframe, broken_pci, monkeypatch, tmp_path
     ):
-        import godml.providers.mlflow as mlflow_provider
+        import godml.train.providers.mlflow as mlflow_provider
 
         df = pii_dataframe.assign(y=[0, 1, 0])
         df.to_csv(compliance_pipeline.dataset.uri, index=False)

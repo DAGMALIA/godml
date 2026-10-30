@@ -26,17 +26,17 @@ __all__ = [
 # 🚀 Lazy import: solo se cargan los módulos pesados si alguien realmente los usa
 def __getattr__(name):
     if name in {"GodmlNotebook", "quick_train", "train_from_yaml", "quick_train_yaml"}:
-        from . import notebook_api
+        from .tools import notebook_api
 
         return getattr(notebook_api, name)
 
     if name in {"load_pipeline"}:
-        from .core_service import parser
+        from .core import parser
 
         return parser.load_pipeline
 
     if name in {"get_executor"}:
-        from .core_service import executors
+        from .train import executors
 
         return executors.get_executor
 
@@ -46,7 +46,7 @@ def __getattr__(name):
         "list_models",
         "promote_model",
     }:
-        from .utils import model_storage
+        from .train import model_storage
 
         return getattr(model_storage, name)
 
