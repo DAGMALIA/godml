@@ -70,3 +70,10 @@ def test_final_release_requires_green_rc_smoke_before_tagging():
     assert 'grep -qxF -e "Post-publish smoke $RC"' in run
     assert not job["steps"][gate].get("continue-on-error")
     assert job["permissions"]["actions"] == "read"
+
+
+def test_development_versions_are_never_tagged():
+    job = load("safety_scan.yml")["jobs"]["supplychain"]
+    tag = next(s for s in job["steps"] if "Tag and push" in s.get("name", ""))
+    run = tag["run"]
+    assert run.index('if [[ "$TAG" == *.dev* ]]') < run.index("git tag -a")
