@@ -43,6 +43,12 @@ report:
         71782:
           reason: "skops, CVE-2024-37065: loading a malicious skops file executes code; godml only loads skops files it wrote itself"
           expires: "2027-01-23"
+        # Reviewed 2026-10-30; approved by the maintainer. Only in the
+        # `sagemaker` extra; fixed in sagemaker 3.8.0, a major version godml
+        # does not support yet (migration: plan F4-12).
+        SFTY-20260305-71051:
+          reason: "sagemaker 2.x: crafted search_hub() query parameters in JumpStart search; godml never calls JumpStart or search_hub"
+          expires: "2027-01-23"
 
 fail-scan-with-exit-code:
   dependency-vulnerabilities:

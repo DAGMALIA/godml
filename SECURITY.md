@@ -75,6 +75,7 @@ longer ignores unpinned or environment results).
 |-----------|---------|-----|-------|---------|
 | SFTY-20240604-95861 | mlflow | CVE-2024-37058 | Loading a malicious Langchain AgentExecutor model executes code | 2027-01-23 |
 | 71782 | skops | CVE-2024-37065 | Loading a malicious skops file executes code | 2027-01-23 |
+| SFTY-20260305-71051 | sagemaker (extra) | — | Crafted query parameters to JumpStart `search_hub()` | 2027-01-23 |
 
 Why they are accepted (approved by the maintainer on 2026-10-25): both are
 code execution when a maliciously crafted model is loaded, and no fixed
@@ -82,6 +83,11 @@ version exists (mlflow 3.17.2, skops 0.16.0 as resolved by CI). GoDML only
 loads models it trained itself, from validated paths, never uses MLflow's
 Langchain flavor and does not run an MLflow server accepting third-party
 uploads.
+
+The sagemaker advisory (approved on 2026-10-30) is fixed only in sagemaker
+3.8.0, a major version the `sagemaker` extra does not support yet (`<3`).
+GoDML never calls JumpStart or `search_hub()`. Migrating to sagemaker 3.x is
+tracked in the GoDML 2.0 plan (F4-12).
 
 Revalidated on 2026-10-25 with the Safety DB (API key) against the versions
 CI resolves. None of the 15 IDs ignored in 1.x is reported for those
@@ -153,7 +159,7 @@ GODML adheres to the principles of **responsible disclosure**:
 | SBOM | CycloneDX on the Release; SPDX signed with Cosign as workflow artifact | ✅ Implemented (signed SBOM not yet on the Release) |
 | PyPI publishing | Trusted Publisher (OIDC) | ✅ Implemented |
 | Code scanning | Bandit HIGH blocking; ruff fail-closed rules for new code | ✅ Implemented |
-| Dependency scanning | Safety + pip-audit, both blocking; 2 reviewed Safety ignores | ✅ Implemented |
+| Dependency scanning | Safety + pip-audit, both blocking; 3 reviewed Safety ignores | ✅ Implemented |
 | Dependency locking | `requirements.lock` without hashes, not used by CI | ⚠️ Partial — hashed lockfile planned |
 | Third-party actions | Pinned by commit SHA (except `slsa-github-generator`, which requires a tag) | ✅ Implemented |
 
