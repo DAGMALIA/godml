@@ -239,6 +239,7 @@ Cada fix lleva primero un test que reproduce el bug.
 - **F1-21** ✅ `deploy_template`: no registrar valores del input en logs (solo forma/columnas)
 - **F1-22** ✅ Test de la condición de métricas de pérdida en `step_builder.py` (unitario o con SDK de SageMaker en un job de test)
 - **F1-23** ✅ Extra `aws`: `sagemaker<3`. El SDK v3 (lo que instalaba `godml[aws]` con `<4`) eliminó `sagemaker.workflow`, `sagemaker.processing` e `image_uris`; el executor de SageMaker estaba roto en instalaciones nuevas. Portar a v3 → F4-07
+- **F1-24** 🟨 Smoke test post-publicación: job que tras publicar instala `godml[all]==<versión>` desde PyPI en entorno limpio y corre `godml --help`, `godml init demo`, `godml run` y el caso sin `GODML_PII_KEY` (error esperado). La promoción a final requiere este job en verde. Correrlo contra 1.4.0rc1
 
 ### F2 — Arquitectura 2.0 (2.0.0a1)
 
@@ -252,6 +253,7 @@ Cada fix lleva primero un test que reproduce el bug.
 - **F2-08** ⬜ CLI con imports perezosos por pilar; `godml --help` arranca en menos de 300 ms solo con core
 - **F2-09** ⬜ Test de modularidad: por cada extra, entorno limpio con solo ese extra y sus tests pasando
 - **F2-10** ⬜ Sacar mlflow del core al extra `train` (hoy mlflow-skinny arrastra fastapi/uvicorn a `pip install godml`); el core no debe importarlo
+- **F2-11** ⬜ Agente de triage con `anthropics/claude-code-action`: etiquetado por pilar y tipo, solicitud de info faltante en bugs, revisión de PRs contra las reglas de CLAUDE.md (ID de tarea, CHANGELOG, tests, sin `except: pass`) y resumen de PRs de Dependabot. Requiere secreto `ANTHROPIC_API_KEY`
 
 ### F3 — Pilar Govern (2.0.0a1)
 

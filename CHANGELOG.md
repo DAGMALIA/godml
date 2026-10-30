@@ -212,6 +212,11 @@ the run. Review these before upgrading (details in the sections below):
 
 ### Changed
 
+- Every release is smoke-tested after publication: `post_publish_smoke.yml`
+  installs `godml[all]==<version>` from PyPI in a clean environment and runs
+  `godml --help`, `godml init`, `godml run`, and `godml run` without
+  `GODML_PII_KEY` (must fail). A final version is only tagged once its latest
+  release candidate passed this test.
 - `pre-commit` is no longer part of the `dev` extra: install it with
   `pipx install pre-commit`. Its patched `virtualenv` requires
   `packaging>=26.3`, which conflicts with the patched SageMaker SDK

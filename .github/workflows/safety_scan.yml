@@ -17,6 +17,7 @@ jobs:
       contents: write
       id-token: write
       security-events: write
+      actions: read
 
     steps:
       # 1️⃣ Checkout
@@ -41,6 +42,31 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "📦 Version: $VERSION"
+
+      # F1-24: a final X.Y.Z is only tagged once the latest X.Y.ZrcN, installed
+      # from PyPI, passed post_publish_smoke.yml. Pre-releases skip this check.
+      - name: 🧪 Require green post-publish smoke of the latest RC
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Pre-release $VERSION: no RC smoke required."
+            exit 0
+          fi
+          RC=$(git ls-remote --tags origin "refs/tags/v${VERSION}rc*" \
+            | sed -E 's|.*refs/tags/v||; s|\^\{\}$||' | sort -uV | tail -1)
+          if [ -z "$RC" ]; then
+            echo "::error::$VERSION has no published RC; publish and smoke-test ${VERSION}rc1 first"
+            exit 1
+          fi
+          gh run list --repo "$GITHUB_REPOSITORY" --workflow post_publish_smoke.yml \
+            --status success --limit 200 --json displayTitle --jq '.[].displayTitle' \
+            > smoke_runs.txt
+          if ! grep -qxF -e "Post-publish smoke $RC" -e "Post-publish smoke v$RC" smoke_runs.txt; then
+            echo "::error::No green post-publish smoke for $RC; run post_publish_smoke.yml with version=$RC"
+            exit 1
+          fi
+          echo "✅ $RC passed the post-publish smoke test"
 
       # 4️⃣ Install dependencies
       - name: 📦 Install project dependencies
