@@ -195,6 +195,11 @@ jobs:
           git config user.name "Arturo Gutierrez Rubio Rojas"
           git config user.email "agtzrubio@dagmalia.com"
           TAG="v${{ steps.version.outputs.version }}"
+          # Development versions (2.0.0.devN on main) are never published.
+          if [[ "$TAG" == *.dev* ]]; then
+            echo "Development version $TAG — not tagged, not published."
+            exit 0
+          fi
           if git ls-remote --tags origin "refs/tags/$TAG" | grep -q "$TAG"; then
             echo "Tag $TAG already exists on remote — skipping. PyPI publish already done."
           else

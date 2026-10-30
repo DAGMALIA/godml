@@ -8,6 +8,12 @@
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT">
 </p>
 
+> [!IMPORTANT]
+> `main` is the development branch of **GoDML 2.0** (`2.0.0.dev0`, not
+> published). The stable release is **1.4.x**: install it with
+> `pip install godml` and see the [`1.x` branch](https://github.com/DAGMALIA/godml/tree/1.x)
+> for its code and documentation.
+
 <h1 align="center">GODML</h1>
 <p align="center"><strong>Governed, Observable & Declarative Machine Learning Framework</strong></p>
 <p align="center">
