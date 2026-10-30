@@ -1,12 +1,7 @@
-# godml/deploy_service/env_config.py
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.serve.deploy.env_config``."""
 
-ENVIRONMENTS = {
-    "dev": {"port": 8000, "host": "0.0.0.0", "reload": True, "docker_tag": "godml-dev"},
-    "qa": {"port": 8001, "host": "0.0.0.0", "reload": False, "docker_tag": "godml-qa"},
-    "prod": {
-        "port": 80,
-        "host": "0.0.0.0",
-        "reload": False,
-        "docker_tag": "godml-prod",
-    },
-}
+from godml.core.deprecation import alias_module
+
+alias_module("godml.deploy_service.env_config", "godml.serve.deploy.env_config")

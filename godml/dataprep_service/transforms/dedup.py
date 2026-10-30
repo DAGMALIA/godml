@@ -1,9 +1,9 @@
-import pandas as pd
-from .base import BaseTransform
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.train.dataprep.transforms.dedup``."""
 
+from godml.core.deprecation import alias_module
 
-class DropDuplicates(BaseTransform):
-    name = "drop_duplicates"
-
-    def apply(self, df: pd.DataFrame, subset=None, keep: str = "first", **_):
-        return df.drop_duplicates(subset=subset, keep=keep)
+alias_module(
+    "godml.dataprep_service.transforms.dedup", "godml.train.dataprep.transforms.dedup"
+)

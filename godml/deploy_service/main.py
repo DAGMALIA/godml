@@ -1,10 +1,7 @@
-# godml/deploy_service/main.py
-import os
-import uvicorn
-from godml.deploy_service.app import app
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.serve.deploy.main``."""
 
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", "8000"))
-    host = os.getenv("HOST", "0.0.0.0")
-    print(f"🌐 Iniciando servicio en http://{host}:{port}")
-    uvicorn.run(app, host=host, port=port)
+from godml.core.deprecation import alias_module
+
+alias_module("godml.deploy_service.main", "godml.serve.deploy.main")

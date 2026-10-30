@@ -6,8 +6,8 @@ sobre un directorio que solo creaba `godml deploy`.
 """
 
 from godml import __version__
-from godml.utils.scaffold import DEPLOY_SERVICE_DIRNAME, scaffold_deploy_service
-from godml.utils.yaml_utils import generate_dockerfile_txt
+from godml.tools.scaffold import DEPLOY_SERVICE_DIRNAME, scaffold_deploy_service
+from godml.tools.yaml_utils import generate_dockerfile_txt
 
 
 def directivas(dockerfile: str) -> str:
@@ -82,7 +82,7 @@ class TestGenerateDockerfile:
         """
         dockerfile = generate_dockerfile_txt()
         assert "deploy_service.server:app" in dockerfile
-        assert "godml.deploy_service.server:app" not in dockerfile
+        assert "godml.serve.deploy.server:app" not in dockerfile
 
     def test_copia_lo_necesario_para_servir(self):
         dockerfile = generate_dockerfile_txt()

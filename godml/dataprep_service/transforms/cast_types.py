@@ -1,33 +1,10 @@
-import pandas as pd
-from .base import BaseTransform
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.train.dataprep.transforms.cast_types``."""
 
+from godml.core.deprecation import alias_module
 
-def _cast_series(s: pd.Series, target: str):
-    if target.startswith("datetime"):
-        fmt = None
-        if ":" in target:
-            fmt = target.split(":", 1)[1]
-        return pd.to_datetime(s, errors="coerce", format=fmt)
-    if target in ("int", "int64"):
-        return pd.to_numeric(s, errors="coerce").astype("Int64")
-    if target in ("float", "float64"):
-        return pd.to_numeric(s, errors="coerce")
-    if target == "str":
-        return s.astype("string")
-    return s
-
-
-class CastTypes(BaseTransform):
-    name = "cast_types"
-
-    def apply(self, df: pd.DataFrame, mapping=None, **_):
-        mapping = mapping or {}
-        out = df.copy()
-        for col, t in mapping.items():
-            if col in out.columns:
-                out[col] = _cast_series(out[col], t)
-        return out
-
-
-class SafeCast(CastTypes):
-    name = "safe_cast"
+alias_module(
+    "godml.dataprep_service.transforms.cast_types",
+    "godml.train.dataprep.transforms.cast_types",
+)

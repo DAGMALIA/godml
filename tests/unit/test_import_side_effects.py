@@ -23,11 +23,11 @@ root_handlers_before = list(logging.getLogger().handlers)
 levels_before = {n: logging.getLogger(n).level for n in ("mlflow", "sagemaker", "urllib3")}
 
 import godml
-import godml.monitoring_service.logger
-import godml.core_service.executors
-import godml.notebook_api
-import godml.providers.mlflow
-import godml.utils.scaffold
+import godml.core.logger
+import godml.train.executors
+import godml.tools.notebook_api
+import godml.train.providers.mlflow
+import godml.tools.scaffold
 
 godml_logger = logging.getLogger("GODML")
 print(json.dumps({
@@ -80,7 +80,7 @@ def test_library_logger_has_only_null_handler(tmp_path):
 
 def test_cli_logging_writes_to_the_given_dir(tmp_path):
     """Output is configured only by the CLI, explicitly."""
-    from godml.monitoring_service.logger import configure_cli_logging
+    from godml.core.logger import configure_cli_logging
 
     logger = logging.getLogger("GODML")
     saved = list(logger.handlers), logger.level, logger.propagate

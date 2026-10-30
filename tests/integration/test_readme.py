@@ -16,7 +16,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 README = (ROOT / "README.md").read_text(encoding="utf-8")
-TEMPLATE = (ROOT / "godml" / "utils" / "README_TEMPLATE.txt").read_text(
+TEMPLATE = (ROOT / "godml" / "tools" / "README_TEMPLATE.txt").read_text(
     encoding="utf-8"
 )
 
@@ -81,8 +81,8 @@ def test_python_examples_run(churn_project):
 
 
 def test_yaml_example_runs(churn_project):
-    from godml.core_service.parser import load_pipeline
-    from godml.providers.mlflow import MLflowExecutor
+    from godml.core.parser import load_pipeline
+    from godml.train.providers.mlflow import MLflowExecutor
 
     (churn_project / "godml.yml").write_text(code_blocks("yaml")[0], encoding="utf-8")
     pipeline = load_pipeline("godml.yml")
@@ -114,7 +114,7 @@ def test_installation_extras_exist():
 
 
 def test_supported_model_types_exist():
-    from godml.model_service.model_loader import CORE_MODEL_REGISTRY as CORE_MODELS
+    from godml.serve.model_loader import CORE_MODEL_REGISTRY as CORE_MODELS
 
     section = README.split("### Supported model types", 1)[1].split("\n## ", 1)[0]
     documented = set(re.findall(r"^\| `([a-z_]+)` \|", section, flags=re.MULTILINE))
@@ -125,7 +125,7 @@ def test_init_yaml_names_a_target():
     """Quick start: `godml init` must produce a YAML with dataset.target."""
     import yaml
 
-    from godml.utils.yaml_utils import generate_default_yaml
+    from godml.tools.yaml_utils import generate_default_yaml
 
     config = yaml.safe_load(generate_default_yaml("demo"))
     assert config["dataset"]["target"]

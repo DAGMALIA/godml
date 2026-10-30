@@ -10,7 +10,7 @@ from .commands.calc_hash import calc_hash_command
 from .commands.init import init_command
 from .commands.serve import serve_command
 from .commands.deploy import deploy_command
-from godml.dataprep_service.cli import app as dataprep_app
+from godml.train.dataprep.cli import app as dataprep_app
 
 
 def _version_callback(value: bool) -> None:

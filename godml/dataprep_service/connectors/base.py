@@ -1,12 +1,9 @@
-import pandas as pd
-from typing import Any, Dict
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.train.dataprep.connectors.base``."""
 
+from godml.core.deprecation import alias_module
 
-class BaseConnector:
-    def read(self, uri: str, options: Dict[str, Any] | None = None) -> pd.DataFrame:
-        raise NotImplementedError
-
-    def write(
-        self, df: pd.DataFrame, uri: str, options: Dict[str, Any] | None = None
-    ) -> None:
-        raise NotImplementedError
+alias_module(
+    "godml.dataprep_service.connectors.base", "godml.train.dataprep.connectors.base"
+)

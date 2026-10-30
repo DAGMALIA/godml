@@ -1,9 +1,9 @@
 import os
 import yaml
 import pandas as pd
-from godml.config_service.loader import load_config
-from godml.config_service.schema import PipelineDefinition
-from godml.compliance_service.pci_dss import PciDssCompliance
+from godml.core.config.loader import load_config
+from godml.core.config.schema import PipelineDefinition
+from godml.govern.compliance.pci_dss import PciDssCompliance
 
 
 class TestFullConfigLoadCycle:
@@ -115,7 +115,7 @@ class TestCompliancePipelineIntegration:
 
 class TestModelIntegration:
     def test_config_model_type_maps_to_notebook_api(self, temp_yaml, binary_dataset):
-        from godml.notebook_api import train_model
+        from godml.tools.notebook_api import train_model
 
         config = load_config(temp_yaml)
         ds = binary_dataset

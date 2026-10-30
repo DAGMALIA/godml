@@ -1,5 +1,5 @@
 import pandas as pd
-from godml.compliance_service.pii_detector import PiiDetector
+from godml.govern.compliance.pii_detector import PiiDetector
 
 
 class TestPiiDetectorColumnType:

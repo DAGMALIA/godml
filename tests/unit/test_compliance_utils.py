@@ -1,4 +1,4 @@
-from godml.compliance_service.compliance_utils import (
+from godml.govern.compliance.compliance_utils import (
     hash_sha256,
     hash_truncated,
     mask_string,

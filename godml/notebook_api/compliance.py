@@ -1,12 +1,7 @@
-from __future__ import annotations
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.tools.notebook_api.compliance``."""
 
-import pandas as pd
+from godml.core.deprecation import alias_module
 
-
-def apply_compliance(df: pd.DataFrame, standard: str = "pci-dss") -> pd.DataFrame:
-    std = (standard or "").lower().strip()
-    if std != "pci-dss":
-        return df
-    from godml.compliance_service.pci_dss import PciDssCompliance
-
-    return PciDssCompliance().apply(df.copy())
+alias_module("godml.notebook_api.compliance", "godml.tools.notebook_api.compliance")

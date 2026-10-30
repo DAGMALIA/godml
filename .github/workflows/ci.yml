@@ -232,9 +232,9 @@ jobs:
       - name: Smoke test — no gpt4all needed
         run: |
           python -c "
-          from godml.config_service.loader import load_config
-          from godml.compliance_service.pci_dss import PciDssCompliance
-          from godml.monitoring_service.metrics import compute_metrics
+          from godml.core.config.loader import load_config
+          from godml.govern.compliance.pci_dss import PciDssCompliance
+          from godml.train.metrics import compute_metrics
           print('Core services import OK without optional deps')
           "
   # ── SAST — Bandit static analysis (all commits/PRs → feeds Scorecard SAST check) ─

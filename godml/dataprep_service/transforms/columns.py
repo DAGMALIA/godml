@@ -1,23 +1,10 @@
-import pandas as pd
-from .base import BaseTransform
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.train.dataprep.transforms.columns``."""
 
+from godml.core.deprecation import alias_module
 
-class DropColumns(BaseTransform):
-    name = "drop_columns"
-
-    def apply(self, df: pd.DataFrame, columns=None, **_):
-        return df.drop(columns=columns or [], errors="ignore")
-
-
-class Rename(BaseTransform):
-    name = "rename"
-
-    def apply(self, df: pd.DataFrame, mapping=None, **_):
-        return df.rename(columns=mapping or {})
-
-
-class SelectColumns(BaseTransform):
-    name = "select"
-
-    def apply(self, df: pd.DataFrame, columns=None, **_):
-        return df[columns] if columns else df
+alias_module(
+    "godml.dataprep_service.transforms.columns",
+    "godml.train.dataprep.transforms.columns",
+)

@@ -1,21 +1,9 @@
-import pandas as pd
-from .base import BaseTransform
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.train.dataprep.transforms.encode``."""
 
+from godml.core.deprecation import alias_module
 
-class OneHot(BaseTransform):
-    name = "one_hot"
-
-    def apply(self, df: pd.DataFrame, columns=None, drop_first: bool = False, **_):
-        columns = columns or []
-        return pd.get_dummies(df, columns=columns, drop_first=drop_first)
-
-
-class LabelEncode(BaseTransform):
-    name = "label_encode"
-
-    def apply(self, df: pd.DataFrame, columns=None, **_):
-        columns = columns or []
-        out = df.copy()
-        for c in columns:
-            out[c] = out[c].astype("category").cat.codes
-        return out
+alias_module(
+    "godml.dataprep_service.transforms.encode", "godml.train.dataprep.transforms.encode"
+)

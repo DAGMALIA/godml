@@ -1,7 +1,10 @@
-import pandas as pd
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.train.dataprep.validators.schema_checks``."""
 
+from godml.core.deprecation import alias_module
 
-def check_types(df: pd.DataFrame, expected: dict[str, str]):
-    for col, typ in expected.items():
-        if col not in df.columns:
-            raise AssertionError(f"Missing column {col}")
+alias_module(
+    "godml.dataprep_service.validators.schema_checks",
+    "godml.train.dataprep.validators.schema_checks",
+)

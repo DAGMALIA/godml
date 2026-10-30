@@ -1,9 +1,10 @@
-import uuid
-from datetime import datetime
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.observe.lineage.openlineage_emitter``."""
 
+from godml.core.deprecation import alias_module
 
-def emit(event_type: str, payload: dict):
-    # MVP: imprime; en P1, enviar a backend OpenLineage (Marquez).
-    print(
-        f"[OPENLINEAGE] {datetime.utcnow().isoformat()} {event_type} id={uuid.uuid4()} payload={payload}"
-    )
+alias_module(
+    "godml.dataprep_service.lineage.openlineage_emitter",
+    "godml.observe.lineage.openlineage_emitter",
+)

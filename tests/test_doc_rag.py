@@ -1,4 +1,4 @@
-from godml.advisor_service.doc_rag_advisor import DocRAGAdvisor
+from godml.tools.advisor.doc_rag_advisor import DocRAGAdvisor
 
 
 def main():

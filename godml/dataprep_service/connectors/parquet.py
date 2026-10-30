@@ -1,18 +1,10 @@
-import importlib
-import pandas as pd
-from .base import BaseConnector
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.train.dataprep.connectors.parquet``."""
 
+from godml.core.deprecation import alias_module
 
-class ParquetConnector(BaseConnector):
-    def _ensure_pyarrow(self):
-        if importlib.util.find_spec("pyarrow") is None:
-            raise RuntimeError("pyarrow no está instalado; requerido para Parquet.")
-
-    def read(self, uri: str, options=None) -> pd.DataFrame:
-        self._ensure_pyarrow()
-        return pd.read_parquet(uri)
-
-    def write(self, df: pd.DataFrame, uri: str, options=None) -> None:
-        self._ensure_pyarrow()
-        options = options or {}
-        df.to_parquet(uri, index=False)
+alias_module(
+    "godml.dataprep_service.connectors.parquet",
+    "godml.train.dataprep.connectors.parquet",
+)

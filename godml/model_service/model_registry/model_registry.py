@@ -1,23 +1,10 @@
-# model_registry.py
-from godml.model_service.model_registry.random_forest_model import RandomForestModel
-from godml.model_service.model_registry.xgboost_model import XgboostModel
-from godml.model_service.model_registry.logistic_regression_model import (
-    LogisticRegressionModel,
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.train.models.model_registry.model_registry``."""
+
+from godml.core.deprecation import alias_module
+
+alias_module(
+    "godml.model_service.model_registry.model_registry",
+    "godml.train.models.model_registry.model_registry",
 )
-
-try:
-    from godml.model_service.model_registry.lstm_forecast_model import LstmForecastModel
-
-    _lstm_available = True
-except ImportError:
-    LstmForecastModel = None
-    _lstm_available = False
-
-model_registry = {
-    "random_forest": RandomForestModel,
-    "xgboost": XgboostModel,
-    "logistic_regression": LogisticRegressionModel,
-}
-
-if _lstm_available:
-    model_registry["lstm_forecast"] = LstmForecastModel

@@ -1,16 +1,7 @@
 # Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
 # SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.core.engine``."""
 
-from typing import Union
-from abc import ABC, abstractmethod
-from godml.config_service.schema import PipelineDefinition, ModelResult
+from godml.core.deprecation import alias_module
 
-
-class BaseExecutor(ABC):
-    @abstractmethod
-    def run(self, pipeline: PipelineDefinition) -> Union[ModelResult, bool, None]:
-        pass
-
-    @abstractmethod
-    def validate(self, pipeline: PipelineDefinition):
-        pass
+alias_module("godml.core_service.engine", "godml.core.engine")

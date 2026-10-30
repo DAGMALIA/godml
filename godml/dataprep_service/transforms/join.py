@@ -1,18 +1,9 @@
-import pandas as pd
-from .base import BaseTransform
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.train.dataprep.transforms.join``."""
 
+from godml.core.deprecation import alias_module
 
-class Join(BaseTransform):
-    name = "join"
-
-    def apply(
-        self,
-        df: pd.DataFrame,
-        right: pd.DataFrame = None,
-        on=None,
-        how: str = "inner",
-        **_,
-    ):
-        if right is None:
-            raise ValueError("Join requiere 'right' DataFrame")
-        return df.merge(right, on=on, how=how)
+alias_module(
+    "godml.dataprep_service.transforms.join", "godml.train.dataprep.transforms.join"
+)

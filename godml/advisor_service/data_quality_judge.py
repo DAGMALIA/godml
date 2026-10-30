@@ -1,10 +1,9 @@
-import pandas as pd
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.tools.advisor.data_quality_judge``."""
 
+from godml.core.deprecation import alias_module
 
-class DataQualityJudge:
-    def check(self, df: pd.DataFrame):
-        report = {}
-        report["nulls"] = df.isnull().sum().to_dict()
-        report["duplicates"] = df.duplicated().sum()
-        report["cardinality"] = {col: df[col].nunique() for col in df.columns}
-        return report
+alias_module(
+    "godml.advisor_service.data_quality_judge", "godml.tools.advisor.data_quality_judge"
+)

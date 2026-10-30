@@ -1,10 +1,10 @@
 import pytest
 import numpy as np
-from godml.monitoring_service.metrics import (
+from godml.train.metrics import (
     evaluate_binary_classification,
     evaluate_regression,
 )
-from godml.monitoring_service.metric_diagnostics import (
+from godml.train.metric_diagnostics import (
     analyze_metric_issue,
     explain_issue_and_action,
 )

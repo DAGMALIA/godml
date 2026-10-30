@@ -1,16 +1,7 @@
-# utils/dtypes.py
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
 # SPDX-License-Identifier: MIT
-"""dtype helpers shared by executors and scripts. Depends only on pandas."""
+"""Deprecated 1.x import path: use ``godml.core.dtypes``."""
 
-import pandas as pd
+from godml.core.deprecation import alias_module
 
-
-def is_text_like(dtype) -> bool:
-    """True for text columns: `object`, or `str`/`string` (pandas 3 default).
-
-    Categoricals are excluded even when their categories are strings; callers
-    encode them through their own branch.
-    """
-    if isinstance(dtype, pd.CategoricalDtype):
-        return False
-    return pd.api.types.is_object_dtype(dtype) or pd.api.types.is_string_dtype(dtype)
+alias_module("godml.utils.dtypes", "godml.core.dtypes")

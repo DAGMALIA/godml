@@ -1,5 +1,5 @@
 import pandas as pd
-from godml.compliance_service.pci_dss import PciDssCompliance
+from godml.govern.compliance.pci_dss import PciDssCompliance
 
 
 class TestPciDssComplianceDropPolicy:

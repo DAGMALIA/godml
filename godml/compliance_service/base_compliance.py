@@ -1,24 +1,10 @@
 # Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
 # SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.govern.compliance.base_compliance``."""
 
-from abc import ABC, abstractmethod
-import pandas as pd
+from godml.core.deprecation import alias_module
 
-
-class BaseCompliance(ABC):
-    """
-    Interfaz base para implementar normativas de cumplimiento como PCI-DSS, HIPAA, GDPR, etc.
-    """
-
-    @abstractmethod
-    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Aplica reglas de cumplimiento sobre un DataFrame.
-        """
-        pass
-
-    def describe(self) -> str:
-        """
-        Devuelve una descripción textual de la normativa.
-        """
-        return self.__class__.__name__
+alias_module(
+    "godml.compliance_service.base_compliance",
+    "godml.govern.compliance.base_compliance",
+)

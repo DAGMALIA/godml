@@ -10,7 +10,7 @@ os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
 os.environ.setdefault("TF_ENABLE_ONEDNN_OPTS", "0")
 
 from godml.cli.app import app  # noqa: E402
-from godml.monitoring_service.logger import configure_cli_logging  # noqa: E402
+from godml.core.logger import configure_cli_logging  # noqa: E402
 
 
 def _tolerate_any_terminal_encoding() -> None:

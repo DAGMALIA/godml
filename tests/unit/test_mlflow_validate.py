@@ -9,9 +9,9 @@ blocked `godml run`.
 import pandas as pd
 import pytest
 
-from godml.compliance_service.validation_helpers import ValidationError
-from godml.config_service.schema import PipelineDefinition
-from godml.providers.mlflow import MLflowExecutor
+from godml.govern.compliance.validation_helpers import ValidationError
+from godml.core.config.schema import PipelineDefinition
+from godml.train.providers.mlflow import MLflowExecutor
 
 
 @pytest.fixture
@@ -55,7 +55,7 @@ def test_batch_without_output_blocks(valid_config):
 def test_sagemaker_rejects_compliance_before_launching(minimal_pipeline_config):
     """F1-04: the stock SageMaker image has no godml, so compliance cannot run
     inside the job; reject it before any (billed) AWS job is created."""
-    from godml.providers.sagemaker.executor import SageMakerExecutor
+    from godml.train.providers.sagemaker.executor import SageMakerExecutor
 
     config = dict(minimal_pipeline_config)
     config["provider"] = "sagemaker"

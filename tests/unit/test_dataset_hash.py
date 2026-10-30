@@ -8,11 +8,11 @@ was at dataset.uri.
 import pandas as pd
 import pytest
 
-import godml.providers.mlflow as mlflow_provider
-from godml.compliance_service.dataset_integrity import verify_dataset_hash
-from godml.compliance_service.errors import DatasetIntegrityError
-from godml.config_service.schema import PipelineDefinition
-from godml.utils.hash import calculate_file_hash
+import godml.train.providers.mlflow as mlflow_provider
+from godml.govern.compliance.dataset_integrity import verify_dataset_hash
+from godml.govern.compliance.errors import DatasetIntegrityError
+from godml.core.config.schema import PipelineDefinition
+from godml.govern.hash import calculate_file_hash
 
 
 @pytest.fixture
@@ -99,7 +99,7 @@ class TestSageMaker:
     """S3 data cannot be hashed locally yet (F3-03): say so instead of implying it was checked."""
 
     def run_validate(self, monkeypatch, minimal_pipeline_config, pinned_hash):
-        import godml.providers.sagemaker.executor as sm
+        import godml.train.providers.sagemaker.executor as sm
 
         warnings_logged: list[str] = []
         monkeypatch.setattr(

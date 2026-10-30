@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
-from godml.model_service.base_model_interface import BaseModel
-from godml.model_service.model_registry.xgboost_model import XgboostModel
-from godml.model_service.model_registry.random_forest_model import RandomForestModel
+from godml.train.models.base_model_interface import BaseModel
+from godml.train.models.model_registry.xgboost_model import XgboostModel
+from godml.train.models.model_registry.random_forest_model import RandomForestModel
 
 
 class TestXgboostModel:

@@ -4,14 +4,14 @@ import os
 
 import typer
 
-from godml.core_service.parser import load_pipeline
-from godml.core_service.executors import get_executor
-from godml.monitoring_service.logger import (
+from godml.core.parser import load_pipeline
+from godml.train.executors import get_executor
+from godml.core.logger import (
     get_logger,
     SecurityError,
     ConfigurationError,
 )
-from godml.utils.path_utils import sanitize_for_log, validate_safe_path
+from godml.core.path_utils import sanitize_for_log, validate_safe_path
 
 logger = get_logger()
 

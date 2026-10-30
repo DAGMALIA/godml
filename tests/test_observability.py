@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from godml.monitoring_service.observability import (
+from godml.observe.observability import (
     BASELINE_FILENAME,
     METRICS_ENABLED,
     DriftMonitor,
@@ -260,7 +260,7 @@ class TestVersionEndpoint:
         from fastapi.testclient import TestClient
 
         from godml import __version__
-        from godml.deploy_service.server import app
+        from godml.serve.deploy.server import app
 
         monkeypatch.delenv("GODML_VERSION", raising=False)
         # Sin context manager: evita el startup, que buscaría un modelo en disco.
@@ -272,7 +272,7 @@ class TestVersionEndpoint:
     def test_la_variable_de_entorno_sigue_teniendo_prioridad(self, monkeypatch):
         from fastapi.testclient import TestClient
 
-        from godml.deploy_service.server import app
+        from godml.serve.deploy.server import app
 
         monkeypatch.setenv("GODML_VERSION", "build-42")
         assert TestClient(app).get("/version").json()["godml_version"] == "build-42"

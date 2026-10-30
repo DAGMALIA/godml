@@ -12,7 +12,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
 
-from godml.utils.log_model_generic import log_model_generic
+from godml.train.log_model_generic import log_model_generic
 
 X = pd.DataFrame({"a": [0, 1, 2, 3, 4, 5, 6, 7], "b": [7, 6, 5, 4, 3, 2, 1, 0]})
 y = [0, 0, 0, 0, 1, 1, 1, 1]

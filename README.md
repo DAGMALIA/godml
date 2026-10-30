@@ -129,7 +129,7 @@ godml run -f godml.yml
 ## Notebook API
 
 ```python
-from godml.notebook_api import GodmlNotebook
+from godml.tools.notebook_api import GodmlNotebook
 
 nb = GodmlNotebook()
 nb.create_pipeline(
@@ -146,7 +146,7 @@ nb.save_model(model_name="churn_xgb", environment="experiments")
 Quick one-liner:
 
 ```python
-from godml.notebook_api import quick_train
+from godml.tools.notebook_api import quick_train
 
 quick_train(
     model_type="random_forest",
@@ -160,7 +160,7 @@ quick_train(
 
 ```python
 import pandas as pd
-from godml.notebook_api import tune_model
+from godml.tools.notebook_api import tune_model
 
 df = pd.read_csv("./data/churn.csv")
 # tune_model expects numeric features: encode or drop text columns first
@@ -177,7 +177,7 @@ if it is installed (`pip install optuna`, not included in any extra).
 ### Advisor (requires `godml[advisor]`)
 
 ```python
-from godml.notebook_api import advisor_full_report
+from godml.tools.notebook_api import advisor_full_report
 
 advisor_full_report(df, target="churn")   # prints task type, suggested models,
                                           # hyperparameter space and data quality
@@ -218,12 +218,12 @@ The dataset target is never treated as PII. Any other `governance.compliance`
 value stops the run: no other standard is implemented.
 
 ```python
-from godml.compliance_service.pci_dss import PciDssCompliance
+from godml.govern.compliance.pci_dss import PciDssCompliance
 
 clean_df = PciDssCompliance(policy="drop_sensitive").apply(df)
 ```
 
-Custom standards: subclass `godml.compliance_service.base_compliance.BaseCompliance`
+Custom standards: subclass `godml.govern.compliance.base_compliance.BaseCompliance`
 and implement `apply(df)`.
 
 ---

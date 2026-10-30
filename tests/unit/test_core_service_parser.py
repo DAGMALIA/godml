@@ -3,9 +3,9 @@ import os
 import pytest
 import yaml
 
-from godml.config_service.schema import PipelineDefinition
-from godml.core_service.parser import load_pipeline
-from godml.monitoring_service.logger import ConfigurationError, SecurityError
+from godml.core.config.schema import PipelineDefinition
+from godml.core.parser import load_pipeline
+from godml.core.logger import ConfigurationError, SecurityError
 
 
 class TestLoadPipeline:

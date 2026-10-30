@@ -13,7 +13,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sklearn.linear_model import LogisticRegression
 
-SERVERS = ["godml.deploy_service.server", "godml.templates.deploy_template.server"]
+SERVERS = ["godml.serve.deploy.server", "godml.templates.deploy_template.server"]
 SENTINEL = 987654.321
 
 

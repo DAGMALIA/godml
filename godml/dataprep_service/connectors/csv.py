@@ -1,14 +1,9 @@
-import pandas as pd
-from .base import BaseConnector
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.train.dataprep.connectors.csv``."""
 
+from godml.core.deprecation import alias_module
 
-class CSVConnector(BaseConnector):
-    def read(self, uri: str, options=None) -> pd.DataFrame:
-        options = options or {}
-        return pd.read_csv(
-            uri, **{k: v for k, v in options.items() if k != "partition_by"}
-        )
-
-    def write(self, df: pd.DataFrame, uri: str, options=None) -> None:
-        options = options or {}
-        df.to_csv(uri, index=False)
+alias_module(
+    "godml.dataprep_service.connectors.csv", "godml.train.dataprep.connectors.csv"
+)

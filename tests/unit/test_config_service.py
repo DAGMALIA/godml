@@ -1,12 +1,12 @@
 import pytest
 import os
 import yaml
-from godml.config_service.resolver import resolve_env_variables
-from godml.config_service.schema import (
+from godml.core.config.resolver import resolve_env_variables
+from godml.core.config.schema import (
     PipelineDefinition,
 )
-from godml.config_service.loader import load_config
-from godml.monitoring_service.logger import ConfigurationError
+from godml.core.config.loader import load_config
+from godml.core.logger import ConfigurationError
 
 
 class TestResolver:

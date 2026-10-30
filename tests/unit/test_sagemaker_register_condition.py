@@ -11,8 +11,8 @@ import types
 
 import pytest
 
-from godml.config_service.schema import PipelineDefinition
-from godml.providers.sagemaker.step_builder import build_register_step
+from godml.core.config.schema import PipelineDefinition
+from godml.train.providers.sagemaker.step_builder import build_register_step
 
 
 class Recorder:

@@ -98,7 +98,7 @@ deploy:
 ## 🧪 Entrenamiento desde Notebooks
 
 ```python
-from godml.notebook_api import GodmlNotebook
+from godml.tools.notebook_api import GodmlNotebook
 godml = GodmlNotebook()
 godml.create_pipeline(
     name="churn_rf",
@@ -114,7 +114,7 @@ godml.save_model(model_name="churn_rf", environment="experiments")
 ## ⚡ Entrenamiento rápido
 
 ```python
-from godml.notebook_api import quick_train
+from godml.tools.notebook_api import quick_train
 
 quick_train(
     model_type="xgboost",
@@ -127,7 +127,7 @@ quick_train(
 ## 🔁 Desde YAML
 
 ```python
-from godml.notebook_api import train_from_yaml
+from godml.tools.notebook_api import train_from_yaml
 train_from_yaml("godml.yml")
 ```
 

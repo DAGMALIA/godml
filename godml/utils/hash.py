@@ -1,12 +1,7 @@
-import hashlib
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.govern.hash``."""
 
+from godml.core.deprecation import alias_module
 
-def calculate_file_hash(file_path: str) -> str:
-    """
-    Calcula el hash SHA256 de un archivo para trazabilidad.
-    """
-    sha256 = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        while chunk := f.read(8192):
-            sha256.update(chunk)
-    return sha256.hexdigest()
+alias_module("godml.utils.hash", "godml.govern.hash")

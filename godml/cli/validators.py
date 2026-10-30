@@ -10,8 +10,8 @@ from subprocess import DEVNULL, CalledProcessError
 import typer
 from yaml import safe_load
 
-from godml.monitoring_service.logger import get_logger, SecurityError
-from godml.utils.path_utils import sanitize_for_log, validate_safe_path
+from godml.core.logger import get_logger, SecurityError
+from godml.core.path_utils import sanitize_for_log, validate_safe_path
 
 logger = get_logger()
 

@@ -5,12 +5,12 @@ import os
 import typer
 import uvicorn
 
-from godml.monitoring_service.logger import (
+from godml.core.logger import (
     get_logger,
     SecurityError,
     ConfigurationError,
 )
-from godml.utils.path_utils import sanitize_for_log
+from godml.core.path_utils import sanitize_for_log
 from ..validators import load_yaml_config
 
 logger = get_logger()
@@ -47,7 +47,7 @@ def serve_command(environment: str = "dev") -> None:
         )
         # F1-08: auto-reload is a development aid; never outside dev.
         uvicorn.run(
-            "godml.deploy_service.server:app",
+            "godml.serve.deploy.server:app",
             host=host,
             port=port,
             reload=environment == "dev",

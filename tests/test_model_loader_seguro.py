@@ -2,12 +2,12 @@
 import pytest
 import pandas as pd
 import numpy as np
-from godml.model_service.model_loader import (
+from godml.serve.model_loader import (
     load_custom_model_class,
     register_adhoc_model,
 )
-from godml.model_service.base_model_interface import BaseModel
-from godml.monitoring_service.logger import SecurityError, ModelLoadError
+from godml.train.models.base_model_interface import BaseModel
+from godml.core.logger import SecurityError, ModelLoadError
 
 
 class TestModelLoaderSecure:

@@ -1,13 +1,7 @@
-# compliance_service/validators.py
+# Copyright (c) 2024 Arturo Gutierrez Rubio Rojas
+# SPDX-License-Identifier: MIT
+"""Deprecated 1.x import path: use ``godml.govern.validators``."""
 
-from typing import List
-from godml.config_service.schema import PipelineDefinition
-from godml.compliance_service.validation_helpers import validate_pipeline
+from godml.core.deprecation import alias_module
 
-
-def run_validations(pipeline: PipelineDefinition) -> List[str]:
-    """
-    Ejecuta todas las validaciones de gobernanza y compliance.
-    Retorna advertencias. Lanza excepción si hay errores críticos.
-    """
-    return validate_pipeline(pipeline)
+alias_module("godml.core_service.validators", "godml.govern.validators")
