@@ -1,6 +1,6 @@
 from typing import List, Literal, Optional, Dict, Any, Union
 from pydantic import BaseModel, Field, ConfigDict
-from godml.train.dataprep.schema import Recipe as DataprepRecipe
+from godml.core.recipe import Recipe as DataprepRecipe
 
 
 class AwsConfig(BaseModel):

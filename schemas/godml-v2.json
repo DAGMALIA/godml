@@ -1,0 +1,377 @@
+{
+  "$defs": {
+    "Data": {
+      "additionalProperties": false,
+      "properties": {
+        "uri": {
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        },
+        "sha256": {
+          "default": "auto",
+          "description": "'auto' or the 64-hex SHA-256 of the dataset",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "target": {
+          "minLength": 1,
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uri",
+        "target"
+      ],
+      "title": "Data",
+      "type": "object"
+    },
+    "Drift": {
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "const": "psi",
+          "default": "psi",
+          "title": "Method",
+          "type": "string"
+        },
+        "threshold": {
+          "exclusiveMinimum": 0,
+          "title": "Threshold",
+          "type": "number"
+        }
+      },
+      "required": [
+        "threshold"
+      ],
+      "title": "Drift",
+      "type": "object"
+    },
+    "Govern": {
+      "additionalProperties": false,
+      "properties": {
+        "policies": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Policies",
+          "type": "array"
+        },
+        "metrics": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "metric name -> threshold such as '>= 0.80'",
+          "title": "Metrics",
+          "type": "object"
+        },
+        "gates": {
+          "items": {
+            "enum": [
+              "pre-train",
+              "post-train",
+              "pre-deploy"
+            ],
+            "type": "string"
+          },
+          "title": "Gates",
+          "type": "array"
+        }
+      },
+      "title": "Govern",
+      "type": "object"
+    },
+    "Metadata": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        },
+        "owner": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Owner"
+        },
+        "tags": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "Metadata",
+      "type": "object"
+    },
+    "Model": {
+      "additionalProperties": false,
+      "description": "Bring your own model: an artifact trained elsewhere.",
+      "properties": {
+        "artifact": {
+          "minLength": 1,
+          "title": "Artifact",
+          "type": "string"
+        },
+        "preprocess": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Preprocess"
+        },
+        "postprocess": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Postprocess"
+        }
+      },
+      "required": [
+        "artifact"
+      ],
+      "title": "Model",
+      "type": "object"
+    },
+    "Observe": {
+      "additionalProperties": false,
+      "properties": {
+        "drift": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Drift"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "lineage": {
+          "anyOf": [
+            {
+              "const": "openlineage",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lineage"
+        }
+      },
+      "title": "Observe",
+      "type": "object"
+    },
+    "RecipeRef": {
+      "additionalProperties": false,
+      "properties": {
+        "recipe": {
+          "description": "path to a dataprep recipe",
+          "minLength": 1,
+          "title": "Recipe",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recipe"
+      ],
+      "title": "RecipeRef",
+      "type": "object"
+    },
+    "Serve": {
+      "additionalProperties": false,
+      "properties": {
+        "variants": {
+          "items": {
+            "$ref": "#/$defs/Variant"
+          },
+          "title": "Variants",
+          "type": "array"
+        }
+      },
+      "title": "Serve",
+      "type": "object"
+    },
+    "Spec": {
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "$ref": "#/$defs/Data"
+        },
+        "train": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Train"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "model": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Model"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "govern": {
+          "$ref": "#/$defs/Govern"
+        },
+        "serve": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Serve"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "observe": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Observe"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "data"
+      ],
+      "title": "Spec",
+      "type": "object"
+    },
+    "Train": {
+      "additionalProperties": false,
+      "properties": {
+        "estimator": {
+          "description": "import path (xgboost.XGBClassifier) or catalog alias (xgboost)",
+          "minLength": 1,
+          "title": "Estimator",
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": true,
+          "title": "Params",
+          "type": "object"
+        },
+        "preprocess": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RecipeRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "estimator"
+      ],
+      "title": "Train",
+      "type": "object"
+    },
+    "Variant": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        },
+        "weight": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Weight",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "weight"
+      ],
+      "title": "Variant",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A `godml.yml` in spec v2.",
+  "properties": {
+    "apiVersion": {
+      "const": "godml.io/v2",
+      "title": "Apiversion",
+      "type": "string"
+    },
+    "kind": {
+      "const": "ModelPipeline",
+      "title": "Kind",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/Metadata"
+    },
+    "spec": {
+      "$ref": "#/$defs/Spec"
+    }
+  },
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "spec"
+  ],
+  "title": "PipelineSpecV2",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/DAGMALIA/godml/main/schemas/godml-v2.json"
+}

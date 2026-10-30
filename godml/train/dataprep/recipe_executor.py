@@ -7,7 +7,7 @@ from yaml import safe_load
 
 from godml.govern.compliance.errors import ComplianceError, unsupported_standard
 
-from .schema import Recipe
+from godml.core.recipe import Recipe
 from godml.observe.lineage.openlineage_emitter import emit
 from .connectors.csv import CSVConnector
 from .connectors.parquet import ParquetConnector

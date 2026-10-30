@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [2.0.0] - Unreleased
 
+### Added
+
+- Spec v2 (`apiVersion: godml.io/v2`, `kind: ModelPipeline`) as Pydantic
+  models in `godml.core.spec`: unknown keys are rejected at every level;
+  exactly one of `spec.train` or `spec.model`; `data.sha256` is `auto` or a
+  SHA-256 digest; metric thresholds look like `">= 0.80"`; serving variant
+  weights add up to 100. Its JSON Schema is published in
+  `schemas/godml-v2.json` (regenerate with `python -m godml.core.spec`).
+  Loading `godml.yml` files in v2 comes with the unified loader.
+
 ### Changed
 
 - Modules are grouped by pillar: `godml.core`, `godml.govern`,
