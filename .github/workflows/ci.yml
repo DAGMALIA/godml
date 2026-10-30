@@ -85,6 +85,7 @@ jobs:
           api-key: ${{ secrets.SAFETY_API_KEY }}
           args: --target safety-scan --policy-file .safety-policy.yml --detailed-output
           output-format: screen
+          debug: true  # TEMPORARY (F0-16)
 
       - name: Run pip-audit
         run: |
