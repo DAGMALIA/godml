@@ -18,8 +18,8 @@ import joblib
 import pandas as pd
 import os
 import time
+from importlib.metadata import version as _package_version
 from pathlib import Path
-from godml import __version__
 from godml.serve.serving import (
     MissingFeaturesError,
     align_features,
@@ -44,7 +44,7 @@ IS_DEV = ENVIRONMENT in ("dev", "qa")
 # ==========================================================
 app = FastAPI(
     title=f"GODML Model API ({ENVIRONMENT})",
-    version=__version__,
+    version=_package_version("godml"),
     description="Microservicio de inferencia robusto para GODML",
 )
 
@@ -202,8 +202,8 @@ def version():
         # cualquier despliegue que no seteara GODML_VERSION a mano — es decir,
         # casi todos. Se conserva la variable como override para builds que
         # quieran marcar algo distinto, pero el fallback ahora es la versión real.
-        "godml_version": os.getenv("GODML_VERSION") or __version__,
-        "service_version": __version__,
+        "godml_version": os.getenv("GODML_VERSION") or _package_version("godml"),
+        "service_version": _package_version("godml"),
         "environment": ENVIRONMENT,
     }
 

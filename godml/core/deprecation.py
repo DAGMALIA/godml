@@ -11,8 +11,10 @@ tools). Every 1.x module path still imports, through a shim that emits
 from __future__ import annotations
 
 import importlib
+import os
 import sys
 import warnings
+from types import FrameType
 from typing import Any
 
 
@@ -20,14 +22,43 @@ class GoDMLDeprecationWarning(DeprecationWarning):
     """A GoDML API (such as a 1.x import path) is deprecated."""
 
 
-# Frames from `warnings.warn` up to the importer: `_warn`, the public helper,
-# the shim's module body, then the importing code (importlib frames are
-# skipped by `warnings` itself).
-_STACKLEVEL = 4
+# The warning must point at the code that asked for the 1.x path, however
+# it got there: an `import` statement, `importlib.import_module`, or a
+# chain of 1.x shims. Frames in GoDML itself and in importlib are skipped
+# (CPython already skips its frozen import machinery).
+_SKIP_PREFIXES = (
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + os.sep,
+    os.path.dirname(os.path.abspath(importlib.__file__)) + os.sep,
+)
+
+
+def _is_import_machinery(filename: str) -> bool:
+    # Same test CPython uses for the frames `warnings` does not count.
+    return "importlib" in filename and "_bootstrap" in filename
+
+
+def _caller_stacklevel() -> int:
+    """`stacklevel` of the first frame outside GoDML and importlib."""
+    # stacklevel=1 is `_warn`, the function that calls `warnings.warn`.
+    level = 1
+    frame: FrameType | None = sys._getframe(1)
+    while frame is not None:
+        filename = frame.f_code.co_filename
+        if not _is_import_machinery(filename):
+            if not filename.startswith(_SKIP_PREFIXES):
+                return level
+            level += 1
+        frame = frame.f_back
+    return level
 
 
 def _warn(message: str) -> None:
-    warnings.warn(message, GoDMLDeprecationWarning, stacklevel=_STACKLEVEL)
+    if sys.version_info >= (3, 12):
+        warnings.warn(
+            message, GoDMLDeprecationWarning, skip_file_prefixes=_SKIP_PREFIXES
+        )
+    else:
+        warnings.warn(message, GoDMLDeprecationWarning, stacklevel=_caller_stacklevel())
 
 
 def alias_module(old: str, new: str) -> None:

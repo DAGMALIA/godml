@@ -139,6 +139,10 @@ jobs:
       - name: mypy
         run: mypy
 
+      # F2-13: dependency rules between pillars ([tool.importlinter]).
+      - name: import-linter
+        run: lint-imports --no-cache
+
   # ── Third-party license report (replaces the hand-written LICENSE_REPORT.md) ─
   licenses:
     name: License report

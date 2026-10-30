@@ -83,3 +83,4 @@ LICENSE_REPORT.md
 # Safety CLI scan input generated in CI (F0-16)
 safety-scan/
 safety-report.json
+.import_linter_cache/
