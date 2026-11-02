@@ -141,7 +141,7 @@ dev = [
   "pytest>=8.0.0,<10",
   "pytest-cov>=5.0.0,<8",
   "pytest-mock>=3.14.0,<4",
-  "ruff>=0.15.17,<0.16",
+  "ruff>=0.15.17,<0.18",
   "mypy>=1.19,<2",
   "types-PyYAML>=6.0,<7",
   # pre-commit is installed separately (`pipx install pre-commit`): its
