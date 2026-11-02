@@ -142,7 +142,7 @@ dev = [
   "pytest-cov>=5.0.0,<8",
   "pytest-mock>=3.14.0,<4",
   "ruff>=0.15.17,<0.16",
-  "mypy>=1.19,<2",
+  "mypy>=1.19,<3",
   "types-PyYAML>=6.0,<7",
   # pre-commit is installed separately (`pipx install pre-commit`): its
   # patched virtualenv needs packaging>=26.3 while the patched SageMaker SDK
